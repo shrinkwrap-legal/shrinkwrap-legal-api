@@ -1,4 +1,4 @@
-package me.jungwirth.playground.springboot.legaltech.adapter.ris.dto;
+package legal.shrinkwrap.api.adapter.ris.dto;
 
 import java.time.LocalDate;
 import java.util.List;

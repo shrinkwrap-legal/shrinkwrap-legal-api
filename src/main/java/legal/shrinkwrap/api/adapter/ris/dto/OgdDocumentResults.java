@@ -10,14 +10,14 @@ public class OgdDocumentResults {
 	private OgdDocumentHits hits;
 	
 	@JsonProperty("OgdDocumentReference")
-	private List<me.jungwirth.playground.springboot.legaltech.adapter.ris.dto.OgdDocumentReference> documentList;
+	private List<OgdDocumentReference> documentList;
 	
 	
 	public OgdDocumentHits getHits() {
 		return hits;
 	}
 	
-	public List<me.jungwirth.playground.springboot.legaltech.adapter.ris.dto.OgdDocumentReference> getDocumentList() {
+	public List<OgdDocumentReference> getDocumentList() {
 		return documentList;
 	}
 	
