@@ -1,26 +1,17 @@
 package legal.shrinkwrap.api.adapter.ris.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
-public class OgdDocumentResults {
+public record OgdDocumentResults (
 	
 	@JsonProperty("Hits")
-	private OgdDocumentHits hits;
-	
-	@JsonProperty("OgdDocumentReference")
-	private List<OgdDocumentReference> documentList;
-	
-	
-	public OgdDocumentHits getHits() {
-		return hits;
-	}
-	
-	public List<OgdDocumentReference> getDocumentList() {
-		return documentList;
-	}
-	
+	OgdDocumentHits hits,
 
+	@JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+	@JsonProperty("OgdDocumentReference")
+	List<OgdDocumentReference> documentList){
 
 }

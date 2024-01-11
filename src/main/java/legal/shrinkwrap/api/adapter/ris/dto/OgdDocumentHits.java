@@ -2,30 +2,18 @@ package legal.shrinkwrap.api.adapter.ris.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class OgdDocumentHits {
+public record OgdDocumentHits (
 	
 	@JsonProperty("@pageNumber")
-	private String pageNumber;
+	String pageNumber,
 	
 	@JsonProperty("@pageSize")
-	private String pageSize;
-	
-	
-	public String getPageNumber() {
-		return pageNumber;
-	}
+	String pageSize,
 
-	public void setPageNumber(String pageNumber) {
-		this.pageNumber = pageNumber;
-	}
-	
-	public String getPageSize() {
-		return pageSize;
-	}
-	
-	public void setPageSize(String pageSize) {
-		this.pageSize = pageSize;
-	}
+	@JsonProperty("#text")
+	String text
+) {
+
 }
 
 

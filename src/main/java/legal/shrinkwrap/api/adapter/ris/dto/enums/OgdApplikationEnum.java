@@ -1,15 +1,18 @@
 package legal.shrinkwrap.api.adapter.ris.dto.enums;
 
-public enum ApplikationEnum {
+public enum OgdApplikationEnum {
 	
 	BundesrechtKonsolidiert("BrKons"),
-	LandesrechtKonsolidiert("LrKons")
+	LandesrechtKonsolidiert("LrKons"),
+
+	Justiz("Justiz")
+
 	;
 	
 	
 	private final String technisch;
 	
-	private ApplikationEnum(String technisch) {
+	private OgdApplikationEnum(String technisch) {
 		this.technisch = technisch;
 	}
 	
