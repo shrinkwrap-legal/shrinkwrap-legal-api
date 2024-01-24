@@ -1,0 +1,33 @@
+package legal.shrinkwrap.api.controller;
+
+import jakarta.validation.Valid;
+import legal.shrinkwrap.api.dto.DocNumberDto;
+import legal.shrinkwrap.api.service.DocumentService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@Validated
+public class CaseLawController {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CaseLawController.class);
+
+    private final DocumentService documentService;
+
+    public CaseLawController(DocumentService documentService) {
+        this.documentService = documentService;
+    }
+
+    @GetMapping("case-law/shrinkwrap")
+    public void getShrinkwrapDocument(@RequestParam("docNumber") @Valid @ParameterObject DocNumberDto docNumberDto) {
+        LOG.info("DocNumber {}", docNumberDto);
+
+        documentService.getDocument(docNumberDto);
+
+    }
+}

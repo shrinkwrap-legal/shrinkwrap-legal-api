@@ -1,9 +1,12 @@
 package legal.shrinkwrap.api.adapter.ris;
 
+import legal.shrinkwrap.api.adapter.ris.dto.OgdDocumentReference;
 import legal.shrinkwrap.api.adapter.ris.dto.enums.OgdApplikationEnum;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,6 +28,11 @@ public class RisAdapterTest {
 
         var result = adapter.getJustiz(OgdApplikationEnum.Justiz, "RS0125227");
         assertThat(result).isNotNull();
+
+        Optional<OgdDocumentReference.Dokumentliste.ContentReference.DokumentlisteUrl.ContentUrl> contentUrl = result.ogdDocumentResults().documentList().getFirst().getData().getDokumentliste().getContentReference().getUrls().getContentUrls().stream().filter(url -> url.getDataType().equals("Html")).findFirst();
+
+
+
     }
 
 

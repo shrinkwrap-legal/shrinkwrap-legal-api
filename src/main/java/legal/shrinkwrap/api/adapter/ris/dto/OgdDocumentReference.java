@@ -46,28 +46,28 @@ public class OgdDocumentReference {
 	
 	public static class Metadaten {
 		@JsonProperty("Technisch")
-		private Technisch technisch;
-		
+		private OgdMetadatenTechnisch technisch;
+
 		@JsonProperty("Allgemein")
-		private Allgemein allgemein;
-		
-		
+		private OgdMetadatenAllgemein allgemein;
+
+
 		@JsonProperty("Bundesrecht")
 		private Bundesrecht bundesrecht;
 		
 		
-		public Technisch getTechnisch() {
+		public OgdMetadatenTechnisch getTechnisch() {
 			return technisch;
 		}
-		public void setTechnisch(Technisch technisch) {
+		public void setTechnisch(OgdMetadatenTechnisch technisch) {
 			this.technisch = technisch;
 		}
 		
-		public Allgemein getAllgemein() {
+		public OgdMetadatenAllgemein getAllgemein() {
 			return allgemein;
 		}
 		
-		public void setAllgemein(Allgemein allgemein) {
+		public void setAllgemein(OgdMetadatenAllgemein allgemein) {
 			this.allgemein = allgemein;
 		}
 		
@@ -77,58 +77,9 @@ public class OgdDocumentReference {
 		public void setBundesrecht(Bundesrecht bundesrecht) {
 			this.bundesrecht = bundesrecht;
 		}
+
 		
-		public static class Technisch {
-			
-			@JsonProperty("ID")
-			private String id;
-			@JsonProperty("Applikation")
-			private String applikation;
-			
-			public String getId() {
-				return id;
-			}
-			public void setId(String id) {
-				this.id = id;
-			}
-			
-			public String getApplikation() {
-				return applikation;
-			}
-			public void setApplikation(String applikation) {
-				this.applikation = applikation;
-			}
-			
-		}
-		
-		public static class Allgemein {
-			
-			@JsonProperty("Veroeffentlicht")
-			@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-			private LocalDate veroeffentlicht;
-			
-			@JsonProperty("Geaendert")
-			@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-			private LocalDate geaendert;
-			
-			public LocalDate getVeroeffentlicht() {
-				return veroeffentlicht;
-			}
-			
-			public void setVeroeffentlicht(LocalDate veroeffentlicht) {
-				this.veroeffentlicht = veroeffentlicht;
-			}
-			
-			public LocalDate getGeaendert() {
-				return geaendert;
-			}
-			
-			public void setGeaendert(LocalDate geaendert) {
-				this.geaendert = geaendert;
-			}
-			
-			
-		}
+
 		
 		public static class Bundesrecht {
 			
