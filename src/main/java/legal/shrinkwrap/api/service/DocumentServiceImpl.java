@@ -2,6 +2,9 @@ package legal.shrinkwrap.api.service;
 
 import legal.shrinkwrap.api.adapter.HtmlDownloadService;
 import legal.shrinkwrap.api.adapter.ris.RisAdapter;
+import legal.shrinkwrap.api.adapter.ris.dto.OgdSearchResult;
+import legal.shrinkwrap.api.adapter.ris.dto.enums.OgdApplikationEnum;
+import legal.shrinkwrap.api.dto.CaseLawResponseDto;
 import legal.shrinkwrap.api.dto.DocNumberDto;
 import org.springframework.stereotype.Service;
 
@@ -18,9 +21,10 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public void getDocument(DocNumberDto docNumberDto) {
+    public CaseLawResponseDto getDocument(DocNumberDto docNumberDto) {
+        //@TODO: Map to OgdApplikationEnum ?
+        OgdSearchResult justiz = risAdapter.getJustiz(OgdApplikationEnum.Justiz, docNumberDto.docNumber());
 
-
-
+        return null;
     }
 }

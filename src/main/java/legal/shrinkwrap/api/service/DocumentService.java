@@ -1,12 +1,12 @@
 package legal.shrinkwrap.api.service;
 
+import legal.shrinkwrap.api.dto.CaseLawResponseDto;
 import legal.shrinkwrap.api.dto.DocNumberDto;
-import org.springframework.stereotype.Service;
 
 
 public interface DocumentService {
 
-    void getDocument(DocNumberDto docNumberDto);
+    CaseLawResponseDto getDocument(DocNumberDto docNumberDto);
 
 
 }

@@ -5,7 +5,8 @@ public enum OgdApplikationEnum {
 	BundesrechtKonsolidiert("BrKons"),
 	LandesrechtKonsolidiert("LrKons"),
 
-	Justiz("Justiz")
+	Justiz("Justiz"),
+	VfGH("VfGH")
 
 	;
 	

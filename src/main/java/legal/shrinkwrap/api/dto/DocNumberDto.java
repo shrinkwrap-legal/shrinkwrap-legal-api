@@ -4,5 +4,5 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public record DocNumberDto(@NotNull @NotBlank @Size(max = 50) String docNumber) {
+public record DocNumberDto(@NotNull @NotBlank @Size(max = 50) String docNumber, @NotNull @NotBlank String court) {
 }
