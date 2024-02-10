@@ -15,6 +15,8 @@ public interface RisAdapter {
      */
     String getVersion();
 
+    String getCaselawByDocNumberAsHtml(OgdApplikationEnum app, String docNumber);
+
     OgdSearchResult getJustiz(OgdApplikationEnum app, String rechtssatznummer);
 
 }

@@ -23,7 +23,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public CaseLawResponseDto getDocument(DocNumberDto docNumberDto) {
         //@TODO: Map to OgdApplikationEnum ?
-        OgdSearchResult justiz = risAdapter.getJustiz(OgdApplikationEnum.Justiz, docNumberDto.docNumber());
+        String justiz = risAdapter.getCaselawByDocNumberAsHtml(OgdApplikationEnum.Justiz, docNumberDto.docNumber());
 
         return null;
     }

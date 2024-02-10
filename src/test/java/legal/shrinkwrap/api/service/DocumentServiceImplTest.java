@@ -14,7 +14,7 @@ class DocumentServiceImplTest {
 
     @Test
     void getDocument() {
-        String docNumber="JJT_20240131_OLG0009_0320BS00233_23H0000_000\n";
+        String docNumber="JJT_20240131_OLG0009_0320BS00233_23H0000_000";
         DocNumberDto dto = new DocNumberDto(docNumber, "Justiz");
         CaseLawResponseDto document = documentService.getDocument(dto);
     }

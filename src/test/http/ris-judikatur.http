@@ -2,6 +2,10 @@
 
 GET https://data.bka.gv.at/ris/api/v2.6/Judikatur?Applikation=Justiz&Rechtssatznummer=RS0125227
 
+###
 
+GET https://data.bka.gv.at/ris/api/v2.6/Judikatur?Applikation=Justiz&Suchworte=JJT_20240131_OLG0009_0320BS00233_23H0000_000&SucheInEntscheidungstexten=true
 
+###
 
+GET https://data.bka.gv.at/ris/api/v2.6/Judikatur?Applikation=Vwgh&Suchworte=JWR_2021150068_20231222L01
