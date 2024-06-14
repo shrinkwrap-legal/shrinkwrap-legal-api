@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.text.MessageFormat;
+
 @RestController
 @Validated
 public class CaseLawController {
@@ -29,5 +31,10 @@ public class CaseLawController {
 
         documentService.getDocument(docNumberDto);
 
+    }
+
+    @GetMapping("case-law/overview")
+    public void getCaselawOverview(@RequestParam("docNumber") String docNumber, @RequestParam("court") String court) {
+        LOG.info(MessageFormat.format("court {1}, docNumber {0}", docNumber, court));
     }
 }
