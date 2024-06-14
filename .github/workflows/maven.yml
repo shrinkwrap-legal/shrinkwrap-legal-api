@@ -27,7 +27,7 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Create application.properties
-      run: echo "$APPLICATION_PROPERTIES" > config/application.properties; ls -lah config/
+      run: mkdir config; echo "$APPLICATION_PROPERTIES" > config/application.properties; ls -lah config/
       env:
         APPLICATION_PROPERTIES: ${{ secrets.application_properties }}
     - name: Build with Maven
