@@ -1,0 +1,29 @@
+:jbake-title: Laufzeitsicht
+:jbake-type: page_toc
+:jbake-status: published
+:jbake-menu: arc42
+:jbake-order: 6
+:filename: \chapters\06_runtime_view.adoc
+ifndef::imagesdir[:imagesdir: ../../images]
+
+:toc:
+
+
+
+[[section-runtime-view]]
+== Laufzeitsicht
+
+
+
+=== _<Bezeichnung Laufzeitszenario 1>_
+
+*  <hier Laufzeitdiagramm oder Ablaufbeschreibung einfügen>
+*  <hier Besonderheiten bei dem Zusammenspiel der Bausteine in diesem Szenario erläutern>
+
+=== _<Bezeichnung Laufzeitszenario 2>_
+
+...
+
+=== _<Bezeichnung Laufzeitszenario n>_
+
+...

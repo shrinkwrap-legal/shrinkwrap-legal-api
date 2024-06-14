@@ -1,0 +1,17 @@
+:jbake-title: Risiken und technische Schulden
+:jbake-type: page_toc
+:jbake-status: published
+:jbake-menu: arc42
+:jbake-order: 11
+:filename: \chapters\11_technical_risks.adoc
+ifndef::imagesdir[:imagesdir: ../../images]
+
+:toc:
+
+
+
+[[section-technical-risks]]
+== Risiken und technische Schulden
+
+
+

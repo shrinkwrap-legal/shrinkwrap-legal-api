@@ -1,0 +1,16 @@
+:jbake-title: Lösungsstrategie
+:jbake-type: page_toc
+:jbake-status: published
+:jbake-menu: arc42
+:jbake-order: 4
+:filename: \chapters\04_solution_strategy.adoc
+ifndef::imagesdir[:imagesdir: ../../images]
+
+:toc:
+
+
+
+[[section-solution-strategy]]
+== Lösungsstrategie
+
+

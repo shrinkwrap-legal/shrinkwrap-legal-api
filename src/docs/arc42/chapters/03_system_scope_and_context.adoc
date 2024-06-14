@@ -1,0 +1,34 @@
+:jbake-title: Kontextabgrenzung
+:jbake-type: page_toc
+:jbake-status: published
+:jbake-menu: arc42
+:jbake-order: 3
+:filename: \chapters\03_system_scope_and_context.adoc
+ifndef::imagesdir[:imagesdir: ../../images]
+
+:toc:
+
+
+
+[[section-system-scope-and-context]]
+== Kontextabgrenzung
+
+
+
+=== Fachlicher Kontext
+
+
+
+**<Diagramm und/oder Tabelle>**
+
+**<optional: Erläuterung der externen fachlichen Schnittstellen>**
+
+=== Technischer Kontext
+
+
+
+**<Diagramm oder Tabelle>**
+
+**<optional: Erläuterung der externen technischen Schnittstellen>**
+
+**<Mapping fachliche auf technische Schnittstellen>**
