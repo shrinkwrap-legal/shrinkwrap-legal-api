@@ -26,6 +26,10 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: maven
+    - name: Create application.properties
+      run: echo "$APPLICATION_PROPERTIES" > config/application.properties; ls -lah config/
+      env:
+        APPLICATION_PROPERTIES: ${{ secrets.application_properties }}
     - name: Build with Maven
       run: mvn clean test package
 
