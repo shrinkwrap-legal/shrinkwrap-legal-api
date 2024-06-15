@@ -205,7 +205,6 @@
         </dependencies>
     </dependencyManagement>
     <repositories>
-        <!--
         <repository>
             <id>spring-milestones</id>
             <name>Spring Milestones</name>
@@ -222,7 +221,6 @@
                 <enabled>false</enabled>
             </releases>
         </repository>
-        -->
     </repositories>
     <build>
         <plugins>
