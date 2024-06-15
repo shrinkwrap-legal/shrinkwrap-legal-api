@@ -42,6 +42,8 @@ public class CaselawTextService {
 
                 if (title.equalsIgnoreCase("Text") ||
                         title.equalsIgnoreCase("Kopf") ||
+                        title.equalsIgnoreCase("Leitsatz") ||
+                        title.equalsIgnoreCase("Rechtssatz") ||
                     title.equalsIgnoreCase("Spruch")) {
                     beforeTextElem = false;
                 }
@@ -57,7 +59,12 @@ public class CaselawTextService {
             }
         }
 
-        CaseLawResponseDto response = new CaseLawResponseDto(null, fullHtml.htmlAll(true), metaInfo);
+        //word count (approx.)
+        String fullText = fullHtml.text();
+        fullText = fullText.replaceAll("[ ]+", " ");
+        int wordCount = fullText.split(" ").length;
+
+        CaseLawResponseDto response = new CaseLawResponseDto(wordCount, fullHtml.htmlAll(true), metaInfo);
 
         //now, in html only the text should be left
         return response;

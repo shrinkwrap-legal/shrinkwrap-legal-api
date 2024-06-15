@@ -1,6 +1,7 @@
 package legal.shrinkwrap.api.controller;
 
 import jakarta.validation.Valid;
+import legal.shrinkwrap.api.dto.CaseLawResponseDto;
 import legal.shrinkwrap.api.dto.DocNumberDto;
 import legal.shrinkwrap.api.service.DocumentService;
 import org.slf4j.Logger;
@@ -26,11 +27,11 @@ public class CaseLawController {
     }
 
     @GetMapping("case-law/shrinkwrap")
-    public void getShrinkwrapDocument(@RequestParam("docNumber") @Valid @ParameterObject DocNumberDto docNumberDto) {
+    public CaseLawResponseDto getShrinkwrapDocument(@RequestParam("docNumber") @Valid @ParameterObject DocNumberDto docNumberDto) {
         LOG.info("DocNumber {}", docNumberDto);
 
-        documentService.getDocument(docNumberDto);
-
+        CaseLawResponseDto document = documentService.getDocument(docNumberDto);
+        return document;
     }
 
     @GetMapping("case-law/overview")
