@@ -9,7 +9,7 @@
 // configure DE settings for asciidoc
 include::chapters/config.adoc[]
 
-= image:arc42-logo.png[arc42] Template
+= image:arc42-logo.png[arc42] Shrinkwrap.Legal
 :revnumber: 8.2 DE
 :revdate: Januar 2023
 :revremark: (basiert auf AsciiDoc Version)

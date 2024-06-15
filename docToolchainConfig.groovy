@@ -117,7 +117,7 @@ microsite.with {
     footerText = '<small class="text-white">built with <a href="https://doctoolchain.org">docToolchain</a> and <a href="https://jbake.org">jBake</a> <br /> theme: <a href="https://www.docsy.dev/">docsy</a></small>'
     //
     // site title if no other title is given
-    title = 'docToolchain'
+    title = 'Shrinkwrap.Legal'
     //
     // the url to create an issue in github
     // Example: https://github.com/docToolchain/docToolchain/issues/new
@@ -442,6 +442,11 @@ jira.with {
 //tag::openApiConfig[]
 // Configuration for OpenAPI related task
 openApi = [:]
+
+openApi.with {
+    specFile = 'src/docs/petstore-v2.0.yaml' // i.e. 'petstore.yaml', 'src/doc/petstore.yaml'
+    infoUrl = 'https://shrinkwrap.legal'
+    infoEmail = 'info@company.com'
 
 // 'specFile' is the name of OpenAPI specification yaml file. Tool expects this file inside working dir (as a filename or relative path with filename)
 // 'infoUrl' and 'infoEmail' are specification metadata about further info related to the API. By default this values would be filled by openapi-generator plugin placeholders
