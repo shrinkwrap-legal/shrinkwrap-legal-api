@@ -8,5 +8,4 @@ public interface DocumentService {
 
     CaseLawResponseDto getDocument(DocNumberDto docNumberDto);
 
-
 }

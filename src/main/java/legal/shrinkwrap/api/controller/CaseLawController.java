@@ -36,5 +36,6 @@ public class CaseLawController {
     @GetMapping("case-law/overview")
     public void getCaselawOverview(@RequestParam("docNumber") String docNumber, @RequestParam("court") String court) {
         LOG.info(MessageFormat.format("court {1}, docNumber {0}", docNumber, court));
+
     }
 }
