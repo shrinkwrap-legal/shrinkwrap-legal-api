@@ -5,7 +5,9 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
+import legal.shrinkwrap.api.dto.NlpTokenInfoDto;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -38,7 +40,17 @@ public class CoreNlpServiceImpl implements CoreNlpService {
 
     }
 
-    private void fullAnnotation(List<CoreMap> sentences) {
+    public List<NlpTokenInfoDto> extractTokens(String text) {
+        Objects.requireNonNull(text);
+
+        List<NlpTokenInfoDto> tokenInfoDtos = new ArrayList<>();
+
+        Annotation document = new Annotation(text);
+
+        pipeline.annotate(document);
+
+        List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
+
         for (CoreMap sentence : sentences) {
             // traversing the words in the current sentence
             // a CoreLabel is a CoreMap with additional token-specific methods
@@ -48,13 +60,13 @@ public class CoreNlpServiceImpl implements CoreNlpService {
                 // this is the POS tag of the token
                 String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
 
-
                 // this is the NER label of the token
                 String ne = token.get(CoreAnnotations.NamedEntityTagAnnotation.class);
 
-                //System.out.println("word: " + word + " pos: " + pos + " ne:" + ne);
+                tokenInfoDtos.add(new NlpTokenInfoDto(word, pos, ne));
             }
-
         }
+
+        return tokenInfoDtos;
     }
 }

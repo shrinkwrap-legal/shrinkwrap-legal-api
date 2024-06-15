@@ -1,5 +1,7 @@
 package legal.shrinkwrap.api.service;
 
+import legal.shrinkwrap.api.dto.NlpTokenInfoDto;
+
 import java.util.List;
 
 /**
@@ -13,4 +15,11 @@ public interface CoreNlpService {
      * @return
      */
     List<String> extractSentences(String text);
+
+    /**
+     *
+     * @param text
+     * @return
+     */
+    List<NlpTokenInfoDto> extractTokens(String text);
 }
