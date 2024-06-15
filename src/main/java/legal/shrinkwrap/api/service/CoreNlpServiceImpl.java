@@ -9,6 +9,11 @@ import edu.stanford.nlp.util.CoreMap;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * TODO
+ * - austrian academic grades
+ * - austrian dates in long form (Jänner instead of Januar)
+ */
 public class CoreNlpServiceImpl implements CoreNlpService {
 
 

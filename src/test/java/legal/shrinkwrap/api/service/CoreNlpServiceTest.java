@@ -18,9 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * test configuration of stanford NLP pipeline
  * https://dkpro.github.io/dkpro-core/
  *
- * TODO
- * - austrian academic grades
- * - austrian dates in long form (Jänner instead of Januar)
  */
 @SpringBootTest
 public class CoreNlpServiceTest {
@@ -34,10 +31,12 @@ public class CoreNlpServiceTest {
         String text = """
         Die DSB forderte die Beschuldigte daher mit Schreiben vom 16.05.2023 zu einer ergänzenden Stellungnahme, zur Klarstellung der Vollmachtbekanntgabe sowie Bekanntgabe ihres Jahresumsatzes auf. Die Beschuldigte verweigerte die weitere Mitwirkung im Verwaltungsstrafverfahren und erstattete keine weitere Stellungnahme in Reaktion darauf.
         
-        Das Oberlandesgericht Wien hat als Berufungsgericht in der Strafsache gegen A und andere Angeklagte wegen des Verbrechens des Suchtgifthandels nach § 28a Abs 1 erster Fall, Abs 2 Z 2, Abs 4 Z 3 SMG und anderer strafbarer Handlungen über die Berufung des Angeklagten B gegen das Urteil des Landesgerichts Eisenstadt als Schöffengericht vom 23. August 2023, AZ 51 Hv 33/23b-147, nach der unter dem Vorsitz der Senatspräsidentin Mag. Seidl, im Beisein der Richterin Dr. Vetter und des Richters Dr. Farkas als weitere Senatsmitglieder in Gegenwart der Oberstaatsanwältin Mag. Strnad, des Angeklagten B* und seines Verteidigers Mag. Michael Slany durchgeführten öffentlichen  Berufungsverhandlung am 31. Januar 2024 zu Recht erkannt: Der Berufung wird nicht Folge gegeben. Gemäß § 390a Abs 1 StPO fallen dem Angeklagten auch die Kosten des Rechtsmittelverfahrens zur Last.
+        Das Oberlandesgericht Wien hat als Berufungsgericht in der Strafsache gegen A und andere Angeklagte wegen des Verbrechens des Suchtgifthandels nach § 28a Abs 1 erster Fall, Abs 2 Z 2, Abs 4 Z 3 SMG und anderer strafbarer Handlungen über die Berufung des Angeklagten B gegen das Urteil des Landesgerichts Eisenstadt als Schöffengericht vom 23. August 2023, AZ 51 Hv 33/23b-147, nach der unter dem Vorsitz der Senatspräsidentin Mag. Seidl, im Beisein der Richterin Dr. Vetter und des Richters Dr. Farkas als weitere Senatsmitglieder in Gegenwart der Oberstaatsanwältin Mag. Strnad, des Angeklagten B* und seines Verteidigers Mag. Michael Slany durchgeführten öffentlichen  Berufungsverhandlung am 31. Jänner 2024 zu Recht erkannt: Der Berufung wird nicht Folge gegeben. Gemäß § 390a Abs 1 StPO fallen dem Angeklagten auch die Kosten des Rechtsmittelverfahrens zur Last.
         """;
 
         List<String> sentences = coreNlpService.extractSentences(text);
+
+        // sentences.forEach(System.out::println);
 
         assertThat(sentences).hasSize(7);
 
