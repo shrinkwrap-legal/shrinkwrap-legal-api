@@ -1,8 +1,9 @@
 package legal.shrinkwrap.api.config;
 
 import legal.shrinkwrap.api.adapter.HtmlDownloadService;
-import legal.shrinkwrap.api.service.CoreNlpService;
+import legal.shrinkwrap.api.service.NLPService;
 import legal.shrinkwrap.api.service.CoreNlpServiceImpl;
+import legal.shrinkwrap.api.service.OpenNlpServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -14,8 +15,13 @@ public class ServiceConfiguration {
         return new HtmlDownloadService();
     }
 
-    @Bean
-    public CoreNlpService coreNlpService() {
+    @Bean("coreNlpService")
+    public NLPService coreNlpService() {
         return new CoreNlpServiceImpl();
+    }
+
+    @Bean("openNlpService")
+    public NLPService openNLPService() {
+        return new OpenNlpServiceImpl();
     }
 }

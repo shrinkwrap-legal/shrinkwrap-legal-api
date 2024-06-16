@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * https://www.baeldung.com/java-nlp-libraries
  */
-public interface CoreNlpService {
+public interface NLPService {
 
     /**
      *

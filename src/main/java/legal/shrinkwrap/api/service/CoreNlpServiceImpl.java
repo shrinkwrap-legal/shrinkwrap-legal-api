@@ -15,8 +15,10 @@ import java.util.Objects;
  * TODO
  * - austrian academic grades
  * - austrian dates in long form (Jänner instead of Januar)
+ * - Landesgericht Wien, usw als entity erkennen
+ *  https://stanfordnlp.github.io/CoreNLP/ner.html#numeric-sequences-and-sutime
  */
-public class CoreNlpServiceImpl implements CoreNlpService {
+public class CoreNlpServiceImpl implements NLPService {
 
 
     private final StanfordCoreNLP pipeline;

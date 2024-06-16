@@ -58,6 +58,11 @@
             <classifier>models-german</classifier>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.opennlp</groupId>
+            <artifactId>opennlp-tools</artifactId>
+            <version>2.3.3</version>
+        </dependency>
 
 
         <!-- Test Processing plain, html, markdown -->
