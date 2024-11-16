@@ -21,8 +21,8 @@ public class SpringAIConfiguration {
 
     @Profile("openai")
     @Bean
-    VectorStore vectorStore(EmbeddingModel embedding, @Value("classpath:ASVG-01.06.2024.pdf") Resource pdf) {
-        SimpleVectorStore vectorStore = new SimpleVectorStore(embedding);
+    VectorStore vectorStore(EmbeddingModel openAiEmbeddingModel, @Value("classpath:ASVG-01.06.2024.pdf") Resource pdf) {
+        SimpleVectorStore vectorStore = new SimpleVectorStore(openAiEmbeddingModel);
         PagePdfDocumentReader reader = new PagePdfDocumentReader(pdf);
         TokenTextSplitter splitter = new TokenTextSplitter();
         List<Document> documents = splitter.apply(reader.get());
@@ -32,8 +32,8 @@ public class SpringAIConfiguration {
 
     @Profile("!openai")
     @Bean("vectorStore")
-    VectorStore vectorStoreDummy(EmbeddingModel embedding) {
-        SimpleVectorStore vectorStore = new SimpleVectorStore(embedding);
+    VectorStore vectorStoreDummy(EmbeddingModel openAiEmbeddingModel) {
+        SimpleVectorStore vectorStore = new SimpleVectorStore(openAiEmbeddingModel);
         return vectorStore;
     }
 

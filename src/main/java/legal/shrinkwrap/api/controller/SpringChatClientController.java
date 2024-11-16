@@ -7,6 +7,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.SystemPromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,7 +27,7 @@ public class SpringChatClientController {
 
     private final VectorStore vectorStore;
 
-    public SpringChatClientController(ChatClient.Builder chatClientBuilder, VectorStore vectorStore) {
+    public SpringChatClientController(@Qualifier("ollamaChatClientBuilder") ChatClient.Builder chatClientBuilder, VectorStore vectorStore) {
         this.chatClient = chatClientBuilder.build();
         this.vectorStore = vectorStore;
     }
