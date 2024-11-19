@@ -277,7 +277,6 @@
                     </releases>
                 </repository>
 
-<!--
                 <repository>
                     <id>spring-snapshots</id>
                     <name>Spring Snapshots</name>
@@ -286,7 +285,6 @@
                         <enabled>false</enabled>
                     </releases>
                 </repository>
-        -->
     </repositories>
     <build>
         <plugins>
