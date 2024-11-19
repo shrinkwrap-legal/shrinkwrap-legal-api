@@ -20,30 +20,12 @@
         <maven.compiler.target>21</maven.compiler.target>
         <spring-ai.version>1.0.0-M3</spring-ai.version>
         <spring-modulith.version>1.2.4</spring-modulith.version>
+        <openapi-generator-version>7.9.0</openapi-generator-version>
+        <graal.languages.version>24.1.1</graal.languages.version>
     </properties>
     <dependencies>
 
-        <!-- HTML Processing -->
-        <dependency>
-            <groupId>org.jodd</groupId>
-            <artifactId>jodd-lagarto</artifactId>
-            <version>6.0.6</version>
-        </dependency>
-        <!--
-                <dependency>
-                    <groupId>javax.xml.bind</groupId>
-                    <artifactId>jaxb-api</artifactId>
-                    <version>2.3.1</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.sun.xml.bind</groupId>
-                    <artifactId>jaxb-impl</artifactId>
-                    <version>2.3.1</version>
-                </dependency>
-
-        -->
-
-        <!-- NLP, OpenAI dependencies -->
+        <!-- LLM OpenAI, Ollama dependencies -->
 
         <dependency>
             <groupId>org.springframework.ai</groupId>
@@ -53,7 +35,7 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-ollama-spring-boot-starter</artifactId>
-            <version>1.0.0-M3</version>
+            <version>${spring-ai.version}</version>
         </dependency>
 
         <dependency>
@@ -61,6 +43,25 @@
             <artifactId>spring-ai-pdf-document-reader</artifactId>
         </dependency>
 
+        <!-- Java and Python dependencies -->
+        <dependency>
+            <groupId>org.graalvm.polyglot</groupId>
+            <artifactId>polyglot</artifactId>
+            <version>${graal.languages.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.polyglot</groupId>
+            <artifactId>python</artifactId>
+            <version>${graal.languages.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.python</groupId>
+            <artifactId>python-embedding</artifactId>
+            <version>${graal.languages.version}</version>
+        </dependency>
+
+        <!-- classic NLP -->
         <dependency>
             <groupId>edu.stanford.nlp</groupId>
             <artifactId>stanford-corenlp</artifactId>
@@ -87,8 +88,12 @@
             <version>2.3.3</version>
         </dependency>
 
-
-        <!-- Test Processing plain, html, markdown -->
+        <!-- HTML, Markdown Processing -->
+        <dependency>
+            <groupId>org.jodd</groupId>
+            <artifactId>jodd-lagarto</artifactId>
+            <version>6.0.6</version>
+        </dependency>
         <dependency>
             <groupId>org.commonmark</groupId>
             <artifactId>commonmark</artifactId>
@@ -106,7 +111,31 @@
             <artifactId>commons-io</artifactId>
             <version>2.17.0</version>
         </dependency>
+        <!-- XML Java Binding -->
+        <!--
+                <dependency>
+                    <groupId>javax.xml.bind</groupId>
+                    <artifactId>jaxb-api</artifactId>
+                    <version>2.3.1</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.sun.xml.bind</groupId>
+                    <artifactId>jaxb-impl</artifactId>
+                    <version>2.3.1</version>
+                </dependency>
+        -->
 
+        <!--  External API generator -->
+        <dependency>
+            <groupId>org.openapitools</groupId>
+            <artifactId>openapi-generator</artifactId>
+            <version>${openapi-generator-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openapitools</groupId>
+            <artifactId>openapi-generator-maven-plugin</artifactId>
+            <version>${openapi-generator-version}</version>
+        </dependency>
 
         <!-- Spring Boot Starter -->
         <dependency>
@@ -174,6 +203,8 @@
             <optional>true</optional>
         </dependency>
         -->
+
+        <!-- TEST dependencies -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -222,6 +253,7 @@
                 <scope>import</scope>
             </dependency>
 
+
             <dependency>
                 <groupId>org.springframework.ai</groupId>
                 <artifactId>spring-ai-bom</artifactId>
@@ -229,26 +261,32 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-
         </dependencies>
     </dependencyManagement>
     <repositories>
-        <repository>
-            <id>spring-milestones</id>
-            <name>Spring Milestones</name>
-            <url>https://repo.spring.io/milestone</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>spring-snapshots</id>
-            <name>Spring Snapshots</name>
-            <url>https://repo.spring.io/snapshot</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
+
+                <repository>
+                    <id>spring-milestones</id>
+                    <name>Spring Milestones</name>
+                    <url>https://repo.spring.io/milestone</url>
+                    <snapshots>
+                        <enabled>false</enabled>
+                    </snapshots>
+                    <releases>
+                        <enabled>false</enabled>
+                    </releases>
+                </repository>
+
+<!--
+                <repository>
+                    <id>spring-snapshots</id>
+                    <name>Spring Snapshots</name>
+                    <url>https://repo.spring.io/snapshot</url>
+                    <releases>
+                        <enabled>false</enabled>
+                    </releases>
+                </repository>
+        -->
     </repositories>
     <build>
         <plugins>
@@ -256,6 +294,112 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+
+            <plugin>
+                <groupId>org.graalvm.python</groupId>
+                <artifactId>graalpy-maven-plugin</artifactId>
+                <version>${graal.languages.version}</version>
+                <executions>
+                    <execution>
+                        <configuration>
+                            <packages>
+                                <package>openapi</package>
+                                <package>certifi</package>
+                                <package>distro</package>
+                                <package>h11</package>
+                                <package>hpy</package>
+                                <package>httpcore</package>
+                                <package>httpx</package>
+                                <package>idna</package>
+                                <package>jiter</package>
+                                <package>pydantic</package>
+                                <package>pydantic_core</package>
+                                <package>sniffio</package>
+                                <package>tqdm</package>
+                                <package>typing_extensions</package>
+
+                            </packages>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-codegen-maven-plugin</artifactId>
+                <version>2.4.43</version>
+
+                <executions>
+                    <execution>
+                        <!-- prints (only, additionally) language specific(!) "config options help" -->
+                        <id>api-generate-help</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <inputSpec>https://data.bka.gv.at/ris/api/v2.6/Content/OGD-RIS_API.yml</inputSpec>
+                            <!-- language/generator!! -->
+                            <language>spring</language>
+                            <configHelp>true</configHelp>
+                        </configuration>
+                    </execution>
+                    <!-- this is the generation: -->
+                    <execution>
+                        <id>api-generate</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <!-- input api definition -->
+                            <inputSpec>https://data.bka.gv.at/ris/api/v2.6/Content/OGD-RIS_API.yml</inputSpec>
+                            <!-- language/generator!! -->
+                            <language>spring</language>
+                            <!-- output folder -->
+                            <output>${project.build.directory}/generated</output>
+
+                            <!-- ... -->
+                            <configOptions> <!-- these are language specific: -->
+
+                                <interfaceOnly>false</interfaceOnly>
+                                <java8>false</java8>
+                                <dateLibrary>java8</dateLibrary>
+                                <!--sourceFolder>.</sourceFolder-->
+                                <throwsException>true</throwsException>
+                                <useTags>true</useTags>
+                                <useBeanValidation>true</useBeanValidation>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>${openapi-generator-version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <output>${project.build.directory}/generated-sources</output>
+                            <apiPackage>at.gv.ris.api.26</apiPackage>
+                            <modelNamePrefix>Ris</modelNamePrefix>
+                            <inputSpec>https://data.bka.gv.at/ris/api/v2.6/Content/OGD-RIS_API.yml</inputSpec>
+
+                            <generatorName>java</generatorName>
+                            <configOptions>
+                                <dateLibrary>java8</dateLibrary>
+                                <sourceFolder>src/man/java</sourceFolder>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            -->
         </plugins>
     </build>
 
