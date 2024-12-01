@@ -18,7 +18,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <spring-ai.version>1.0.0-M3</spring-ai.version>
+        <spring-ai.version>1.0.0-M4</spring-ai.version>
         <spring-modulith.version>1.2.4</spring-modulith.version>
         <openapi-generator-version>7.9.0</openapi-generator-version>
         <graal.languages.version>24.1.1</graal.languages.version>
@@ -35,14 +35,15 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-ollama-spring-boot-starter</artifactId>
-            <version>${spring-ai.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-pdf-document-reader</artifactId>
-        </dependency>
 
+        </dependency>
+        <!--
+                        -->
         <!-- Java and Python dependencies -->
         <dependency>
             <groupId>org.graalvm.polyglot</groupId>
@@ -241,8 +242,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -252,39 +251,33 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-
-
             <dependency>
                 <groupId>org.springframework.ai</groupId>
                 <artifactId>spring-ai-bom</artifactId>
-                <version>${spring-ai.version}</version>
+                <version>1.0.0-SNAPSHOT</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
+
     <repositories>
-
-                <repository>
-                    <id>spring-milestones</id>
-                    <name>Spring Milestones</name>
-                    <url>https://repo.spring.io/milestone</url>
-                    <snapshots>
-                        <enabled>false</enabled>
-                    </snapshots>
-                    <releases>
-                        <enabled>false</enabled>
-                    </releases>
-                </repository>
-
-                <repository>
-                    <id>spring-snapshots</id>
-                    <name>Spring Snapshots</name>
-                    <url>https://repo.spring.io/snapshot</url>
-                    <releases>
-                        <enabled>false</enabled>
-                    </releases>
-                </repository>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>spring-snapshots</id>
+            <name>Spring Snapshots</name>
+            <url>https://repo.spring.io/snapshot</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
     </repositories>
     <build>
         <plugins>
@@ -292,86 +285,37 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <!--
+                        <plugin>
+                            <groupId>org.graalvm.python</groupId>
+                            <artifactId>graalpy-maven-plugin</artifactId>
+                            <version>${graal.languages.version}</version>
+                            <executions>
+                                <execution>
+                                    <configuration>
+                                        <packages>
+                                            <package>openapi</package>
+                                            <package>certifi</package>
+                                            <package>distro</package>
+                                            <package>h11</package>
+                                            <package>hpy</package>
+                                            <package>httpcore</package>
+                                            <package>httpx</package>
+                                            <package>idna</package>
+                                            <package>jiter</package>
+                                            <package>pydantic</package>
+                                            <package>pydantic_core</package>
+                                            <package>sniffio</package>
+                                            <package>tqdm</package>
+                                            <package>typing_extensions</package>
 
-            <plugin>
-                <groupId>org.graalvm.python</groupId>
-                <artifactId>graalpy-maven-plugin</artifactId>
-                <version>${graal.languages.version}</version>
-                <executions>
-                    <execution>
-                        <configuration>
-                            <packages>
-                                <package>openapi</package>
-                                <package>certifi</package>
-                                <package>distro</package>
-                                <package>h11</package>
-                                <package>hpy</package>
-                                <package>httpcore</package>
-                                <package>httpx</package>
-                                <package>idna</package>
-                                <package>jiter</package>
-                                <package>pydantic</package>
-                                <package>pydantic_core</package>
-                                <package>sniffio</package>
-                                <package>tqdm</package>
-                                <package>typing_extensions</package>
+                                        </packages>
+                                    </configuration>
+                                </execution>
+                            </executions>
+                        </plugin>
+            -->
 
-                            </packages>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>io.swagger</groupId>
-                <artifactId>swagger-codegen-maven-plugin</artifactId>
-                <version>2.4.43</version>
-
-                <executions>
-                    <execution>
-                        <!-- prints (only, additionally) language specific(!) "config options help" -->
-                        <id>api-generate-help</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <inputSpec>https://data.bka.gv.at/ris/api/v2.6/Content/OGD-RIS_API.yml</inputSpec>
-                            <!-- language/generator!! -->
-                            <language>spring</language>
-                            <configHelp>true</configHelp>
-                        </configuration>
-                    </execution>
-                    <!-- this is the generation: -->
-                    <execution>
-                        <id>api-generate</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <phase>generate-sources</phase>
-                        <configuration>
-                            <!-- input api definition -->
-                            <inputSpec>https://data.bka.gv.at/ris/api/v2.6/Content/OGD-RIS_API.yml</inputSpec>
-                            <!-- language/generator!! -->
-                            <language>spring</language>
-                            <!-- output folder -->
-                            <output>${project.build.directory}/generated</output>
-
-                            <!-- ... -->
-                            <configOptions> <!-- these are language specific: -->
-
-                                <interfaceOnly>false</interfaceOnly>
-                                <java8>false</java8>
-                                <dateLibrary>java8</dateLibrary>
-                                <!--sourceFolder>.</sourceFolder-->
-                                <throwsException>true</throwsException>
-                                <useTags>true</useTags>
-                                <useBeanValidation>true</useBeanValidation>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <!--
             <plugin>
                 <groupId>org.openapitools</groupId>
