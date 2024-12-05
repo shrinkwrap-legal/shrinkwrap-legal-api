@@ -20,7 +20,7 @@
         <maven.compiler.target>21</maven.compiler.target>
         <spring-ai.version>1.0.0-M4</spring-ai.version>
         <spring-modulith.version>1.2.4</spring-modulith.version>
-        <openapi-generator-version>7.9.0</openapi-generator-version>
+        <openapi-generator-version>7.10.0</openapi-generator-version>
         <graal.languages.version>24.1.1</graal.languages.version>
     </properties>
     <dependencies>
@@ -129,12 +129,12 @@
         <!--  External API generator -->
         <dependency>
             <groupId>org.openapitools</groupId>
-            <artifactId>openapi-generator</artifactId>
-            <version>${openapi-generator-version}</version>
+            <artifactId>jackson-databind-nullable</artifactId>
+            <version>0.2.6</version>
         </dependency>
         <dependency>
             <groupId>org.openapitools</groupId>
-            <artifactId>openapi-generator-maven-plugin</artifactId>
+            <artifactId>openapi-generator</artifactId>
             <version>${openapi-generator-version}</version>
         </dependency>
 
@@ -285,7 +285,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-
                         <plugin>
                             <groupId>org.graalvm.python</groupId>
                             <artifactId>graalpy-maven-plugin</artifactId>
@@ -315,7 +314,7 @@
                             </executions>
                         </plugin>
 
-            <!--
+
             <plugin>
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>
@@ -326,21 +325,31 @@
                             <goal>generate</goal>
                         </goals>
                         <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/ris/OGD-RIS_API.yml</inputSpec>
                             <output>${project.build.directory}/generated-sources</output>
-                            <apiPackage>at.gv.ris.api.26</apiPackage>
-                            <modelNamePrefix>Ris</modelNamePrefix>
+                            <apiPackage>at.gv.ris.api.v26.api</apiPackage>
+                            <modelPackage>at.gv.ris.api.v26.model</modelPackage>
+                            <invokerPackage>at.gv.ris.api.v26.invoker</invokerPackage>
+                            <!-- <modelNamePrefix>Ris</modelNamePrefix> -->
+                            <apiNameSuffix>RisApi</apiNameSuffix>
+                            <!--
                             <inputSpec>https://data.bka.gv.at/ris/api/v2.6/Content/OGD-RIS_API.yml</inputSpec>
-
+                            -->
                             <generatorName>java</generatorName>
+                            <library>resttemplate</library>
                             <configOptions>
                                 <dateLibrary>java8</dateLibrary>
-                                <sourceFolder>src/man/java</sourceFolder>
+                                <sourceFolder>src/main/java</sourceFolder>
+                                <testOutput>${project.build.directory}/generated-test-sources</testOutput>
+                                <useJakartaEe>true</useJakartaEe>
+                                <legacyDiscriminatorBehavior>true</legacyDiscriminatorBehavior>
+                                <useOneOfInterfaces>true</useOneOfInterfaces>
                             </configOptions>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-            -->
+
         </plugins>
     </build>
 

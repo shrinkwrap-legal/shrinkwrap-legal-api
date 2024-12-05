@@ -1,6 +1,10 @@
 package legal.shrinkwrap.api.config;
 
 
+
+import at.gv.ris.api.v26.api.JudikaturRisApi;
+import at.gv.ris.api.v26.invoker.ApiClient;
+
 import legal.shrinkwrap.api.adapter.ris.RisAdapter;
 import legal.shrinkwrap.api.adapter.ris.RisAdapterImpl;
 import org.springframework.context.annotation.Bean;
@@ -18,4 +22,18 @@ public class AdapterConfiguration {
     public RisAdapter risAdapter() {
         return new RisAdapterImpl();
     }
+
+
+    @Bean
+    public ApiClient apiClient() {
+        ApiClient client = new ApiClient();
+        client.setDebugging(true);
+        return client;
+    }
+
+    @Bean
+    public JudikaturRisApi judikaturRisApi() {
+        return new JudikaturRisApi(apiClient());
+    }
+
 }
