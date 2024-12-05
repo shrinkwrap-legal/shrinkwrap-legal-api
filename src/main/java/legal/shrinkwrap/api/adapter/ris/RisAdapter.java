@@ -19,4 +19,6 @@ public interface RisAdapter {
 
     OgdSearchResult getJustiz(OgdApplikationEnum app, String rechtssatznummer);
 
+    OgdSearchResult getJustiz(OgdApplikationEnum app);
+
 }

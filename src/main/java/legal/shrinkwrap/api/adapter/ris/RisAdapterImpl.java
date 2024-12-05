@@ -77,5 +77,13 @@ public class RisAdapterImpl implements RisAdapter {
 
     }
 
+    @Override
+    public OgdSearchResult getJustiz(OgdApplikationEnum app) {
+        OgdSearchResponse response = restClient.get()
+                .uri(RIS_APP_JUDIKATUR, Map.of(OgdQueryParam.APPLIKATION, app.getTechnisch()))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve().body(OgdSearchResponse.class);
 
+        return response.ogdSearchResult();
+    }
 }
