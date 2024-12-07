@@ -1,4 +1,4 @@
-package legal.shrinkwrap.api.adapter.ris.dto.enums;
+package legal.shrinkwrap.api.adapter.ris.rest.dto.enums;
 
 public enum OgdApplikationEnum {
 	

@@ -1,10 +1,10 @@
-package legal.shrinkwrap.api.adapter.ris;
+package legal.shrinkwrap.api.adapter.ris.rest;
 
-import legal.shrinkwrap.api.adapter.ris.dto.OgdQueryParam;
-import legal.shrinkwrap.api.adapter.ris.dto.OgdSearchResponse;
-import legal.shrinkwrap.api.adapter.ris.dto.OgdSearchResult;
-import legal.shrinkwrap.api.adapter.ris.dto.OgdVersionResponse;
-import legal.shrinkwrap.api.adapter.ris.dto.enums.OgdApplikationEnum;
+import legal.shrinkwrap.api.adapter.ris.rest.dto.OgdQueryParam;
+import legal.shrinkwrap.api.adapter.ris.rest.dto.OgdSearchResponse;
+import legal.shrinkwrap.api.adapter.ris.rest.dto.OgdSearchResult;
+import legal.shrinkwrap.api.adapter.ris.rest.dto.OgdVersionResponse;
+import legal.shrinkwrap.api.adapter.ris.rest.dto.enums.OgdApplikationEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;

@@ -1,4 +1,4 @@
-package legal.shrinkwrap.api.adapter.ris.dto;
+package legal.shrinkwrap.api.adapter.ris.rest.dto;
 
 import java.time.LocalDate;
 import java.util.List;

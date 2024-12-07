@@ -1,7 +1,7 @@
-package legal.shrinkwrap.api.adapter.ris;
+package legal.shrinkwrap.api.adapter.ris.rest;
 
-import legal.shrinkwrap.api.adapter.ris.dto.OgdSearchResult;
-import legal.shrinkwrap.api.adapter.ris.dto.enums.OgdApplikationEnum;
+import legal.shrinkwrap.api.adapter.ris.rest.dto.OgdSearchResult;
+import legal.shrinkwrap.api.adapter.ris.rest.dto.enums.OgdApplikationEnum;
 
 /**
  * <a href="https://data.bka.gv.at/ris/ogd/v2.6/Documents/Dokumentation_OGD-RIS_API.pdf">RIS API Documentation</a>

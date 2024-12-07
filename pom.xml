@@ -112,19 +112,52 @@
             <artifactId>commons-io</artifactId>
             <version>2.17.0</version>
         </dependency>
+
         <!-- XML Java Binding -->
-        <!--
-                <dependency>
-                    <groupId>javax.xml.bind</groupId>
-                    <artifactId>jaxb-api</artifactId>
-                    <version>2.3.1</version>
-                </dependency>
-                <dependency>
-                    <groupId>com.sun.xml.bind</groupId>
-                    <artifactId>jaxb-impl</artifactId>
-                    <version>2.3.1</version>
-                </dependency>
-        -->
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>4.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-impl</artifactId>
+            <version>4.0.5</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.xml.bind</groupId>
+            <artifactId>jaxb-xjc</artifactId>
+            <version>4.0.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jvnet.jaxb</groupId>
+            <artifactId>jaxb-plugins-runtime</artifactId>
+            <version>4.0.8</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jvnet.jaxb</groupId>
+            <artifactId>jaxb-plugins</artifactId>
+            <version>4.0.8</version>
+        </dependency>
+
+        <!-- Jakarta Web Services -->
+        <dependency>
+            <groupId>jakarta.jws</groupId>
+            <artifactId>jakarta.jws-api</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.xml.ws</groupId>
+            <artifactId>jakarta.xml.ws-api</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sun.xml.ws</groupId>
+            <artifactId>jaxws-tools</artifactId>
+            <version>3.0.2</version>
+        </dependency>
 
         <!--  External API generator -->
         <dependency>
@@ -285,36 +318,77 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-                        <plugin>
-                            <groupId>org.graalvm.python</groupId>
-                            <artifactId>graalpy-maven-plugin</artifactId>
-                            <version>${graal.languages.version}</version>
-                            <executions>
-                                <execution>
-                                    <configuration>
-                                        <packages>
-                                            <package>openapi</package>
-                                            <package>certifi</package>
-                                            <package>distro</package>
-                                            <package>h11</package>
-                                            <package>hpy</package>
-                                            <package>httpcore</package>
-                                            <package>httpx</package>
-                                            <package>idna</package>
-                                            <package>jiter</package>
-                                            <package>pydantic</package>
-                                            <package>pydantic_core</package>
-                                            <package>sniffio</package>
-                                            <package>tqdm</package>
-                                            <package>typing_extensions</package>
+            <plugin>
+                <groupId>org.graalvm.python</groupId>
+                <artifactId>graalpy-maven-plugin</artifactId>
+                <version>${graal.languages.version}</version>
+                <executions>
+                    <execution>
+                        <configuration>
+                            <packages>
+                                <package>openapi</package>
+                                <package>certifi</package>
+                                <package>distro</package>
+                                <package>h11</package>
+                                <package>hpy</package>
+                                <package>httpcore</package>
+                                <package>httpx</package>
+                                <package>idna</package>
+                                <package>jiter</package>
+                                <package>pydantic</package>
+                                <package>pydantic_core</package>
+                                <package>sniffio</package>
+                                <package>tqdm</package>
+                                <package>typing_extensions</package>
 
-                                        </packages>
-                                    </configuration>
-                                </execution>
-                            </executions>
-                        </plugin>
+                            </packages>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
+            <plugin>
+                <!-- https://github.com/highsource/jaxb-tools -->
+                <groupId>com.sun.xml.ws</groupId>
+                <artifactId>jaxws-maven-plugin</artifactId>
+                <version>4.0.3</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jvnet.jaxb</groupId>
+                        <artifactId>jaxb-plugins-runtime</artifactId>
+                        <version>4.0.8</version>
+                    </dependency>
+                    <dependency>
+                    <groupId>org.jvnet.jaxb</groupId>
+                    <artifactId>jaxb-plugins</artifactId>
+                    <version>4.0.8</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>wsimport</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <xjcArgs>
+                        <xjcArg>-Xequals</xjcArg>
+                        <xjcArg>-XtoString</xjcArg>
+                    </xjcArgs>
+                    <wsdlUrls>
+                        <wsdlUrl>https://data.bka.gv.at/ris/ogd/v2.6/ogdrisservice.asmx?WSDL</wsdlUrl>
+                    </wsdlUrls>
+                    <packageName>at.gv.bka.ris.v26.soap.ws.client</packageName>
+                    <sourceDestDir>
+                        ${project.build.directory}/generated-sources/
+                    </sourceDestDir>
+                    <extension>true</extension>
+                </configuration>
+            </plugin>
 
+            <!-- issue with generating REST API -->
+            <!--
             <plugin>
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>
@@ -330,11 +404,7 @@
                             <apiPackage>at.gv.ris.api.v26.api</apiPackage>
                             <modelPackage>at.gv.ris.api.v26.model</modelPackage>
                             <invokerPackage>at.gv.ris.api.v26.invoker</invokerPackage>
-                            <!-- <modelNamePrefix>Ris</modelNamePrefix> -->
                             <apiNameSuffix>RisApi</apiNameSuffix>
-                            <!--
-                            <inputSpec>https://data.bka.gv.at/ris/api/v2.6/Content/OGD-RIS_API.yml</inputSpec>
-                            -->
                             <generatorName>java</generatorName>
                             <library>resttemplate</library>
                             <configOptions>
@@ -349,6 +419,7 @@
                     </execution>
                 </executions>
             </plugin>
+            -->
 
         </plugins>
     </build>

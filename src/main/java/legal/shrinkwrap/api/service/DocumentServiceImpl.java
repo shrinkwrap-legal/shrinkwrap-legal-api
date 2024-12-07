@@ -1,8 +1,8 @@
 package legal.shrinkwrap.api.service;
 
 import legal.shrinkwrap.api.adapter.HtmlDownloadService;
-import legal.shrinkwrap.api.adapter.ris.RisAdapter;
-import legal.shrinkwrap.api.adapter.ris.dto.enums.OgdApplikationEnum;
+import legal.shrinkwrap.api.adapter.ris.rest.RisAdapter;
+import legal.shrinkwrap.api.adapter.ris.rest.dto.enums.OgdApplikationEnum;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
 import legal.shrinkwrap.api.dto.DocNumberDto;
 import org.springframework.stereotype.Service;
