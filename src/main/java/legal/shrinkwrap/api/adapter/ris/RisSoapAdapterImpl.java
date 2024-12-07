@@ -4,17 +4,18 @@ import at.gv.bka.ris.v26.soap.ws.client.*;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import legal.shrinkwrap.api.adapter.exception.AdapterRequestException;
-import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
 import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
 public class RisSoapAdapterImpl implements RisSoapAdapter {
     private final static Logger LOG = LoggerFactory.getLogger(RisSoapAdapterImpl.class);
+    private final Integer MAX_SIZE = 1000;
     private final String STATUS_OK = "ok";
 
     private final OgdRisServiceSoap risSoap;
@@ -96,12 +97,9 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
             }
         }
 
-        judikaturSearchRequest.setDokumenteProSeite(PageSize.TWENTY);
-        judikaturSearchRequest.setSeitennummer(1);
+        List<OgdDocumentResults.OgdDocumentReference> documentResults = searchPagination(risRequest);
 
-        SearchDocumentsResponse.SearchDocumentsResult searchDocumentsResult = searchPagination(risRequest);
-
-        List<RisJudikaturResult> judikaturResults =  searchDocumentsResult.getOgdDocumentResults().getOgdDocumentReference().stream().map(SoapResponseMapper::mapToJudikaturResult).toList();
+        List<RisJudikaturResult> judikaturResults =  documentResults.stream().map(SoapResponseMapper::mapToJudikaturResult).toList();
 
 
         return new RisSearchResult(judikaturResults);
@@ -111,15 +109,49 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
 
 
 
-    private SearchDocumentsResponse.SearchDocumentsResult searchPagination(OGDRisRequest risRequest) {
+    private List<OgdDocumentResults.OgdDocumentReference> searchPagination(OGDRisRequest risRequest) {
+        List<OgdDocumentResults.OgdDocumentReference> documents = new ArrayList<>();
+
+        Integer pageCount = 1;
+        Long resultSize = 0L;
+
+        do {
+            incrementSeitennummer(risRequest, pageCount);
+            SearchDocumentsResponse.SearchDocumentsResult searchDocumentsResult = search(risRequest);
+            documents.addAll(searchDocumentsResult.getOgdDocumentResults().getOgdDocumentReference());
+            resultSize = searchDocumentsResult.getOgdDocumentResults().getHits().getValue().longValue();
+            pageCount++;
+        } while (documents.size() < resultSize && documents.size() < MAX_SIZE);
+
+        return documents;
+
+    }
+
+    private SearchDocumentsResponse.SearchDocumentsResult search(OGDRisRequest risRequest) {
         SearchDocumentsResponse.SearchDocumentsResult searchDocumentsResult = risSoap.searchDocuments(risRequest);
         if(searchDocumentsResult.getError() != null) {
             LOG.error("RIS adapter search request error: {}",searchDocumentsResult.getError());
             throw new AdapterRequestException(searchDocumentsResult.getError().getMessage());
         }
+
         return searchDocumentsResult;
-        // searchDocumentsResult.getOgdDocumentResults().getHits().get
+
     }
+
+    private void incrementSeitennummer(OGDRisRequest risRequest, Integer seitennummer) {
+        if(risRequest != null && risRequest.getSuche() != null) {
+            if(risRequest.getSuche().getJudikatur() != null) {
+                risRequest.getSuche().getJudikatur().setDokumenteProSeite(PageSize.ONE_HUNDRED);
+                risRequest.getSuche().getJudikatur().setSeitennummer(seitennummer);
+            }
+            if(risRequest.getSuche().getBundesrecht() != null) {
+                risRequest.getSuche().getBundesrecht().setSeitennummer(seitennummer);
+            }
+        }
+
+    }
+
+
 
 
 }

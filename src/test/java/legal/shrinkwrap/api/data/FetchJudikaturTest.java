@@ -54,7 +54,7 @@ public class FetchJudikaturTest {
                         .build()
         );
         assertThat(result).isNotNull();
-        assertThat(result.getJudikaturResults()).isNotNull().hasSize(20);
+        assertThat(result.getJudikaturResults()).isNotNull().hasSize(1000);
 
         List<CaseLawDataset> dataset = new ArrayList<>();
         result.getJudikaturResults().forEach(r -> {
