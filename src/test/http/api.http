@@ -2,7 +2,6 @@
 
 GET http://localhost:8080/api/case-law/shrinkwrap?ecli=ECLI:AT:OGH0002:2017:0140OS00062.17Z.1107.000
 
-    //
 
 ###
 GET http://localhost:8080/api/case-law/overview?docNumber=asdf&court=asdf

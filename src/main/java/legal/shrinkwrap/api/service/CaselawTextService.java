@@ -13,6 +13,22 @@ import java.util.Map;
 @Service
 public class CaselawTextService {
 
+
+    public String extractContent(String uncleanedRisHTML) {
+
+        Jerry fullHtml = Jerry.of(uncleanedRisHTML);
+
+        //remove all sr-only content (screenreader only)
+        fullHtml.find(".sr-only").remove();
+        fullHtml.find("head").remove();
+
+        //paperw can be multiple (annotated with "nextpage")
+        Iterator<Jerry> pwIterator = fullHtml.find(".paperw>.contentBlock").iterator();
+
+        return fullHtml.html();
+
+    }
+
     /**
      * Clean up RIS html response
      * @param uncleanedRisHTML
