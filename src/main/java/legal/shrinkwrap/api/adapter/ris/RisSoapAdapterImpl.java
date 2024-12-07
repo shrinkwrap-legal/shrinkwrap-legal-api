@@ -50,10 +50,21 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
         return new RisSearchResult();
     }
 
-    public RisSearchResult findCaseLawDocuments(RisCourt court) {
+    public RisSearchResult findCaseLawDocuments(RisCourt court, String ecli) {
         OGDRisRequest risRequest = SoapRequestMapper.createRisSearch(objectFactory);
         JudikaturSearchRequest judikaturSearchRequest = objectFactory.createJudikaturSearchRequest();
         risRequest.getSuche().setJudikatur(judikaturSearchRequest);
+
+        if(ecli != null) {
+            FulltextSearchExpression searchExpression = objectFactory.createFulltextSearchExpression();
+            searchExpression.setValue(ecli);
+            judikaturSearchRequest.setSuchworte(searchExpression);
+        }
+
+        JudikaturTypSucheinschraenkung judikaturTyp = objectFactory.createJudikaturTypSucheinschraenkung();
+        judikaturTyp.setSucheInRechtssaetzen(true);
+        judikaturTyp.setSucheInEntscheidungstexten(true);
+        judikaturSearchRequest.setDokumenttyp(judikaturTyp);
 
         switch (court) {
             case Justiz -> {

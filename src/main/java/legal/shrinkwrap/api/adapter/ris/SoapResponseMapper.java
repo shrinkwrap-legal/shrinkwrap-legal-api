@@ -39,16 +39,13 @@ public class SoapResponseMapper {
 
     private static RisJudikaturMetadaten mapJudikaturMetadaten(JudikaturResponse judikaturResponse) {
 
-        LOG.info("Judikatur: {}", judikaturResponse);
-
-
         RisJudikaturMetadaten judikaturMetadaten = new RisJudikaturMetadaten(
                 judikaturResponse.getGeschaeftszahl().getItem(),
                 judikaturResponse.getDokumenttyp(),
                 formXmlGregorianCalendar(judikaturResponse.getEntscheidungsdatum().getValue()),
                 judikaturResponse.getEuropeanCaseLawIdentifier(),
                 judikaturResponse.getSchlagworte(),
-                judikaturResponse.getNormen().getItem()
+                fromArrayOfStrings(judikaturResponse.getNormen())
         );
 
         if(judikaturResponse.getJustiz() != null) judikaturMetadaten.setJustizMetadaten(mapToJustizMetadaten(judikaturResponse.getJustiz()));
@@ -58,16 +55,16 @@ public class SoapResponseMapper {
 
     private static RisJustizMetadaten mapToJustizMetadaten(JustizResponse justizResponse) {
 
-        justizResponse.getTextnummern();
-        //justizResponse.getEntscheidungstexte().getItem().getFirst().get
+        // justizResponse.getTextnummern();
+        // justizResponse.getEntscheidungstexte().getItem().getFirst().get
 
         return new RisJustizMetadaten(
                 justizResponse.getGericht(),
                 justizResponse.getEntscheidungsart(),
                 justizResponse.getAnmerkung(),
                 justizResponse.getFundstelle(),
-                justizResponse.getRechtssatznummern().getItem(),
-                justizResponse.getRechtsgebiete().getItem()
+                fromArrayOfStrings(justizResponse.getRechtssatznummern()),
+                fromArrayOfStrings(justizResponse.getRechtsgebiete())
         );
     }
 
@@ -88,6 +85,14 @@ public class SoapResponseMapper {
             return null;
         }
         return LocalDate.ofInstant(xmlGregorianCalendar.toGregorianCalendar().getTime().toInstant(), ZoneId.systemDefault());
+    }
+
+    public static List<String> fromArrayOfStrings(ArrayOfString arrayOfString) {
+        if(arrayOfString == null) {
+            return List.of();
+        }
+        return arrayOfString.getItem();
+
     }
 
 }

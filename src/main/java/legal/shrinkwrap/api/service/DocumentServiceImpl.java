@@ -1,32 +1,41 @@
 package legal.shrinkwrap.api.service;
 
 import legal.shrinkwrap.api.adapter.HtmlDownloadService;
-import legal.shrinkwrap.api.adapter.ris.rest.RisAdapter;
-import legal.shrinkwrap.api.adapter.ris.rest.dto.enums.OgdApplikationEnum;
+import legal.shrinkwrap.api.adapter.ris.RisSoapAdapter;
+import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
+import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
+import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
+import legal.shrinkwrap.api.dto.CaseLawRequestDto;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
-import legal.shrinkwrap.api.dto.DocNumberDto;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DocumentServiceImpl implements DocumentService {
 
-    private final RisAdapter risAdapter;
+    private final RisSoapAdapter risSoapAdapter;
 
     private final HtmlDownloadService htmlDownloadService;
 
     private final CaselawTextService caselawTextService;
 
-    public DocumentServiceImpl(RisAdapter risAdapter, HtmlDownloadService htmlDownloadService, CaselawTextService caselawTextService) {
-        this.risAdapter = risAdapter;
+    public DocumentServiceImpl(RisSoapAdapter risSoapAdapter, HtmlDownloadService htmlDownloadService, CaselawTextService caselawTextService) {
+        this.risSoapAdapter = risSoapAdapter;
         this.htmlDownloadService = htmlDownloadService;
         this.caselawTextService = caselawTextService;
     }
 
     @Override
-    public CaseLawResponseDto getDocument(DocNumberDto docNumberDto) {
-        //@TODO: Map to OgdApplikationEnum ?
-        String justiz = risAdapter.getCaselawByDocNumberAsHtml(OgdApplikationEnum.Justiz, docNumberDto.docNumber());
-        CaseLawResponseDto res = caselawTextService.prepareRISCaseLawHtml(justiz);
+    public CaseLawResponseDto getDocument(CaseLawRequestDto requestDto) {
+
+        RisSearchResult result = risSoapAdapter.findCaseLawDocuments(RisCourt.Justiz, requestDto.ecli());
+        if(result == null) {
+            return null;
+        }
+        RisJudikaturResult justiz = result.getJudikaturResults().getFirst();
+
+        String htmlContent = htmlDownloadService.downloadHtml(justiz.getHtmlDocumentUrl());
+
+        CaseLawResponseDto res = caselawTextService.prepareRISCaseLawHtml(htmlContent);
         return res;
     }
 }

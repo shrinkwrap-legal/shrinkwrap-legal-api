@@ -7,7 +7,7 @@ public interface RisSoapAdapter {
 
     String getVersion();
 
-    RisSearchResult findCaseLawDocuments(RisCourt court);
+    RisSearchResult findCaseLawDocuments(RisCourt court, String ecli);
 
 
 }

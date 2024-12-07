@@ -1,7 +1,6 @@
-package legal.shrinkwrap.api.adapter.ris;
+package legal.shrinkwrap.api.adapter.ris.rest;
 
 import legal.shrinkwrap.api.adapter.ris.rest.dto.OgdDocumentReference;
-import legal.shrinkwrap.api.adapter.ris.rest.RisAdapter;
 import legal.shrinkwrap.api.adapter.ris.rest.dto.enums.OgdApplikationEnum;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
