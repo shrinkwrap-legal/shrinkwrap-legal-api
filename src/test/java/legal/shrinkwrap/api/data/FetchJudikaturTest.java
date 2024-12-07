@@ -1,6 +1,8 @@
 package legal.shrinkwrap.api.data;
 
 
+import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLaw;
+import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLawBuilder;
 import legal.shrinkwrap.api.adapter.ris.RisSoapAdapterImpl;
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
@@ -23,7 +25,10 @@ public class FetchJudikaturTest {
 
     @Test
     public void test_getJustiz() {
-        RisSearchResult result = risSoapAdapter.findCaseLawDocuments(RisCourt.Justiz, null);
+        RisSearchResult result = risSoapAdapter.findCaseLawDocuments(
+                RisSearchParameterCaseLawBuilder.builder()
+                        .court(RisCourt.Justiz).build()
+        );
         assertThat(result).isNotNull();
         assertThat(result.getJudikaturResults()).isNotNull().hasSize(20);
         System.out.println(result);

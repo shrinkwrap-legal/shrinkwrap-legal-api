@@ -50,23 +50,23 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
         return new RisSearchResult();
     }
 
-    public RisSearchResult findCaseLawDocuments(RisCourt court, String ecli) {
+    public RisSearchResult findCaseLawDocuments(RisSearchParameterCaseLaw searchParameter) {
         OGDRisRequest risRequest = SoapRequestMapper.createRisSearch(objectFactory);
         JudikaturSearchRequest judikaturSearchRequest = objectFactory.createJudikaturSearchRequest();
         risRequest.getSuche().setJudikatur(judikaturSearchRequest);
 
-        if(ecli != null) {
+        if(searchParameter.ecli() != null) {
             FulltextSearchExpression searchExpression = objectFactory.createFulltextSearchExpression();
-            searchExpression.setValue(ecli);
+            searchExpression.setValue(searchParameter.ecli());
             judikaturSearchRequest.setSuchworte(searchExpression);
         }
 
         JudikaturTypSucheinschraenkung judikaturTyp = objectFactory.createJudikaturTypSucheinschraenkung();
-        judikaturTyp.setSucheInRechtssaetzen(true);
-        judikaturTyp.setSucheInEntscheidungstexten(true);
+        judikaturTyp.setSucheInRechtssaetzen(searchParameter.judikaturTyp().inRechtssaetzen());
+        judikaturTyp.setSucheInEntscheidungstexten(searchParameter.judikaturTyp().inEntscheidungstexten());
         judikaturSearchRequest.setDokumenttyp(judikaturTyp);
 
-        switch (court) {
+        switch (searchParameter.court()) {
             case Justiz -> {
                 JustizSearchRequest justizSearchRequest = objectFactory.createJustizSearchRequest();
                 judikaturSearchRequest.setJustiz(justizSearchRequest);
@@ -92,7 +92,7 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
                 judikaturSearchRequest.setDsk(dskSearchRequest);
             }
             case null, default -> {
-                throw new AdapterRequestException("Unknown court type "+court);
+                throw new AdapterRequestException("Unknown court type "+searchParameter.court());
             }
         }
 

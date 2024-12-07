@@ -22,6 +22,7 @@
         <spring-modulith.version>1.2.4</spring-modulith.version>
         <openapi-generator-version>7.10.0</openapi-generator-version>
         <graal.languages.version>24.1.1</graal.languages.version>
+        <record.builder.version>41</record.builder.version>
     </properties>
     <dependencies>
 
@@ -111,6 +112,12 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.17.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.soabase.record-builder</groupId>
+            <artifactId>record-builder-core</artifactId>
+            <version>${record.builder.version}</version>
         </dependency>
 
         <!-- XML Java Binding -->
@@ -384,6 +391,19 @@
                         ${project.build.directory}/generated-sources/
                     </sourceDestDir>
                     <extension>true</extension>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>io.soabase.record-builder</groupId>
+                            <artifactId>record-builder-processor</artifactId>
+                            <version>${record.builder.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
 

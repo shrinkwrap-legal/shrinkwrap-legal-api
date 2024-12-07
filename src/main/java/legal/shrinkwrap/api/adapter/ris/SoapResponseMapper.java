@@ -49,6 +49,9 @@ public class SoapResponseMapper {
         );
 
         if(judikaturResponse.getJustiz() != null) judikaturMetadaten.setJustizMetadaten(mapToJustizMetadaten(judikaturResponse.getJustiz()));
+        // if(judikaturResponse.getBvwg() != null)
+        // if(judikaturResponse.getVwgh() != null) {}
+        // if(judikaturResponse.getVfgh() != null) {}
 
         return judikaturMetadaten;
     }
