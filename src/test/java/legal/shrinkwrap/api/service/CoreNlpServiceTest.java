@@ -2,7 +2,7 @@ package legal.shrinkwrap.api.service;
 
 
 import legal.shrinkwrap.api.SpringTest;
-import legal.shrinkwrap.api.config.TestServicesConfiguration;
+import legal.shrinkwrap.api.config.NlpServiceConfiguration;
 import legal.shrinkwrap.api.dto.NlpTokenInfoDto;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * https://dkpro.github.io/dkpro-core/
  *
  */
-@ContextConfiguration(classes = TestServicesConfiguration.class)
+@ContextConfiguration(classes = NlpServiceConfiguration.class)
 public class CoreNlpServiceTest extends SpringTest {
 
     @Autowired
