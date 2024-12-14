@@ -13,6 +13,7 @@ import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
 import legal.shrinkwrap.api.config.AdapterConfiguration;
 import legal.shrinkwrap.api.config.ServiceConfiguration;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
+import legal.shrinkwrap.api.dto.CaseLawResponseDto;
 import legal.shrinkwrap.api.service.CaselawTextService;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
@@ -59,14 +60,14 @@ public class FetchJudikaturTest {
         List<CaseLawDataset> dataset = new ArrayList<>();
         result.getJudikaturResults().forEach(r -> {
             String fullHtml = htmlDownloadService.downloadHtml(r.getHtmlDocumentUrl());
-            String content = caselawTextService.extractContent(fullHtml);
+            CaseLawResponseDto content = caselawTextService.prepareRISCaseLawHtml(fullHtml);
             dataset.add(new CaseLawDataset(
                     r.getMetadaten().getId(),
                     r.getMetadaten().getApplicationType().value(),
                     r.getMetadaten().getOrgan(),
                     r.getMetadaten().getPublished(),
                     r.getMetadaten().getChanged(), r.getMetadaten().getUrl(), r.getHtmlDocumentUrl(), String.join(";", r.getJudikaturMetadaten().getGeschaeftszahl()),
-                    null, null, null, null, content));
+                    null, null, null, null, content.caselawHtml()));
 
         });
 

@@ -14,7 +14,9 @@ import java.util.Map;
 public class CaselawTextService {
 
 
+    @Deprecated
     public String extractContent(String uncleanedRisHTML) {
+        //be careful, this will not work with some docs!
 
         Jerry fullHtml = Jerry.of(uncleanedRisHTML);
 
@@ -35,15 +37,23 @@ public class CaselawTextService {
      * @return
      */
     public CaseLawResponseDto prepareRISCaseLawHtml(String uncleanedRisHTML) {
+        //some initial HTML preprocessing, e.g. removing double nbsp;
+        uncleanedRisHTML = uncleanedRisHTML.replaceAll("(\\u00a0|&nbsp;|&#160;)+", "\u00a0");
+
+        //clean nbsp followed by regular space, and vice versa
+        uncleanedRisHTML = uncleanedRisHTML.replaceAll("(\\u00a0|&nbsp;|&#160;) ", " ");
+        uncleanedRisHTML = uncleanedRisHTML.replaceAll(" (\\u00a0|&nbsp;|&#160;)", " ");
+
+
         Jerry fullHtml = Jerry.of(uncleanedRisHTML);
 
         //remove all sr-only content (screenreader only)
         fullHtml.find(".sr-only").remove();
         fullHtml.find("head").remove();
 
-        //paperw can be multiple (annotated with "nextpage")
+        //paperw can be multiple (annotated with "nextpage") - need to get content from all
+        //by removing irrelevant ones
         Iterator<Jerry> pwIterator = fullHtml.find(".paperw>.contentBlock").iterator();
-        Map<String, String> metaInfo = new HashMap<>();
 
         boolean beforeTextElem = true;
 
@@ -60,16 +70,12 @@ public class CaselawTextService {
                         title.equalsIgnoreCase("Kopf") ||
                         title.equalsIgnoreCase("Leitsatz") ||
                         title.equalsIgnoreCase("Rechtssatz") ||
-                    title.equalsIgnoreCase("Spruch")) {
+                        title.equalsIgnoreCase("Spruch")) {
                     beforeTextElem = false;
                 }
 
+                //Usually at the end
                 if (beforeTextElem || title.equalsIgnoreCase("European Case Law Identifier")) {
-                    String content = element.find("*").not("h1.Titel").text();
-                    if (StringUtils.isNotEmpty(content)) {
-                        metaInfo.put(title, content);
-                    }
-
                     element.remove();
                 }
             }
@@ -80,7 +86,7 @@ public class CaselawTextService {
         fullText = fullText.replaceAll("[ ]+", " ");
         int wordCount = fullText.split(" ").length;
 
-        CaseLawResponseDto response = new CaseLawResponseDto(wordCount, fullHtml.htmlAll(true), metaInfo);
+        CaseLawResponseDto response = new CaseLawResponseDto(wordCount, fullHtml.htmlAll(true));
 
         //now, in html only the text should be left
         return response;
