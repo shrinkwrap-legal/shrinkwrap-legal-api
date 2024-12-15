@@ -22,6 +22,7 @@
         <spring-modulith.version>1.2.4</spring-modulith.version>
         <openapi-generator-version>7.10.0</openapi-generator-version>
         <graal.languages.version>24.1.1</graal.languages.version>
+        <jackson.version>2.18.2</jackson.version>
         <record.builder.version>41</record.builder.version>
     </properties>
     <dependencies>
@@ -105,6 +106,16 @@
             <groupId>org.commonmark</groupId>
             <artifactId>commonmark-ext-gfm-tables</artifactId>
             <version>0.23.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>${jackson.version}</version>
         </dependency>
 
         <!-- useful libraries for java  -->

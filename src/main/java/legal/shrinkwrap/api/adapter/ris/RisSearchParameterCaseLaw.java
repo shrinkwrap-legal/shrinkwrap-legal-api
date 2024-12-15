@@ -10,8 +10,6 @@ public record RisSearchParameterCaseLaw(
         String ecli,
         JudikaturTyp judikaturTyp
 ) {
-    public RisSearchParameterCaseLaw {
-        judikaturTyp = new JudikaturTyp(true, true);
+    public record JudikaturTyp(Boolean inRechtssaetzen, Boolean inEntscheidungstexten) {
     }
-    public record JudikaturTyp (Boolean inRechtssaetzen, Boolean inEntscheidungstexten){}
 }

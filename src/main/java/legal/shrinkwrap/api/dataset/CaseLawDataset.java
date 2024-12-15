@@ -15,7 +15,7 @@ public record CaseLawDataset (
         @JsonFormat(locale = "en", shape = JsonFormat.Shape.STRING) LocalDate metadataChanged,
         String metadataUrl,
         String htmlUrl,
-        String caseLawBusinessCode,
+        String caseLawBusinessCode, //? "Geschäftszahl" -> Case number
         String caseLawEcli,
         String caseLawDocumentType,
         String justizGericht,
