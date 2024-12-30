@@ -16,7 +16,7 @@ public record RisSearchParameterCaseLaw(
 
             private RisCourt court;
             private String ecli;
-            private RisSearchParameterCaseLaw.JudikaturTyp judikaturTyp;
+            private RisSearchParameterCaseLaw.JudikaturTyp judikaturTyp = new JudikaturTyp(true, true);
 
             public RisSearchParameterCaseLawBuilder court(RisCourt court) {
                 this.court = court;
