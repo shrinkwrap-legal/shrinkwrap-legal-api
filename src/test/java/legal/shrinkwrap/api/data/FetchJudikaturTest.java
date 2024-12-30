@@ -15,6 +15,7 @@ import legal.shrinkwrap.api.dataset.CaseLawDataset;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
 import legal.shrinkwrap.api.service.CaselawTextService;
 import org.apache.commons.io.FileUtils;
+import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.util.ResourceUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -39,9 +41,31 @@ public class FetchJudikaturTest {
     @Autowired
     private HtmlDownloadService htmlDownloadService;
 
+    //@Value("${files.output-directory}")
+    private String outputDirectory = "/tmp/shrinkwrap/";
+
     private CaselawTextService caselawTextService = new CaselawTextService();
 
     @Test
+    public void test_getJustizAndSingleHtml() throws IOException {
+        RisSearchResult result = risSoapAdapter.findCaseLawDocuments(
+                RisSearchParameterCaseLaw.builder()
+                        .court(RisCourt.Justiz)
+                        .judikaturTyp(new RisSearchParameterCaseLaw.JudikaturTyp(false, true))
+                        .build()
+        );
+        assertThat(result).isNotNull();
+        assertThat(result.getJudikaturResults()).isNotNull().hasSize(1000);
+
+        String fullHtml = htmlDownloadService.downloadHtml(result.getJudikaturResults().getFirst().getHtmlDocumentUrl());
+        CaseLawResponseDto content = caselawTextService.prepareRISCaseLawHtml(fullHtml);
+        assertThat(content).isNotNull();
+        assertThat(content.caselawHtml()).isNotNull();
+
+    }
+
+    @Test
+    @Ignore
     public void test_getJustiz() throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
@@ -66,21 +90,26 @@ public class FetchJudikaturTest {
                     r.getMetadaten().getOrgan(),
                     r.getMetadaten().getPublished(),
                     r.getMetadaten().getChanged(), r.getMetadaten().getUrl(), r.getHtmlDocumentUrl(), String.join(";", r.getJudikaturMetadaten().getGeschaeftszahl()),
-                    null, null, null, null, content.caselawHtml()));
+                    r.getJudikaturMetadaten().getEcli(), null, null, null, content.caselawHtml()));
 
         });
 
         String jsonResult = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(dataset);
 
-        /*
+        dataset.stream().forEach(d -> {
+            try {
+                FileUtils.writeStringToFile(ResourceUtils.getFile(outputDirectory + File.separator + d.caseLawEcli().replaceAll(":","_") + ".html"), d.content(), Charset.forName("UTF-8"));
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
+        });
+
         try {
             FileUtils.writeStringToFile(ResourceUtils.getFile("dataset/justiz.json"), jsonResult, Charset.defaultCharset());
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-         */
 
 
-        System.out.println(jsonResult);
     }
 }
