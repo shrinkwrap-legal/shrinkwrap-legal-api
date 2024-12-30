@@ -1,6 +1,5 @@
 package legal.shrinkwrap.api.adapter.ris;
 
-import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLawBuilder;
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
 import legal.shrinkwrap.api.config.AdapterConfiguration;
@@ -29,7 +28,7 @@ public class RisSoapAdapterTest {
 
     @Test
     public void test_findDocumentForEuropeanCaseLawIdentifier() {
-        RisSearchResult result = risSoapAdapter.findCaseLawDocuments(RisSearchParameterCaseLawBuilder.builder()
+        RisSearchResult result = risSoapAdapter.findCaseLawDocuments(RisSearchParameterCaseLaw.builder()
                 .court(RisCourt.Justiz)
                 .ecli("ECLI:AT:OGH0002:2017:0140OS00062.17Z.1107.000").build());
 
