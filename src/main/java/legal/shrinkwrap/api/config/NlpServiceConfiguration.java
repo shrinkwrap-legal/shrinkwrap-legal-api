@@ -11,7 +11,7 @@ public class NlpServiceConfiguration {
 
     @Bean("coreNlpService")
     public NLPService coreNlpService() {
-        return new CoreNlpServiceImpl();
+        return null;// new CoreNlpServiceImpl();
     }
 
     @Bean("openNlpService")
