@@ -2,7 +2,6 @@ package legal.shrinkwrap.api.service;
 
 import legal.shrinkwrap.api.adapter.HtmlDownloadService;
 import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLaw;
-import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLawBuilder;
 import legal.shrinkwrap.api.adapter.ris.RisSoapAdapter;
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
@@ -29,7 +28,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public CaseLawResponseDto getDocument(CaseLawRequestDto requestDto) {
 
-        RisSearchResult result = risSoapAdapter.findCaseLawDocuments(RisSearchParameterCaseLawBuilder.builder()
+        RisSearchResult result = risSoapAdapter.findCaseLawDocuments(RisSearchParameterCaseLaw.builder()
                 .court(RisCourt.Justiz)
                 .ecli(requestDto.ecli()).build()
                 );

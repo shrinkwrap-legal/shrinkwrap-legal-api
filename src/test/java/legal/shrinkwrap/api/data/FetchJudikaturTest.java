@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import legal.shrinkwrap.api.adapter.HtmlDownloadService;
 import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLaw;
-import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLawBuilder;
 import legal.shrinkwrap.api.adapter.ris.RisSoapAdapterImpl;
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
@@ -49,7 +48,7 @@ public class FetchJudikaturTest {
 
 
         RisSearchResult result = risSoapAdapter.findCaseLawDocuments(
-                RisSearchParameterCaseLawBuilder.builder()
+                        RisSearchParameterCaseLaw.builder()
                         .court(RisCourt.Justiz)
                         .judikaturTyp(new RisSearchParameterCaseLaw.JudikaturTyp(false, true))
                         .build()
