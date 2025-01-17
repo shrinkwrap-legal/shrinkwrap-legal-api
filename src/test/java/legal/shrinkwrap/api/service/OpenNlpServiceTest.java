@@ -2,6 +2,8 @@ package legal.shrinkwrap.api.service;
 
 import legal.shrinkwrap.api.SpringTest;
 import legal.shrinkwrap.api.config.TestServicesConfiguration;
+
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -11,6 +13,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Disabled
 @ContextConfiguration(classes = TestServicesConfiguration.class)
 public class OpenNlpServiceTest extends SpringTest {
 

@@ -25,11 +25,8 @@ public class SpringChatClientController {
 
     private final ChatClient chatClient;
 
-    private final VectorStore vectorStore;
-
-    public SpringChatClientController(@Qualifier("ollamaChatClientBuilder") ChatClient.Builder chatClientBuilder, VectorStore vectorStore) {
+    public SpringChatClientController(@Qualifier("ollamaChatClientBuilder") ChatClient.Builder chatClientBuilder) {
         this.chatClient = chatClientBuilder.build();
-        this.vectorStore = vectorStore;
     }
 
     @GetMapping("/client")
@@ -40,6 +37,7 @@ public class SpringChatClientController {
 
     @GetMapping("/pdf")
     public String infoPdf(String question) {
+        /*
         List<Document> documents = vectorStore.similaritySearch(question);
 
         String inlined = documents.stream()
@@ -64,6 +62,9 @@ public class SpringChatClientController {
         String answer = chatClient.prompt(combinedPrompt).call().content();
         return answer;
 
+         */
+
+        return "TEST";
     }
 
 }

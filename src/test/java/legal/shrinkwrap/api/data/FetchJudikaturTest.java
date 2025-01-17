@@ -1,27 +1,7 @@
 package legal.shrinkwrap.api.data;
 
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import legal.shrinkwrap.api.adapter.HtmlDownloadService;
-import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLaw;
-import legal.shrinkwrap.api.adapter.ris.RisSoapAdapterImpl;
-import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
-import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
-import legal.shrinkwrap.api.config.AdapterConfiguration;
-import legal.shrinkwrap.api.config.ServiceConfiguration;
-import legal.shrinkwrap.api.dataset.CaseLawDataset;
-import legal.shrinkwrap.api.dto.CaseLawResponseDto;
-import legal.shrinkwrap.api.service.CaselawTextService;
-import org.apache.commons.io.FileUtils;
-import org.junit.Ignore;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.util.ResourceUtils;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,10 +9,31 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.util.ResourceUtils;
+
+import legal.shrinkwrap.api.adapter.HtmlDownloadService;
+import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLaw;
+import legal.shrinkwrap.api.adapter.ris.RisSoapAdapterImpl;
+import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
+import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
+import legal.shrinkwrap.api.config.AdapterConfiguration;
+import legal.shrinkwrap.api.config.CommonServiceConfiguration;
+import legal.shrinkwrap.api.dataset.CaseLawDataset;
+import legal.shrinkwrap.api.dto.CaseLawResponseDto;
+import legal.shrinkwrap.api.service.CaselawTextService;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {AdapterConfiguration.class, ServiceConfiguration.class})
+@ContextConfiguration(classes = {AdapterConfiguration.class, CommonServiceConfiguration.class})
 public class FetchJudikaturTest {
 
     @Autowired
@@ -47,7 +48,7 @@ public class FetchJudikaturTest {
     private CaselawTextService caselawTextService = new CaselawTextService();
 
     @Test
-    public void test_getJustizAndSingleHtml() throws IOException {
+    public void test_getJustizAndSingleHtml() {
         RisSearchResult result = risSoapAdapter.findCaseLawDocuments(
                 RisSearchParameterCaseLaw.builder()
                         .court(RisCourt.Justiz)
@@ -65,7 +66,7 @@ public class FetchJudikaturTest {
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void test_getJustiz() throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());

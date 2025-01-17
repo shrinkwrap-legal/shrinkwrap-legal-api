@@ -19,6 +19,7 @@ import java.util.List;
 public class SpringAIConfiguration {
 
 
+    /*
     @Profile("openai")
     @Bean
     VectorStore vectorStore(EmbeddingModel openAiEmbeddingModel, @Value("classpath:ASVG-01.06.2024.pdf") Resource pdf) {
@@ -30,12 +31,17 @@ public class SpringAIConfiguration {
         return vectorStore;
     }
 
+     */
+
+    /*
     @Profile("!openai")
     @Bean("vectorStore")
     VectorStore vectorStoreDummy(EmbeddingModel openAiEmbeddingModel) {
         SimpleVectorStore vectorStore = new SimpleVectorStore(openAiEmbeddingModel);
         return vectorStore;
     }
+
+     */
 
 
 }
