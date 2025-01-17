@@ -3,6 +3,7 @@ package legal.shrinkwrap.api.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Template;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -47,10 +48,16 @@ public class CaselawAnalyzerService {
 
 
     public void analyzeCaselaw(CaseLawDataset caselaw) {
-        String textFromHtml = null;
         try {
-            textFromHtml = getTextFromHtml(caselaw.contentHtml());
-            List<String> sentences = getSentencesFromCaseLaw(textFromHtml);
+            List<String> sentences = null;
+            if (Strings.isNotEmpty(caselaw.sentences())) {
+
+                sentences = Arrays.asList(caselaw.sentences().split("\r\n"));
+            }  else {
+                String textFromHtml = null;
+                textFromHtml = getTextFromHtml(caselaw.contentHtml());
+                getSentencesFromCaseLaw(textFromHtml);
+            }
 
             //build model
             List<SentenceModel> sentenceModels = new ArrayList<>();
