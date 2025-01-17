@@ -20,7 +20,8 @@ public record CaseLawDataset (
         String caseLawDocumentType,
         String justizGericht,
         String justizEntscheidungsart,
-        String content
+        String contentHtml,
+        String sentences
         )
 {
 

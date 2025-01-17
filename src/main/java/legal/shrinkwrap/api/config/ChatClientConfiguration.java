@@ -20,6 +20,7 @@ public class ChatClientConfiguration {
 
     @Bean
     @Scope("prototype")
+    @Qualifier("openAiChatClientBuilder")
     ChatClient.Builder openAiChatClientBuilder(ChatClientBuilderConfigurer chatClientBuilderConfigurer,
                                                @Qualifier("openAiChatModel") ChatModel chatModel) {
         ChatClient.Builder builder = ChatClient.builder(chatModel);
@@ -28,6 +29,7 @@ public class ChatClientConfiguration {
 
     @Bean
     @Scope("prototype")
+    @Qualifier("ollamaChatClientBuilder")
     ChatClient.Builder ollamaChatClientBuilder(ChatClientBuilderConfigurer chatClientBuilderConfigurer,
                                                @Qualifier("ollamaChatModel") ChatModel chatModel) {
         ChatClient.Builder builder = ChatClient.builder(chatModel);

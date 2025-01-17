@@ -90,15 +90,17 @@ public class FetchJudikaturTest {
                     r.getMetadaten().getOrgan(),
                     r.getMetadaten().getPublished(),
                     r.getMetadaten().getChanged(), r.getMetadaten().getUrl(), r.getHtmlDocumentUrl(), String.join(";", r.getJudikaturMetadaten().getGeschaeftszahl()),
-                    r.getJudikaturMetadaten().getEcli(), null, null, null, content.caselawHtml()));
+                    r.getJudikaturMetadaten().getEcli(), null, null, null, content.caselawHtml(), null));
 
         });
+
+
 
         String jsonResult = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(dataset);
 
         dataset.stream().forEach(d -> {
             try {
-                FileUtils.writeStringToFile(ResourceUtils.getFile(outputDirectory + File.separator + d.caseLawEcli().replaceAll(":","_") + ".html"), d.content(), Charset.forName("UTF-8"));
+                FileUtils.writeStringToFile(ResourceUtils.getFile(outputDirectory + File.separator + d.caseLawEcli().replaceAll(":","_") + ".html"), d.contentHtml(), Charset.forName("UTF-8"));
             } catch (IOException e) {
                 System.out.println(e.getMessage());
             }
