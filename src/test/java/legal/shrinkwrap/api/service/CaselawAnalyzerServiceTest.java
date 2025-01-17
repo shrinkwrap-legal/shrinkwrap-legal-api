@@ -47,11 +47,15 @@ class CaselawAnalyzerServiceTest {
     @Autowired
     private HtmlDownloadService htmlDownloadService;
 
+    @Autowired
+    private CaselawTextService caselawTextService;
+
     @Test
     public void singleCaseLaw() {
         String ecli = "ECLI:AT:OGH0002:2024:008OBA00004";
         String url = "https://www.ris.bka.gv.at/Dokumente/Justiz/JJT_20240826_OGH0002_008OBA00004_24G0000_000/JJT_20240826_OGH0002_008OBA00004_24G0000_000.html";
         String htmlContent = fileHandlingService.loadFile(ecli,".full.html");
+        htmlContent = caselawTextService.prepareRISCaseLawHtml(htmlContent).caselawHtml();
         if (htmlContent == null) {
             htmlContent = htmlDownloadService.downloadHtml(url);
             fileHandlingService.saveFile(ecli,".full.html", htmlContent);
