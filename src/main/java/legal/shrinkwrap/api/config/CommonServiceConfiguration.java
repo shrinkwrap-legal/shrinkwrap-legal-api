@@ -1,5 +1,6 @@
 package legal.shrinkwrap.api.config;
 
+import legal.shrinkwrap.api.service.FileHandlingService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,5 +13,8 @@ public class CommonServiceConfiguration {
     public HtmlDownloadService htmlDownloadService() {
         return new HtmlDownloadService();
     }
+
+    @Bean
+    public FileHandlingService fileHandlingService() { return new FileHandlingService(); }
 
 }
