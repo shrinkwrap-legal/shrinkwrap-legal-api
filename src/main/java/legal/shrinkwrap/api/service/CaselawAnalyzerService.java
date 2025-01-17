@@ -5,6 +5,9 @@ import com.github.jknack.handlebars.Template;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +31,7 @@ public class CaselawAnalyzerService {
             .connectTimeout(Duration.ofSeconds(60))
             .build();
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final Template partsTemplate;
+    private final Map<String, Template> templates = new HashMap<>();
 
     private final ChatClient chatClient;
 
@@ -38,7 +41,16 @@ public class CaselawAnalyzerService {
         Handlebars handlebars = new Handlebars();
         try {
             String s = Files.readString(ResourceUtils.getFile("classpath:prompts/parts.hbs").toPath());
-            partsTemplate = handlebars.compileInline(s);
+            Template template = handlebars.compileInline(s);
+            templates.put("parts", template);
+
+            s = Files.readString(ResourceUtils.getFile("classpath:prompts/summary.hbs").toPath());
+            template = handlebars.compileInline(s);
+            templates.put("summary", template);
+
+            s = Files.readString(ResourceUtils.getFile("classpath:prompts/summary.system.hbs").toPath());
+            template = handlebars.compileInline(s);
+            templates.put("summary.system", template);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -46,6 +58,43 @@ public class CaselawAnalyzerService {
     }
 
 
+
+    public void summarizeCaselaw(CaseLawDataset caselaw) {
+        List<String> sentences = null;
+        if (Strings.isNotEmpty(caselaw.sentences())) {
+            sentences = Arrays.asList(caselaw.sentences().split("\r\n")).stream().map(s -> s.split(": ",2)[1]).toList();
+        }  else {
+            String textFromHtml = null;
+            try {
+                textFromHtml = getTextFromHtml(caselaw.contentHtml());
+                sentences = getSentencesFromCaseLaw(textFromHtml);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        String text = Strings.join(sentences,'\n');
+        TextModel model = new TextModel(text);
+
+        try {
+            String system = templates.get("summary.system").apply(model);
+            String user = templates.get("summary").apply(model);
+
+            Message systemMessage = new SystemMessage(system);
+            Message userMessage = new UserMessage(user);
+            Prompt p = new Prompt(List.of(systemMessage, userMessage));
+            ChatResponse chatResponse = chatClient.prompt(p).call().chatResponse();
+            String aireturn  = chatResponse.getResult().getOutput().getText();
+            System.out.println(aireturn);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
 
     public void analyzeCaselaw(CaseLawDataset caselaw) {
         try {
@@ -56,7 +105,7 @@ public class CaselawAnalyzerService {
             }  else {
                 String textFromHtml = null;
                 textFromHtml = getTextFromHtml(caselaw.contentHtml());
-                getSentencesFromCaseLaw(textFromHtml);
+                sentences = getSentencesFromCaseLaw(textFromHtml);
             }
 
             //build model
@@ -68,7 +117,7 @@ public class CaselawAnalyzerService {
             SentencesModel model = new SentencesModel(sentenceModels);
 
             //apply template
-            String aiQuery = partsTemplate.apply(model);
+            String aiQuery = templates.get("parts").apply(model);
 
             //get from AI
             //@TODO: get token usage, maybe split
@@ -178,4 +227,6 @@ public class CaselawAnalyzerService {
 
     private static final record SentenceModel(int id, String sentence) {
     }
+
+    private static final record TextModel(String text) {}
 }
