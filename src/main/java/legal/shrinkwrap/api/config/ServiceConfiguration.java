@@ -1,5 +1,6 @@
 package legal.shrinkwrap.api.config;
 
+import legal.shrinkwrap.api.python.ShrinkwrapPythonRestService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -17,8 +18,11 @@ public class ServiceConfiguration {
     @Qualifier("openAiChatClientBuilder")
     ChatClient.Builder chatClientBuilder;
 
+    @Autowired
+    ShrinkwrapPythonRestService shrinkwrapPythonRestService;
+
     @Bean
     public CaselawAnalyzerService caselawAnalyzerService() {
-        return new CaselawAnalyzerService(chatClientBuilder);
+        return new CaselawAnalyzerService(chatClientBuilder, shrinkwrapPythonRestService);
     }
 }

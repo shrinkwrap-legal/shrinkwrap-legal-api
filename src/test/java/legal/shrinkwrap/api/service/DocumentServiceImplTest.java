@@ -18,4 +18,11 @@ class DocumentServiceImplTest {
         //CaseLawRequestDto dto = new CaseLawRequestDto(docNumber, "Justiz");
         //CaseLawResponseDto document = documentService.getDocument(dto);
     }
+
+    @Test
+    void testGetDatasetForEcli() {
+        String ecli = "ECLI:AT:OGH0002:2024:008OBA00004";
+        CaseLawRequestDto dto = new CaseLawRequestDto(ecli, null, null);
+        documentService.getCaselawDatasetForECLI(ecli);
+    }
 }

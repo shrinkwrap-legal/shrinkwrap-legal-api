@@ -1,14 +1,10 @@
 package legal.shrinkwrap.api.service;
 
 import jodd.jerry.Jerry;
-import legal.shrinkwrap.api.controller.CaseLawController;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class CaselawTextService {

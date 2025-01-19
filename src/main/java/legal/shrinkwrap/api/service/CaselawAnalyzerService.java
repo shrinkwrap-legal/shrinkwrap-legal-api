@@ -3,6 +3,8 @@ package legal.shrinkwrap.api.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Template;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
+import legal.shrinkwrap.api.python.ShrinkwrapPythonRestService;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;
@@ -27,16 +29,16 @@ import java.util.*;
 
 
 public class CaselawAnalyzerService {
-    private final HttpClient client = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(60))
-            .build();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+
     private final Map<String, Template> templates = new HashMap<>();
 
     private final ChatClient chatClient;
 
-    public CaselawAnalyzerService(ChatClient.Builder chatClientBuilder) {
+    private final ShrinkwrapPythonRestService pythonRestService;
+
+    public CaselawAnalyzerService(ChatClient.Builder chatClientBuilder, ShrinkwrapPythonRestService pythonRestService) {
         chatClient = chatClientBuilder.build();
+        this.pythonRestService = pythonRestService;
 
         Handlebars handlebars = new Handlebars();
         try {
@@ -65,16 +67,7 @@ public class CaselawAnalyzerService {
             sentences = Arrays.asList(caselaw.sentences().split("\r\n")).stream().map(s -> s.split(": ",2)[1]).toList();
         }  else {
             String textFromHtml = null;
-            try {
-                textFromHtml = getTextFromHtml(caselaw.contentHtml());
-                sentences = getSentencesFromCaseLaw(textFromHtml);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            } catch (URISyntaxException e) {
-                throw new RuntimeException(e);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            throw new NotImplementedException();
         }
 
         String text = Strings.join(sentences,'\n');
@@ -104,8 +97,7 @@ public class CaselawAnalyzerService {
                 sentences = Arrays.asList(caselaw.sentences().split("\r\n"));
             }  else {
                 String textFromHtml = null;
-                textFromHtml = getTextFromHtml(caselaw.contentHtml());
-                sentences = getSentencesFromCaseLaw(textFromHtml);
+                throw new NotImplementedException();
             }
 
             //build model
@@ -169,58 +161,14 @@ public class CaselawAnalyzerService {
                     """;
             String fullHtml = "<html><head>" + css + "</head><body>" + innerHtml + "</body></html>";
             System.out.println(fullHtml);
-        } catch (IOException | URISyntaxException | InterruptedException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
 
     }
 
-    public String getTextFromHtml(String html) throws IOException, URISyntaxException, InterruptedException {
-        Map<String, String> requestBody = new HashMap<>();
-        requestBody.put("contentHtml", html);
-        String requestBodyJson = objectMapper.writeValueAsString(requestBody);
 
-
-        //get sentences
-        // Create the POST request
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI("http://localhost:8090/htmlToText"))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(requestBodyJson))
-                .build();
-
-        // Send the request and retrieve the response
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        // Return the response body
-        String body = response.body();
-        Map<String, String> result = objectMapper.readValue(body, Map.class);
-        return result.get("text");
-    }
-
-    public List<String> getSentencesFromCaseLaw(String text) throws IOException, URISyntaxException, InterruptedException {
-        Map<String, String> requestBody = new HashMap<>();
-        requestBody.put("contentText", text);
-        String requestBodyJson = objectMapper.writeValueAsString(requestBody);
-
-
-        //get sentences
-        // Create the POST request
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI("http://localhost:8090/sentencier"))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(requestBodyJson))
-                .build();
-
-        // Send the request and retrieve the response
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        // Return the response body
-        String body = response.body();
-        Map result = objectMapper.readValue(body, Map.class);
-        return (List<String>) result.get("sentences");
-    }
 
     private static final record SentencesModel(List<SentenceModel> sentences) {
     }
