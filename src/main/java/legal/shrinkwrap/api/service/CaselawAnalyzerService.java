@@ -12,6 +12,7 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.ResourceUtils;
@@ -31,6 +32,7 @@ import java.util.*;
 public class CaselawAnalyzerService {
 
     private final Map<String, Template> templates = new HashMap<>();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final ChatClient chatClient;
 
@@ -62,15 +64,10 @@ public class CaselawAnalyzerService {
 
 
     public void summarizeCaselaw(CaseLawDataset caselaw) {
-        List<String> sentences = null;
-        if (Strings.isNotEmpty(caselaw.sentences())) {
-            sentences = Arrays.asList(caselaw.sentences().split("\r\n")).stream().map(s -> s.split(": ",2)[1]).toList();
-        }  else {
-            String textFromHtml = null;
+        if (caselaw.sentences().isEmpty()) {
             throw new NotImplementedException();
         }
-
-        String text = Strings.join(sentences,'\n');
+        String text = caselaw.sentences();
         TextModel model = new TextModel(text);
 
         try {
@@ -79,9 +76,16 @@ public class CaselawAnalyzerService {
 
             Message systemMessage = new SystemMessage(system);
             Message userMessage = new UserMessage(user);
-            Prompt p = new Prompt(List.of(systemMessage, userMessage));
+            OpenAiChatOptions options = OpenAiChatOptions.builder()
+                    .model("gpt-4o-mini").build();
+            Prompt p = new Prompt(List.of(systemMessage, userMessage), options);
             ChatResponse chatResponse = chatClient.prompt(p).call().chatResponse();
             String aireturn  = chatResponse.getResult().getOutput().getText();
+
+            //sometimes, openai will start with "```"
+            String cleanedAi = aireturn.replaceAll("```json", "").replaceAll("```", "");
+            Map jsonReturn = objectMapper.readValue(cleanedAi, Map.class);
+
             System.out.println(aireturn);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -94,7 +98,7 @@ public class CaselawAnalyzerService {
             List<String> sentences = null;
             if (Strings.isNotEmpty(caselaw.sentences())) {
 
-                sentences = Arrays.asList(caselaw.sentences().split("\r\n"));
+                sentences = Arrays.asList(caselaw.sentences().split("\n"));
             }  else {
                 String textFromHtml = null;
                 throw new NotImplementedException();
