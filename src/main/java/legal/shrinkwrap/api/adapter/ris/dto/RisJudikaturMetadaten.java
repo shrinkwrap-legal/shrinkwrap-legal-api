@@ -16,6 +16,12 @@ public class RisJudikaturMetadaten extends AbstractRisMetadaten {
     private List<String> normen;
 
     private RisJustizMetadaten justizMetadaten;
+    private RisBvwgMetadaten bvwgMetadaten;
+    private RisVfghMetadaten vfghMetadaten;
+    private RisVwghMetadaten vwghMetadaten;
+    private RisLvwgMetadaten lvwgMetadaten;
+    private RisDskMetadaten dskMetadaten;
+
 
     public RisJudikaturMetadaten(List<String> geschaeftszahl, JudikaturDokumenttyp dokumenttyp, LocalDate entscheidungsdatum, String ecli,
                                  String schlagworte, List<String> normen) {
@@ -49,5 +55,45 @@ public class RisJudikaturMetadaten extends AbstractRisMetadaten {
 
     public RisJustizMetadaten getJustizMetadaten() {
         return justizMetadaten;
+    }
+
+    public void setBvwgMetadaten(RisBvwgMetadaten bvwgMetadaten) {
+        this.bvwgMetadaten = bvwgMetadaten;
+    }
+
+    public RisBvwgMetadaten getBvwgMetadaten() {
+        return bvwgMetadaten;
+    }
+
+    public void setVfghMetadaten(RisVfghMetadaten vfghMetadaten) {
+        this.vfghMetadaten = vfghMetadaten;
+    }
+
+    public RisVfghMetadaten getVfghMetadaten() {
+        return vfghMetadaten;
+    }
+
+    public void setVwghMetadaten(RisVwghMetadaten vwghMetadaten) {
+        this.vwghMetadaten = vwghMetadaten;
+    }
+
+    public RisVwghMetadaten getVwghMetadaten() {
+        return vwghMetadaten;
+    }
+
+    public void setLvwgMetadaten(RisLvwgMetadaten lvwgMetadaten) {
+        this.lvwgMetadaten = lvwgMetadaten;
+    }
+
+    public RisLvwgMetadaten getLvwgMetadaten() {
+        return lvwgMetadaten;
+    }
+
+    public void setDskMetadaten(RisDskMetadaten dskMetadaten) {
+        this.dskMetadaten = dskMetadaten;
+    }
+
+    public RisDskMetadaten getDskMetadaten() {
+        return dskMetadaten;
     }
 }

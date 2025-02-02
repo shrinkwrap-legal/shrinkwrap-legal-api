@@ -1,11 +1,11 @@
 package legal.shrinkwrap.api.adapter.ris;
 
 import legal.shrinkwrap.api.adapter.ris.dto.AbstractRisGerichtMetadaten;
+import legal.shrinkwrap.api.adapter.ris.dto.RisBaseMetadaten;
 
 import java.util.List;
 
-public class RisJustizMetadaten extends AbstractRisGerichtMetadaten {
-    private String gericht;
+public class RisJustizMetadaten extends RisBaseMetadaten {
     private String entscheidungsart;
     private String anmerkung;
     private String fundstelle;
@@ -13,20 +13,15 @@ public class RisJustizMetadaten extends AbstractRisGerichtMetadaten {
     private List<String> rechtsgebiete;
 
 
-
     public RisJustizMetadaten(final String gericht, final String entscheidungsart, final String anmerkung, final String fundstelle,
                               final List<String> rechtssatznummern,
                               final List<String> rechtsgebiete) {
-        this.gericht = gericht;
+        super(gericht);
         this.entscheidungsart = entscheidungsart;
         this.anmerkung = anmerkung;
         this.fundstelle = fundstelle;
         this.rechtssatznummern = rechtssatznummern;
         this.rechtsgebiete = rechtsgebiete;
-    }
-
-    public String getGericht() {
-        return gericht;
     }
 
     public String getAnmerkung() {

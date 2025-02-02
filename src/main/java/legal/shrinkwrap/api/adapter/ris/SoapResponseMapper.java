@@ -1,9 +1,15 @@
 package legal.shrinkwrap.api.adapter.ris;
 
 import at.gv.bka.ris.v26.soap.ws.client.*;
+import legal.shrinkwrap.api.adapter.ris.dto.RisBvwgMetadaten;
+import legal.shrinkwrap.api.adapter.ris.dto.RisDskMetadaten;
 import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturMetadaten;
 import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
+import legal.shrinkwrap.api.adapter.ris.dto.RisLvwgMetadaten;
 import legal.shrinkwrap.api.adapter.ris.dto.RisMetadaten;
+import legal.shrinkwrap.api.adapter.ris.dto.RisVfghMetadaten;
+import legal.shrinkwrap.api.adapter.ris.dto.RisVwghMetadaten;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,9 +55,11 @@ public class SoapResponseMapper {
         );
 
         if(judikaturResponse.getJustiz() != null) judikaturMetadaten.setJustizMetadaten(mapToJustizMetadaten(judikaturResponse.getJustiz()));
-        // if(judikaturResponse.getBvwg() != null)
-        // if(judikaturResponse.getVwgh() != null) {}
-        // if(judikaturResponse.getVfgh() != null) {}
+        if(judikaturResponse.getBvwg() != null) judikaturMetadaten.setBvwgMetadaten(mapToBvwgMetadaten(judikaturResponse.getBvwg()));
+        if(judikaturResponse.getVwgh() != null) judikaturMetadaten.setVwghMetadaten(mapToVwghMetadaten(judikaturResponse.getVwgh()));
+        if(judikaturResponse.getVfgh() != null) judikaturMetadaten.setVfghMetadaten(mapToVfghMetadaten(judikaturResponse.getVfgh()));
+        if(judikaturResponse.getLvwg() != null) judikaturMetadaten.setLvwgMetadaten(mapToLvwgMetadaten(judikaturResponse.getLvwg()));
+        if(judikaturResponse.getDsk() != null) judikaturMetadaten.setDskMetadaten(mapToDskMetadaten(judikaturResponse.getDsk()));
 
         return judikaturMetadaten;
     }
@@ -69,6 +77,31 @@ public class SoapResponseMapper {
                 fromArrayOfStrings(justizResponse.getRechtssatznummern()),
                 fromArrayOfStrings(justizResponse.getRechtsgebiete())
         );
+    }
+
+    private static RisBvwgMetadaten mapToBvwgMetadaten(BvwgResponse bvwgResponse) {
+        // TODO map all metadata
+        return new RisBvwgMetadaten(bvwgResponse.getGericht());
+    }
+
+    private static RisVfghMetadaten mapToVfghMetadaten(VfghResponse vfghResponse) {
+        // TODO map all metadata
+        return new RisVfghMetadaten(vfghResponse.getGericht());
+    }
+
+    private static RisVwghMetadaten mapToVwghMetadaten(VwghResponse vwghResponse) {
+        // TODO map all metadata
+        return new RisVwghMetadaten(vwghResponse.getGericht());
+    }
+
+    private static RisLvwgMetadaten mapToLvwgMetadaten(LvwgResponse lvwgResponse) {
+        // TODO map all metadata
+        return new RisLvwgMetadaten(lvwgResponse.getGericht());
+    }
+
+    private static RisDskMetadaten mapToDskMetadaten(DskResponse dskResponse) {
+        // TODO map all metadata
+        return new RisDskMetadaten();
     }
 
     private static String mapUrl(List<WebDocumentContentReference> referenceList) {
