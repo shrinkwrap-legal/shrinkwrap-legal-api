@@ -75,11 +75,25 @@ public class DocumentServiceImpl implements DocumentService {
             if(result == null) {
                 return null;
             }
-            RisJudikaturResult justiz = result.getJudikaturResults().getFirst();
+            RisJudikaturResult judikaturResult = result.getJudikaturResults().getFirst();
             CaseLawEntity entity = new CaseLawEntity();
-            RisJudikaturMetadaten metadata = justiz.getJudikaturMetadaten();
-            entity.setDocNumber(justiz.getMetadaten().getId());
+            RisJudikaturMetadaten metadata = judikaturResult.getJudikaturMetadaten();
+            //general metadata
+            entity.setDocNumber(judikaturResult.getMetadaten().getId());
+            entity.setApplicationType(judikaturResult.getMetadaten().getApplicationType().value());
+            entity.setUrl(judikaturResult.getMetadaten().getUrl());
+            entity.setHtmlUrl(judikaturResult.getHtmlDocumentUrl());
+            entity.setLastChangedDate(judikaturResult.getMetadaten().getChanged());
+            entity.setPublishedDate(judikaturResult.getMetadaten().getPublished());
+            entity.setCourt(judikaturResult.getMetadaten().getOrgan());
+
+            //judikatur specific metadata
             entity.setEcli(metadata.getEcli());
+            entity.setCaseNumber(metadata.getGeschaeftszahl().getFirst());
+            entity.setDecisionDate(metadata.getEntscheidungsdatum());
+
+            entity.setMetadata(judikaturResult.getMetadaten().getFullResponseAsJson());
+
             caseLawEntity = caseLawRepository.save(entity);
         } else {
             caseLawEntity = dbEntity.get();

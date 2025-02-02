@@ -49,7 +49,7 @@ public class CaseLawEntity {
     @Column(name = "last_changed", columnDefinition = "DATE")
     private LocalDate lastChangedDate;
 
-    @Column(name = "metadata")
+    @Column(name = "metadata", columnDefinition = "JSON")
     private String metadata;
 
     @Column(name = "html", columnDefinition = "TEXT")

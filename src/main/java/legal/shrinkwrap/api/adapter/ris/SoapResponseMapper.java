@@ -1,12 +1,15 @@
 package legal.shrinkwrap.api.adapter.ris;
 
 import at.gv.bka.ris.v26.soap.ws.client.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import legal.shrinkwrap.api.adapter.ris.dto.RisBvwgMetadaten;
 import legal.shrinkwrap.api.adapter.ris.dto.RisDskMetadaten;
 import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturMetadaten;
 import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
 import legal.shrinkwrap.api.adapter.ris.dto.RisLvwgMetadaten;
 import legal.shrinkwrap.api.adapter.ris.dto.RisMetadaten;
+import legal.shrinkwrap.api.utils.ObjectMapperWithXmlGregorianCalenderSupport;
 import legal.shrinkwrap.api.adapter.ris.dto.RisVfghMetadaten;
 import legal.shrinkwrap.api.adapter.ris.dto.RisVwghMetadaten;
 
@@ -21,6 +24,7 @@ import java.util.List;
 public class SoapResponseMapper {
 
     private static final Logger LOG = LoggerFactory.getLogger(SoapResponseMapper.class);
+    private static final ObjectMapper MAPPER = new ObjectMapperWithXmlGregorianCalenderSupport();
 
 
     public static RisJudikaturResult mapToJudikaturResult(OgdDocumentResults.OgdDocumentReference documentReference) {
@@ -33,13 +37,21 @@ public class SoapResponseMapper {
     }
 
     private static RisMetadaten mapMetadaten(OgdMetadataType ogdMetadataType) {
+        String json = null;
+        try {
+             json = MAPPER.writeValueAsString(ogdMetadataType);
+        } catch (JsonProcessingException e) {
+            LOG.error(e.getMessage());
+        }
+
         return new RisMetadaten(
                 ogdMetadataType.getTechnisch().getID(),
                 ogdMetadataType.getTechnisch().getApplikation(),
                 ogdMetadataType.getTechnisch().getOrgan(),
                 formXmlGregorianCalendar(ogdMetadataType.getAllgemein().getVeroeffentlicht().getValue()),
                 formXmlGregorianCalendar(ogdMetadataType.getAllgemein().getGeaendert().getValue()),
-                ogdMetadataType.getAllgemein().getDokumentUrl()
+                ogdMetadataType.getAllgemein().getDokumentUrl(),
+                json
         );
     }
 

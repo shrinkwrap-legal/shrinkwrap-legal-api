@@ -1,10 +1,12 @@
 package legal.shrinkwrap.api.adapter.ris.dto;
 
 import at.gv.bka.ris.v26.soap.ws.client.TechnicalApplicationType;
+import lombok.Getter;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.time.LocalDate;
 
+@Getter
 public class RisMetadaten {
 
     private String id;
@@ -14,40 +16,17 @@ public class RisMetadaten {
     private LocalDate published;
     private LocalDate changed;
     private String url;
+    private String fullResponseAsJson;
 
-    public RisMetadaten(String id, TechnicalApplicationType applicationType, String organ,LocalDate published, LocalDate changed, String url) {
+    public RisMetadaten(String id, TechnicalApplicationType applicationType, String organ,LocalDate published, LocalDate changed, String url, String fullResponseAsJson) {
         this.id = id;
         this.applicationType = applicationType;
         this.organ = organ;
         this.published = published;
         this.changed = changed;
         this.url = url;
+        this.fullResponseAsJson = fullResponseAsJson;
     }
-
-    public String getId() {
-        return id;
-    }
-
-    public TechnicalApplicationType getApplicationType() {
-        return applicationType;
-    }
-
-    public String getOrgan() {
-        return organ;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public LocalDate getPublished() {
-        return published;
-    }
-
-    public LocalDate getChanged() {
-        return changed;
-    }
-
 
     @Override
     public String toString() {
