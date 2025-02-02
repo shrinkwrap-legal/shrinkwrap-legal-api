@@ -50,19 +50,15 @@ class CaselawAnalyzerServiceTest {
     @Autowired
     private CaselawTextService caselawTextService;
 
+    @Autowired
+    private DocumentService documentService;
+
     @Test
     public void singleCaseLaw() {
         String ecli = "ECLI:AT:OGH0002:2024:008OBA00004";
-        String url = "https://www.ris.bka.gv.at/Dokumente/Justiz/JJT_20240826_OGH0002_008OBA00004_24G0000_000/JJT_20240826_OGH0002_008OBA00004_24G0000_000.html";
-        String htmlContent = fileHandlingService.loadFile(ecli,".full.html");
-        htmlContent = caselawTextService.prepareRISCaseLawHtml(htmlContent).caselawHtml();
-        if (htmlContent == null) {
-            htmlContent = htmlDownloadService.downloadHtml(url);
-            fileHandlingService.saveFile(ecli,".full.html", htmlContent);
-        }
-        CaseLawDataset ds = new CaseLawDataset(null, null, null, null, null, null, null, null, null, null, null, null, htmlContent, null);
-        caselawAnalyzerService.analyzeCaselaw(ds);
-        caselawAnalyzerService.summarizeCaselaw(ds);
+        CaseLawDataset caselawDatasetForECLI = documentService.getCaselawDatasetForECLI(ecli);
+        caselawAnalyzerService.summarizeCaselaw(caselawDatasetForECLI);
+        caselawAnalyzerService.analyzeCaselaw(caselawDatasetForECLI);
     }
 
     @Test
@@ -72,12 +68,15 @@ class CaselawAnalyzerServiceTest {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(directoryPath, "*.html")) {
             for (Path entry : stream) {
                 System.out.println("Reading file: " + entry.getFileName());
-                String content = new String(Files.readAllBytes(entry), StandardCharsets.UTF_8);
-                CaseLawDataset ds = new CaseLawDataset(null,null,null,null,null,null,null,null,null,null,null,null,content,null);
-                caselawAnalyzerService.analyzeCaselaw(ds);
+                String sentenceContent = null;// Files.readString((Paths.get("c:\\tmp\\shrinkwrap\\ECLI_AT_OGH0002_2024_008OBA00004.24G.0826.000.html.sentences.txt")), StandardCharsets.UTF_8);
+                String htmlContent = Files.readString((Paths.get("c:\\tmp\\shrinkwrap\\ECLI_AT_OGH0002_2024_008OBA00004.24G.0826.000.html")), StandardCharsets.UTF_8);
+                CaseLawDataset ds = new CaseLawDataset(null,null,null,null,null,null,null,null,null,null,null,null,htmlContent,sentenceContent);
+                caselawAnalyzerService.summarizeCaselaw(ds);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+
 }
