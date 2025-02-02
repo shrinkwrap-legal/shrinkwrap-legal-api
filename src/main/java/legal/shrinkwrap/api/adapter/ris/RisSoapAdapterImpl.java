@@ -61,6 +61,12 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
             searchExpression.setValue(searchParameter.ecli());
             judikaturSearchRequest.setSuchworte(searchExpression);
         }
+        if (searchParameter.docNumber() != null) {
+            FulltextSearchExpression searchExpression = objectFactory.createFulltextSearchExpression();
+            searchExpression.setValue(searchParameter.docNumber());
+            judikaturSearchRequest.setSuchworte(searchExpression);
+        }
+
 
         JudikaturTypSucheinschraenkung judikaturTyp = objectFactory.createJudikaturTypSucheinschraenkung();
         judikaturTyp.setSucheInRechtssaetzen(searchParameter.judikaturTyp().inRechtssaetzen());

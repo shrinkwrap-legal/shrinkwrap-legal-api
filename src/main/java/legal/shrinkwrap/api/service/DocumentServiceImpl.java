@@ -1,20 +1,25 @@
 package legal.shrinkwrap.api.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import legal.shrinkwrap.api.adapter.HtmlDownloadService;
 import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLaw;
 import legal.shrinkwrap.api.adapter.ris.RisSoapAdapter;
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
+import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturMetadaten;
 import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
 import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
 import legal.shrinkwrap.api.dto.CaseLawRequestDto;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
+import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
+import legal.shrinkwrap.api.persistence.repo.CaseLawRepository;
 import legal.shrinkwrap.api.python.ShrinkwrapPythonRestService;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class DocumentServiceImpl implements DocumentService {
@@ -29,28 +34,63 @@ public class DocumentServiceImpl implements DocumentService {
 
     private final ShrinkwrapPythonRestService shrinkwrapPythonRestService;
 
+    private final CaseLawRepository caseLawRepository;
 
-    public DocumentServiceImpl(RisSoapAdapter risSoapAdapter, HtmlDownloadService htmlDownloadService, CaselawTextService caselawTextService, FileHandlingService fileHandlingService, ShrinkwrapPythonRestService shrinkwrapPythonRestService) {
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    public DocumentServiceImpl(RisSoapAdapter risSoapAdapter, HtmlDownloadService htmlDownloadService, CaselawTextService caselawTextService, FileHandlingService fileHandlingService, ShrinkwrapPythonRestService shrinkwrapPythonRestService, CaseLawRepository caseLawRepository) {
         this.risSoapAdapter = risSoapAdapter;
         this.htmlDownloadService = htmlDownloadService;
         this.caselawTextService = caselawTextService;
         this.fileHandlingService = fileHandlingService;
         this.shrinkwrapPythonRestService = shrinkwrapPythonRestService;
+        this.caseLawRepository = caseLawRepository;
     }
 
     @Override
     public CaseLawResponseDto getDocument(CaseLawRequestDto requestDto) {
+        CaseLawEntity caseLawEntity = null;
+        Optional<CaseLawEntity> dbEntity = Optional.empty();
 
-        RisSearchResult result = risSoapAdapter.findCaseLawDocuments(RisSearchParameterCaseLaw.builder()
-                .court(RisCourt.Justiz)
-                .ecli(requestDto.ecli()).build()
-                );
-        if(result == null) {
-            return null;
+        //try loading from repository
+        if (requestDto.ecli() != null) {
+            dbEntity = caseLawRepository.findCaseLawEntityByEcli(requestDto.ecli());
         }
-        RisJudikaturResult justiz = result.getJudikaturResults().getFirst();
+        if (dbEntity.isEmpty() && requestDto.docNumber() != null) {
+            dbEntity = caseLawRepository.findCaseLawEntityByDocNumber(requestDto.docNumber());
+        }
 
-        String htmlContent = htmlDownloadService.downloadHtml(justiz.getHtmlDocumentUrl());
+        //if no match, get from RIS, and save to db
+        if (dbEntity.isEmpty()) {
+            RisSearchParameterCaseLaw.RisSearchParameterCaseLawBuilder builder = RisSearchParameterCaseLaw.builder();
+            builder.court(requestDto.court());
+            if (requestDto.ecli() != null) {
+                builder.ecli(requestDto.ecli());
+            }
+            else if (requestDto.docNumber() != null) {
+                builder.docNumber(requestDto.docNumber());
+            }
+
+            RisSearchResult result = risSoapAdapter.findCaseLawDocuments(builder.build());
+            if(result == null) {
+                return null;
+            }
+            RisJudikaturResult justiz = result.getJudikaturResults().getFirst();
+            CaseLawEntity entity = new CaseLawEntity();
+            RisJudikaturMetadaten metadata = justiz.getJudikaturMetadaten();
+            entity.setDocNumber(justiz.getMetadaten().getId());
+            entity.setEcli(metadata.getEcli());
+            caseLawEntity = caseLawRepository.save(entity);
+        } else {
+            caseLawEntity = dbEntity.get();
+        }
+
+        //try loading analysis from repository
+
+        //if no match, make analysis, save to db
+
+
+        String htmlContent = htmlDownloadService.downloadHtml(caseLawEntity.getHtmlUrl());
 
         CaseLawResponseDto res = caselawTextService.prepareRISCaseLawHtml(htmlContent);
         return res;

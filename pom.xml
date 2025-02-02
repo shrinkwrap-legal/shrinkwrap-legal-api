@@ -272,6 +272,12 @@
             <optional>true</optional>
         </dependency>
         -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.36</version>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- TEST dependencies -->
         <dependency>
@@ -427,9 +433,9 @@
                 <configuration>
                     <annotationProcessorPaths>
                         <path>
-                            <groupId>io.soabase.record-builder</groupId>
-                            <artifactId>record-builder-processor</artifactId>
-                            <version>${record.builder.version}</version>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.36</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
