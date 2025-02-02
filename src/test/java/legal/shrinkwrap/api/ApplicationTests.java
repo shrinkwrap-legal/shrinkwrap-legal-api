@@ -6,7 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @Tag("fast")
 @SpringBootTest
-class ApplicationTests {
+class ApplicationTests extends SpringTest {
 
     @Test
     void contextLoads() {
