@@ -44,12 +44,22 @@ public class SoapResponseMapper {
             LOG.error(e.getMessage());
         }
 
+        LocalDate veroeffentlicht = null;
+        if (ogdMetadataType.getAllgemein().getVeroeffentlicht() != null) {
+            veroeffentlicht = formXmlGregorianCalendar(ogdMetadataType.getAllgemein().getVeroeffentlicht().getValue());
+        }
+
+        LocalDate geaendert = null;
+        if (ogdMetadataType.getAllgemein().getGeaendert() != null) {
+            geaendert = formXmlGregorianCalendar(ogdMetadataType.getAllgemein().getGeaendert().getValue());
+        }
+
         return new RisMetadaten(
                 ogdMetadataType.getTechnisch().getID(),
                 ogdMetadataType.getTechnisch().getApplikation(),
                 ogdMetadataType.getTechnisch().getOrgan(),
-                formXmlGregorianCalendar(ogdMetadataType.getAllgemein().getVeroeffentlicht().getValue()),
-                formXmlGregorianCalendar(ogdMetadataType.getAllgemein().getGeaendert().getValue()),
+                veroeffentlicht,
+                geaendert,
                 ogdMetadataType.getAllgemein().getDokumentUrl(),
                 json
         );
