@@ -11,14 +11,21 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import legal.shrinkwrap.api.SpringTest;
+import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
+import legal.shrinkwrap.api.persistence.entity.CaseLawAnalysisEntity;
+import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
+import legal.shrinkwrap.api.python.ShrinkwrapPythonRestService;
+import legal.shrinkwrap.api.service.*;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.ResourceUtils;
 
 import legal.shrinkwrap.api.adapter.HtmlDownloadService;
@@ -26,15 +33,12 @@ import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLaw;
 import legal.shrinkwrap.api.adapter.ris.RisSoapAdapterImpl;
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
-import legal.shrinkwrap.api.config.AdapterConfiguration;
-import legal.shrinkwrap.api.config.CommonServiceConfiguration;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
-import legal.shrinkwrap.api.service.CaselawTextService;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {AdapterConfiguration.class, CommonServiceConfiguration.class})
-public class FetchJudikaturTest {
+@SpringBootTest
+@Slf4j
+public class FetchJudikaturTest extends SpringTest {
 
     @Autowired
     private RisSoapAdapterImpl risSoapAdapter;
@@ -42,10 +46,21 @@ public class FetchJudikaturTest {
     @Autowired
     private HtmlDownloadService htmlDownloadService;
 
+    @Autowired
+    private DocumentService documentService;
+
+    @Autowired
+    private CaselawAnalyzerService caselawAnalyzerService;
+
+    @Autowired
+    private ShrinkwrapPythonRestService shrinkwrapPythonRestService;
+
     //@Value("${files.output-directory}")
     private String outputDirectory = "/tmp/shrinkwrap/";
 
     private CaselawTextService caselawTextService = new CaselawTextService();
+    @Autowired
+    private FileHandlingService fileHandlingService;
 
     @Test
     public void test_getJustizAndSingleHtml() {
@@ -62,6 +77,58 @@ public class FetchJudikaturTest {
         CaseLawResponseDto content = caselawTextService.prepareRISCaseLawHtml(fullHtml);
         assertThat(content).isNotNull();
         assertThat(content.caselawHtml()).isNotNull();
+
+    }
+
+    @Test
+    @Disabled
+    public void test_getJustizDataSet() throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory().enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE));
+        objectMapper.registerModule(new JavaTimeModule());
+
+        RisSearchResult results = risSoapAdapter.findCaseLawDocuments(
+                RisSearchParameterCaseLaw.builder()
+                        .court(RisCourt.BVwG)
+                        .judikaturTyp(new RisSearchParameterCaseLaw.JudikaturTyp(false, true))
+                        .build()
+        );
+        assertThat(results).isNotNull();
+
+        //download, put in DB
+        int cnt = 0;
+        for (RisJudikaturResult result : results.getJudikaturResults()) {
+            cnt++;
+            if (cnt % 20 == 0) {
+                log.info(cnt + " out of " + results.getJudikaturResults().size() + " = " + (cnt *100 / results.getJudikaturResults().size() + " %"));
+            }
+            CaseLawEntity entity = DocumentServiceImpl.mapJudikaturResultToEntity(result);
+            if (entity.getEcli() == null) {
+                System.out.println(entity);
+                continue;
+            }
+
+            if (fileHandlingService.loadFile(entity.getEcli(),"all.yaml") != null) {
+                continue;
+            }
+            log.info("new " + entity.getEcli());
+
+            String htmlContent = htmlDownloadService.downloadHtml(entity.getHtmlUrl());
+            CaseLawResponseDto dto = caselawTextService.prepareRISCaseLawHtml(htmlContent);
+            entity.setFullCleanHtml(dto.caselawHtml());
+
+            //text only
+            String textFromHtml = shrinkwrapPythonRestService.getTextFromHtml(dto.caselawHtml());
+            CaseLawAnalysisEntity aEntity = new CaseLawAnalysisEntity();
+            aEntity.setFullText(textFromHtml);
+            aEntity.setCaseLaw(entity);
+            aEntity.setWordCount((long) textFromHtml.split("\\s").length);
+
+            String yaml = objectMapper.writeValueAsString(aEntity);
+
+            //save as single yaml
+            fileHandlingService.saveFile(entity.getEcli(),"all.yaml",yaml);
+        }
+
 
     }
 

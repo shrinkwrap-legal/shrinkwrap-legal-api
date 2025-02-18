@@ -1,5 +1,6 @@
 package legal.shrinkwrap.api.service;
 
+import legal.shrinkwrap.api.SpringTest;
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
 import legal.shrinkwrap.api.dto.CaseLawRequestDto;
@@ -9,8 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
-@ActiveProfiles("test")
-class DocumentServiceImplTest {
+class DocumentServiceImplTest extends SpringTest {
 
     @Autowired
     private DocumentService documentService;

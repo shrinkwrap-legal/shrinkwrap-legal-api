@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @Table(name = "caselaw")
 @Getter
 @Setter
+@ToString
 public class CaseLawEntity {
     @Id
     @GeneratedValue

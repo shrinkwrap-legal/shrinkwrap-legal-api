@@ -1,6 +1,7 @@
 package legal.shrinkwrap.api.adapter.ris;
 
 import at.gv.bka.ris.v26.soap.ws.client.*;
+import groovy.util.logging.Slf4j;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import legal.shrinkwrap.api.adapter.exception.AdapterRequestException;
@@ -12,10 +13,10 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-
+@Slf4j
 public class RisSoapAdapterImpl implements RisSoapAdapter {
     private final static Logger LOG = LoggerFactory.getLogger(RisSoapAdapterImpl.class);
-    private final Integer MAX_SIZE = 1000;
+    private final Long MAX_SIZE = 10000L;
     private final String STATUS_OK = "ok";
 
     private final OgdRisServiceSoap risSoap;
@@ -127,6 +128,7 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
             documents.addAll(searchDocumentsResult.getOgdDocumentResults().getOgdDocumentReference());
             resultSize = searchDocumentsResult.getOgdDocumentResults().getHits().getValue().longValue();
             pageCount++;
+            LOG.info(documents.size() + " documents found in page " + pageCount + " of " + resultSize + " - " + (documents.size()*100 / resultSize) + " %");
         } while (documents.size() < resultSize && documents.size() < MAX_SIZE);
 
         return documents;

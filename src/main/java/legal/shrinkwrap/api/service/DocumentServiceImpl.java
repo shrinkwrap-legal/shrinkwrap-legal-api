@@ -76,23 +76,12 @@ public class DocumentServiceImpl implements DocumentService {
                 return null;
             }
             RisJudikaturResult judikaturResult = result.getJudikaturResults().getFirst();
-            CaseLawEntity entity = new CaseLawEntity();
-            RisJudikaturMetadaten metadata = judikaturResult.getJudikaturMetadaten();
-            //general metadata
-            entity.setDocNumber(judikaturResult.getMetadaten().getId());
-            entity.setApplicationType(judikaturResult.getMetadaten().getApplicationType().value());
-            entity.setUrl(judikaturResult.getMetadaten().getUrl());
-            entity.setHtmlUrl(judikaturResult.getHtmlDocumentUrl());
-            entity.setLastChangedDate(judikaturResult.getMetadaten().getChanged());
-            entity.setPublishedDate(judikaturResult.getMetadaten().getPublished());
-            entity.setCourt(judikaturResult.getMetadaten().getOrgan());
+            CaseLawEntity entity = mapJudikaturResultToEntity(judikaturResult);
 
-            //judikatur specific metadata
-            entity.setEcli(metadata.getEcli());
-            entity.setCaseNumber(metadata.getGeschaeftszahl().getFirst());
-            entity.setDecisionDate(metadata.getEntscheidungsdatum());
-
-            entity.setMetadata(judikaturResult.getMetadaten().getFullResponseAsJson());
+            //html
+            String htmlContent = htmlDownloadService.downloadHtml(entity.getHtmlUrl());
+            CaseLawResponseDto dto = caselawTextService.prepareRISCaseLawHtml(htmlContent);
+            entity.setFullCleanHtml(dto.caselawHtml());
 
             caseLawEntity = caseLawRepository.save(entity);
         } else {
@@ -104,10 +93,32 @@ public class DocumentServiceImpl implements DocumentService {
         //if no match, make analysis, save to db
 
 
-        String htmlContent = htmlDownloadService.downloadHtml(caseLawEntity.getHtmlUrl());
 
-        CaseLawResponseDto res = caselawTextService.prepareRISCaseLawHtml(htmlContent);
+
+        CaseLawResponseDto res = caselawTextService.prepareRISCaseLawHtml(caseLawEntity.getFullCleanHtml());
         return res;
+    }
+
+    public static CaseLawEntity mapJudikaturResultToEntity(RisJudikaturResult judikaturResult) {
+        CaseLawEntity entity = new CaseLawEntity();
+        RisJudikaturMetadaten metadata = judikaturResult.getJudikaturMetadaten();
+        //general metadata
+        entity.setDocNumber(judikaturResult.getMetadaten().getId());
+        entity.setApplicationType(judikaturResult.getMetadaten().getApplicationType().value());
+        entity.setUrl(judikaturResult.getMetadaten().getUrl());
+        entity.setHtmlUrl(judikaturResult.getHtmlDocumentUrl());
+        entity.setLastChangedDate(judikaturResult.getMetadaten().getChanged());
+        entity.setPublishedDate(judikaturResult.getMetadaten().getPublished());
+        entity.setCourt(judikaturResult.getMetadaten().getOrgan());
+
+        //judikatur specific metadata
+        entity.setEcli(metadata.getEcli());
+        entity.setCaseNumber(metadata.getGeschaeftszahl().getFirst());
+        entity.setDecisionDate(metadata.getEntscheidungsdatum());
+
+        entity.setMetadata(judikaturResult.getMetadaten().getFullResponseAsJson());
+
+        return entity;
     }
 
     @Override

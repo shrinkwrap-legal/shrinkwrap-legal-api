@@ -1,12 +1,16 @@
 package legal.shrinkwrap.api.persistence.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Table(name = "caselaw_analysis")
+@Getter
+@Setter
 public class CaseLawAnalysisEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private CaseLawEntity caseLaw;
