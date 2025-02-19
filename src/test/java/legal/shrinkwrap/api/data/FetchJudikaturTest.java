@@ -11,8 +11,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import legal.shrinkwrap.api.SpringTest;
 import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
@@ -59,6 +57,7 @@ public class FetchJudikaturTest extends SpringTest {
     private String outputDirectory = "/tmp/shrinkwrap/";
 
     private CaselawTextService caselawTextService = new CaselawTextService();
+
     @Autowired
     private FileHandlingService fileHandlingService;
 
@@ -77,14 +76,12 @@ public class FetchJudikaturTest extends SpringTest {
         CaseLawResponseDto content = caselawTextService.prepareRISCaseLawHtml(fullHtml);
         assertThat(content).isNotNull();
         assertThat(content.caselawHtml()).isNotNull();
-
     }
 
     @Test
     @Disabled
     public void test_getJustizDataSet() throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory().enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE));
-        objectMapper.registerModule(new JavaTimeModule());
+        ObjectMapper objectMapper = YamlMapper.getMapper();
 
         RisSearchResult results = risSoapAdapter.findCaseLawDocuments(
                 RisSearchParameterCaseLaw.builder()
