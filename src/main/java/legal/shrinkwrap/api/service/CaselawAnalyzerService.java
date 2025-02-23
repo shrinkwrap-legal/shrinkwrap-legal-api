@@ -1,8 +1,11 @@
 package legal.shrinkwrap.api.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Template;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
+import legal.shrinkwrap.api.persistence.entity.CaseLawAnalysisEntity;
+import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
 import legal.shrinkwrap.api.python.ShrinkwrapPythonRestService;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.logging.log4j.util.Strings;
@@ -18,6 +21,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.ResourceUtils;
 import com.github.jknack.handlebars.Handlebars;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -25,12 +30,13 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.*;
 
 
 public class CaselawAnalyzerService {
-
+    private final String outputdir = "/Users/thomas/Downloads/ECLI/";
     private final Map<String, Template> templates = new HashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -63,27 +69,40 @@ public class CaselawAnalyzerService {
 
 
 
-    public void summarizeCaselaw(CaseLawDataset caselaw) {
-        if (caselaw.sentences().isEmpty()) {
+    public void summarizeCaselaw(CaseLawAnalysisEntity caselaw) {
+        if (caselaw.getFullText().isEmpty()) {
             throw new NotImplementedException();
         }
-        String text = caselaw.sentences();
+        String text = caselaw.getFullText();
         TextModel model = new TextModel(text);
+        String ecli = caselaw.getCaseLaw().getEcli();
 
         try {
             String system = templates.get("summary.system").apply(model);
             String user = templates.get("summary").apply(model);
 
+            /*
             Message systemMessage = new SystemMessage(system);
             Message userMessage = new UserMessage(user);
             OpenAiChatOptions options = OpenAiChatOptions.builder()
                     .model("gpt-4o-mini").build();
             Prompt p = new Prompt(List.of(systemMessage, userMessage), options);
             ChatResponse chatResponse = chatClient.prompt(p).call().chatResponse();
-            String aireturn  = chatResponse.getResult().getOutput().getText();
+            String aireturn  = chatResponse.getResult().getOutput().getText();*/
+            String aireturn = "";
+            try {
+                    String openAIBatchJson = toOpenAIBatchJson(user, system, ecli);
+                writeToAppropriateFile(openAIBatchJson);
+                return;
+                //aireturn = callOllamaFromChristian(user);
+            }
+            catch (Exception e) {
+
+            }
+
 
             //sometimes, openai will start with "```"
-            String cleanedAi = aireturn.replaceAll("```json", "").replaceAll("```", "");
+            String cleanedAi = aireturn.replaceAll("```json", "").replaceAll("```", "").trim();
             Map jsonReturn = objectMapper.readValue(cleanedAi, Map.class);
 
             System.out.println(aireturn);
@@ -91,6 +110,86 @@ public class CaselawAnalyzerService {
             throw new RuntimeException(e);
         }
 
+    }
+
+    public String callOllamaFromChristian(String prompt) throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newHttpClient();
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("model", "qwen2.5:32b");
+        params.put("stream", false);
+        params.put("prompt",prompt);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonBody = objectMapper.writeValueAsString(params);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://XXXXXXX:9999/api/generate"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        System.out.println("Response status code: " + response.statusCode());
+
+        Map<String,Object> map = objectMapper.readValue(response.body(), Map.class);
+        return map.get("response").toString();
+    }
+
+    public String toOpenAIBatchJson(String system, String user, String ecli) throws JsonProcessingException {
+        Map<String, Object> request = new HashMap<>();
+        request.put("custom_id", ecli);
+        request.put("method", "POST");
+        request.put("url", "/v1/chat/completions");
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("model", "gpt-4o-mini");
+        body.put("max_tokens", 10000);
+
+        List<Map<String, String>> messages = new ArrayList<>();
+
+        Map<String, String> systemMessage = new HashMap<>();
+        systemMessage.put("role", "system");
+        systemMessage.put("content", system);
+        messages.add(systemMessage);
+
+        Map<String, String> userMessage = new HashMap<>();
+        userMessage.put("role", "user");
+        userMessage.put("content", user);
+        messages.add(userMessage);
+
+        body.put("messages", messages);
+        request.put("body", body);
+
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(request);
+        //System.out.println(json);
+        return json;
+    }
+
+    public void writeToAppropriateFile(String content) {
+        try {
+            int fileNumber = 0;
+            String fileName = outputdir + "file.json";
+
+            while (true) {
+                File file = new File(fileName);
+                if (!file.exists() || Files.size(Paths.get(fileName)) < 199 * 1024 * 1024) { // 199 MB in bytes) {
+                    try (FileWriter writer = new FileWriter(file, true)) {
+                        writer.write(content + '\n');
+                    }
+                    catch (IOException e) {}
+                    break;
+                } else {
+                    fileNumber++;
+                    fileName = outputdir + "file" + fileNumber + ".json";
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void analyzeCaselaw(CaseLawDataset caselaw) {

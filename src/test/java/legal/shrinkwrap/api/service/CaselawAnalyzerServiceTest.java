@@ -57,7 +57,7 @@ class CaselawAnalyzerServiceTest {
     public void singleCaseLaw() {
         String ecli = "ECLI:AT:OGH0002:2024:008OBA00004";
         CaseLawDataset caselawDatasetForECLI = documentService.getCaselawDatasetForECLI(ecli);
-        caselawAnalyzerService.summarizeCaselaw(caselawDatasetForECLI);
+        caselawAnalyzerService.summarizeCaselaw(null);
         caselawAnalyzerService.analyzeCaselaw(caselawDatasetForECLI);
     }
 
@@ -71,7 +71,7 @@ class CaselawAnalyzerServiceTest {
                 String sentenceContent = null;// Files.readString((Paths.get("c:\\tmp\\shrinkwrap\\ECLI_AT_OGH0002_2024_008OBA00004.24G.0826.000.html.sentences.txt")), StandardCharsets.UTF_8);
                 String htmlContent = Files.readString((Paths.get("c:\\tmp\\shrinkwrap\\ECLI_AT_OGH0002_2024_008OBA00004.24G.0826.000.html")), StandardCharsets.UTF_8);
                 CaseLawDataset ds = new CaseLawDataset(null,null,null,null,null,null,null,null,null,null,null,null,htmlContent,sentenceContent);
-                caselawAnalyzerService.summarizeCaselaw(ds);
+                caselawAnalyzerService.summarizeCaselaw(null);
             }
         } catch (IOException e) {
             e.printStackTrace();
