@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -126,6 +127,32 @@ public class FetchJudikaturTest extends SpringTest {
             fileHandlingService.saveFile(entity.getEcli(),"all.yaml",yaml);
         }
 
+    }
+
+    @Test
+    @Disabled
+    public void test_getJustizDataSet_jsonl() throws IOException {
+
+
+        RisSearchResult results = risSoapAdapter.findCaseLawDocuments(
+                RisSearchParameterCaseLaw.builder()
+                        .court(RisCourt.BVwG)
+                        .year(Year.of(2020))
+                        .judikaturTyp(new RisSearchParameterCaseLaw.JudikaturTyp(false, true))
+                        .build()
+        );
+        assertThat(results).isNotNull();
+
+        for (RisJudikaturResult result : results.getJudikaturResults()) {
+
+            String htmlContent = htmlDownloadService.downloadHtml(result.getHtmlDocumentUrl());
+            CaseLawResponseDto dto = caselawTextService.prepareRISCaseLawHtml(htmlContent);
+            String fullText = htmlDownloadService.html2text(htmlContent);
+
+            CaseLawAnalysisEntity entity =  new CaseLawAnalysisEntity();
+            entity.setFullText(fullText);
+
+        }
 
     }
 
