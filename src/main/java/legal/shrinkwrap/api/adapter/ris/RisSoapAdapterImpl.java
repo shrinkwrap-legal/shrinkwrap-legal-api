@@ -1,22 +1,49 @@
 package legal.shrinkwrap.api.adapter.ris;
 
-import at.gv.bka.ris.v26.soap.ws.client.*;
-import groovy.util.logging.Slf4j;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.GregorianCalendar;
+import java.util.List;
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeConstants;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
 import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
-import legal.shrinkwrap.api.adapter.exception.AdapterRequestException;
-import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
-import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import at.gv.bka.ris.v26.soap.ws.client.BvwgSearchRequest;
+import at.gv.bka.ris.v26.soap.ws.client.DskSearchRequest;
+import at.gv.bka.ris.v26.soap.ws.client.FulltextSearchExpression;
+import at.gv.bka.ris.v26.soap.ws.client.JudikaturSearchRequest;
+import at.gv.bka.ris.v26.soap.ws.client.JudikaturTypSucheinschraenkung;
+import at.gv.bka.ris.v26.soap.ws.client.JustizSearchRequest;
+import at.gv.bka.ris.v26.soap.ws.client.LvwgSearchRequest;
+import at.gv.bka.ris.v26.soap.ws.client.OGDRisRequest;
+import at.gv.bka.ris.v26.soap.ws.client.ObjectFactory;
+import at.gv.bka.ris.v26.soap.ws.client.OgdDocumentResults;
+import at.gv.bka.ris.v26.soap.ws.client.OgdRisService;
+import at.gv.bka.ris.v26.soap.ws.client.OgdRisServiceSoap;
+import at.gv.bka.ris.v26.soap.ws.client.PageSize;
+import at.gv.bka.ris.v26.soap.ws.client.SearchDocumentsResponse;
+import at.gv.bka.ris.v26.soap.ws.client.VfghSearchRequest;
+import at.gv.bka.ris.v26.soap.ws.client.VwghSearchRequest;
+
+import legal.shrinkwrap.api.adapter.exception.AdapterRequestException;
+import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
+import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class RisSoapAdapterImpl implements RisSoapAdapter {
     private final static Logger LOG = LoggerFactory.getLogger(RisSoapAdapterImpl.class);
-    private final Long MAX_SIZE = 10000L;
+    private final Long MAX_SIZE = 10L;
     private final String STATUS_OK = "ok";
 
     private final OgdRisServiceSoap risSoap;
@@ -24,6 +51,14 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
     private final ObjectFactory objectFactory = new ObjectFactory();
 
     public RisSoapAdapterImpl() {
+        /*
+        System.setProperty("com.sun.xml.ws.transport.http.client.HttpTransportPipe.dump", "true");
+        System.setProperty("com.sun.xml.internal.ws.transport.http.client.HttpTransportPipe.dump", "true");
+        System.setProperty("com.sun.xml.ws.transport.http.HttpAdapter.dump", "true");
+        System.setProperty("com.sun.xml.internal.ws.transport.http.HttpAdapter.dump", "true");
+        System.setProperty("com.sun.xml.internal.ws.transport.http.HttpAdapter.dumpTreshold", "999999");
+
+         */
         try {
             soapContext = JAXBContext.newInstance("at.gv.bka.ris.v26.soap.ws.client");
         } catch (JAXBException e) {
@@ -57,6 +92,7 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
         JudikaturSearchRequest judikaturSearchRequest = objectFactory.createJudikaturSearchRequest();
         risRequest.getSuche().setJudikatur(judikaturSearchRequest);
 
+
         if(searchParameter.ecli() != null) {
             FulltextSearchExpression searchExpression = objectFactory.createFulltextSearchExpression();
             searchExpression.setValue(searchParameter.ecli());
@@ -67,6 +103,32 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
             searchExpression.setValue(searchParameter.docNumber());
             judikaturSearchRequest.setSuchworte(searchExpression);
         }
+
+        if(searchParameter.year() != null) {
+            try {
+                ZonedDateTime datetimeStart = ZonedDateTime.of(LocalDate.of(searchParameter.year().getValue(), 1,1), LocalTime.MIN, ZoneId.of("Europe/Vienna"));
+                XMLGregorianCalendar decisionDateStart = DatatypeFactory.newInstance().newXMLGregorianCalendar(GregorianCalendar.from(datetimeStart));
+                decisionDateStart.setHour(DatatypeConstants.FIELD_UNDEFINED);
+                decisionDateStart.setMinute(DatatypeConstants.FIELD_UNDEFINED);
+                decisionDateStart.setSecond(DatatypeConstants.FIELD_UNDEFINED);
+                decisionDateStart.setMillisecond(DatatypeConstants.FIELD_UNDEFINED);
+                JAXBElement<XMLGregorianCalendar> xmlStart = objectFactory.createJudikaturSearchRequestEntscheidungsdatumVon(decisionDateStart);
+                judikaturSearchRequest.setEntscheidungsdatumVon(xmlStart);
+
+                ZonedDateTime datetimeEnd = ZonedDateTime.of(LocalDate.of(searchParameter.year().getValue(), 12,31), LocalTime.MAX, ZoneId.of("Europe/Vienna"));
+                XMLGregorianCalendar decisionDateEnd = DatatypeFactory.newInstance().newXMLGregorianCalendar(GregorianCalendar.from(datetimeEnd));
+                decisionDateEnd.setHour(DatatypeConstants.FIELD_UNDEFINED);
+                decisionDateEnd.setMinute(DatatypeConstants.FIELD_UNDEFINED);
+                decisionDateEnd.setSecond(DatatypeConstants.FIELD_UNDEFINED);
+                decisionDateEnd.setMillisecond(DatatypeConstants.FIELD_UNDEFINED);
+                JAXBElement<XMLGregorianCalendar> xmlEnd = objectFactory.createJudikaturSearchRequestEntscheidungsdatumBis(decisionDateEnd);
+                judikaturSearchRequest.setEntscheidungsdatumBis(xmlEnd);
+            } catch (DatatypeConfigurationException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+
 
 
         JudikaturTypSucheinschraenkung judikaturTyp = objectFactory.createJudikaturTypSucheinschraenkung();

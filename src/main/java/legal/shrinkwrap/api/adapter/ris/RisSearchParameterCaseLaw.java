@@ -1,23 +1,25 @@
 package legal.shrinkwrap.api.adapter.ris;
 
 
+import java.time.Year;
+
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
-import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
 
 
 public record RisSearchParameterCaseLaw(
         RisCourt court,
         String ecli,
         String docNumber,
+        Year year,
         JudikaturTyp judikaturTyp
 ) {
     //Builder
     public static final class RisSearchParameterCaseLawBuilder {
 
-
         private RisCourt court;
         private String ecli;
         private String docNumber;
+        private Year year;
         private RisSearchParameterCaseLaw.JudikaturTyp judikaturTyp = new JudikaturTyp(true, true);
 
         public RisSearchParameterCaseLawBuilder court(RisCourt court) {
@@ -35,13 +37,18 @@ public record RisSearchParameterCaseLaw(
             return this;
         }
 
+        public RisSearchParameterCaseLawBuilder year(Year year) {
+            this.year = year;
+            return this;
+        }
+
         public RisSearchParameterCaseLawBuilder judikaturTyp(RisSearchParameterCaseLaw.JudikaturTyp judikaturTyp) {
             this.judikaturTyp = judikaturTyp;
             return this;
         }
 
         public RisSearchParameterCaseLaw build() {
-            return new RisSearchParameterCaseLaw(court, ecli, docNumber, judikaturTyp);
+            return new RisSearchParameterCaseLaw(court, ecli, docNumber, year, judikaturTyp);
         }
 
     }
