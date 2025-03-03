@@ -1,7 +1,11 @@
-#services:
-#  database:
-#    image: 'postgres:16.1-alpine'
-#    ports:
-#      - '5432'
-#    environment:
-#      - 'POSTGRES_USER=shrinkwrap'
+services:
+  database:
+    image: 'postgres:17-bookworm'
+    ports:
+      - '127.0.0.1:5432:5432'
+    environment:
+      POSTGRES_USER: 'shrinkwrap'
+      POSTGRES_DB: 'shrinkwrap'
+      POSTGRES_PASSWORD: 'shrinkwrap'
+    volumes:
+      - /home/shrinkwrap/data:/var/lib/postgresql/data
