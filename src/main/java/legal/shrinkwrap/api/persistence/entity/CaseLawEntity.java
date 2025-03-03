@@ -2,6 +2,7 @@ package legal.shrinkwrap.api.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -51,6 +52,7 @@ public class CaseLawEntity {
     private LocalDate lastChangedDate;
 
     @Column(name = "metadata", columnDefinition = "JSON")
+    @ColumnTransformer(write = "?::json")
     private String metadata;
 
     @Column(name = "html", columnDefinition = "TEXT")
