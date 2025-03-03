@@ -1,5 +1,11 @@
 FROM maven:3.9.9-amazoncorretto-21-debian
 
+# add debian packages
+WORKDIR /tmp
+RUN apt update && apt upgrade -y && apt install -y wget
+RUN wget https://github.com/jgm/pandoc/releases/download/3.6.3/pandoc-3.6.3-1-amd64.deb
+RUN dpkg -i pandoc-3.6.3-1-amd64.deb
+
 RUN addgroup --system spring && adduser --system spring --home /user/spring && adduser spring spring
 USER spring:spring
 
@@ -9,8 +15,6 @@ WORKDIR /app
 COPY --chown=spring:spring pom.xml .
 RUN mvn -B dependency:resolve
 
-
-RUN ls -lahh
 
 # copy source code
 COPY --chown=spring:spring src ./src
