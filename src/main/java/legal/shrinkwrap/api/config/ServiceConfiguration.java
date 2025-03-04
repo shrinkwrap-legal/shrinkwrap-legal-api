@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import legal.shrinkwrap.api.service.CaselawAnalyzerService;
+import org.springframework.core.io.ResourceLoader;
 
 @Configuration
 @Import({CommonServiceConfiguration.class})
@@ -21,8 +22,11 @@ public class ServiceConfiguration {
     @Autowired
     ShrinkwrapPythonRestService shrinkwrapPythonRestService;
 
+    @Autowired
+    ResourceLoader resourceLoader;
+
     @Bean
     public CaselawAnalyzerService caselawAnalyzerService() {
-        return new CaselawAnalyzerService(chatClientBuilder, shrinkwrapPythonRestService);
+        return new CaselawAnalyzerService(chatClientBuilder, resourceLoader);
     }
 }

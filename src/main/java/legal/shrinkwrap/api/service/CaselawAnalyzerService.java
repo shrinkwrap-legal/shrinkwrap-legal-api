@@ -3,7 +3,7 @@ package legal.shrinkwrap.api.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Template;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
-import legal.shrinkwrap.api.python.ShrinkwrapPythonRestService;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.ai.chat.client.ChatClient;
@@ -13,19 +13,12 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.util.ResourceUtils;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import com.github.jknack.handlebars.Handlebars;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.file.Files;
-import java.time.Duration;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 
@@ -36,23 +29,24 @@ public class CaselawAnalyzerService {
 
     private final ChatClient chatClient;
 
-    private final ShrinkwrapPythonRestService pythonRestService;
 
-    public CaselawAnalyzerService(ChatClient.Builder chatClientBuilder, ShrinkwrapPythonRestService pythonRestService) {
+    public CaselawAnalyzerService(ChatClient.Builder chatClientBuilder, ResourceLoader resourceLoader) {
         chatClient = chatClientBuilder.build();
-        this.pythonRestService = pythonRestService;
 
         Handlebars handlebars = new Handlebars();
         try {
-            String s = Files.readString(ResourceUtils.getFile("classpath:prompts/parts.hbs").toPath());
+            Resource resource = resourceLoader.getResource("classpath:prompts/parts.hbs");
+            String s = IOUtils.toString(resource.getInputStream(), StandardCharsets.UTF_8);
             Template template = handlebars.compileInline(s);
             templates.put("parts", template);
 
-            s = Files.readString(ResourceUtils.getFile("classpath:prompts/summary.hbs").toPath());
+            resource = resourceLoader.getResource("classpath:prompts/summary.hbs");
+            s = IOUtils.toString(resource.getInputStream(), StandardCharsets.UTF_8);
             template = handlebars.compileInline(s);
             templates.put("summary", template);
 
-            s = Files.readString(ResourceUtils.getFile("classpath:prompts/summary.system.hbs").toPath());
+            resource = resourceLoader.getResource("classpath:prompts/summary.system.hbs");
+            s = IOUtils.toString(resource.getInputStream(), StandardCharsets.UTF_8);
             template = handlebars.compileInline(s);
             templates.put("summary.system", template);
 
