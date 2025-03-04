@@ -56,7 +56,7 @@ public class CaseLawEntity {
     private String metadata;
 
     @Column(name = "html", columnDefinition = "TEXT")
-    @Lob
+    @Basic(fetch = FetchType.LAZY)
     private String fullCleanHtml;
 
 }

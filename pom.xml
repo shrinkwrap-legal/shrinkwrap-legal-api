@@ -84,12 +84,12 @@
             <classifier>models</classifier>
         </dependency> -->
 
-        <dependency>
+        <!--<dependency>
             <groupId>edu.stanford.nlp</groupId>
             <artifactId>stanford-corenlp</artifactId>
             <version>4.5.8</version>
             <classifier>models-german</classifier>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>org.apache.opennlp</groupId>
