@@ -11,29 +11,14 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeConstants;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
+
+import at.gv.bka.ris.v26.soap.ws.client.*;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import at.gv.bka.ris.v26.soap.ws.client.BvwgSearchRequest;
-import at.gv.bka.ris.v26.soap.ws.client.DskSearchRequest;
-import at.gv.bka.ris.v26.soap.ws.client.FulltextSearchExpression;
-import at.gv.bka.ris.v26.soap.ws.client.JudikaturSearchRequest;
-import at.gv.bka.ris.v26.soap.ws.client.JudikaturTypSucheinschraenkung;
-import at.gv.bka.ris.v26.soap.ws.client.JustizSearchRequest;
-import at.gv.bka.ris.v26.soap.ws.client.LvwgSearchRequest;
-import at.gv.bka.ris.v26.soap.ws.client.OGDRisRequest;
-import at.gv.bka.ris.v26.soap.ws.client.ObjectFactory;
-import at.gv.bka.ris.v26.soap.ws.client.OgdDocumentResults;
-import at.gv.bka.ris.v26.soap.ws.client.OgdRisService;
-import at.gv.bka.ris.v26.soap.ws.client.OgdRisServiceSoap;
-import at.gv.bka.ris.v26.soap.ws.client.PageSize;
-import at.gv.bka.ris.v26.soap.ws.client.SearchDocumentsResponse;
-import at.gv.bka.ris.v26.soap.ws.client.VfghSearchRequest;
-import at.gv.bka.ris.v26.soap.ws.client.VwghSearchRequest;
 
 import legal.shrinkwrap.api.adapter.exception.AdapterRequestException;
 import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
@@ -160,6 +145,10 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
             case DSB -> {
                 DskSearchRequest dskSearchRequest = objectFactory.createDskSearchRequest();
                 judikaturSearchRequest.setDsk(dskSearchRequest);
+            }
+            case GBK -> {
+                GbkSearchRequest gbkSearchRequest = objectFactory.createGbkSearchRequest();
+                judikaturSearchRequest.setGbk(gbkSearchRequest);
             }
             case null, default -> {
                 throw new AdapterRequestException("Unknown court type "+searchParameter.court());
