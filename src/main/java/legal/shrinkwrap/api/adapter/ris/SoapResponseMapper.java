@@ -76,12 +76,18 @@ public class SoapResponseMapper {
                 fromArrayOfStrings(judikaturResponse.getNormen())
         );
 
-        if(judikaturResponse.getJustiz() != null) judikaturMetadaten.setJustizMetadaten(mapToJustizMetadaten(judikaturResponse.getJustiz()));
-        if(judikaturResponse.getBvwg() != null) judikaturMetadaten.setBvwgMetadaten(mapToBvwgMetadaten(judikaturResponse.getBvwg()));
-        if(judikaturResponse.getVwgh() != null) judikaturMetadaten.setVwghMetadaten(mapToVwghMetadaten(judikaturResponse.getVwgh()));
-        if(judikaturResponse.getVfgh() != null) judikaturMetadaten.setVfghMetadaten(mapToVfghMetadaten(judikaturResponse.getVfgh()));
-        if(judikaturResponse.getLvwg() != null) judikaturMetadaten.setLvwgMetadaten(mapToLvwgMetadaten(judikaturResponse.getLvwg()));
-        if(judikaturResponse.getDsk() != null) judikaturMetadaten.setDskMetadaten(mapToDskMetadaten(judikaturResponse.getDsk()));
+        if (judikaturResponse.getJustiz() != null)
+            judikaturMetadaten.setJustizMetadaten(mapToJustizMetadaten(judikaturResponse.getJustiz()));
+        if (judikaturResponse.getBvwg() != null)
+            judikaturMetadaten.setBvwgMetadaten(mapToBvwgMetadaten(judikaturResponse.getBvwg()));
+        if (judikaturResponse.getVwgh() != null)
+            judikaturMetadaten.setVwghMetadaten(mapToVwghMetadaten(judikaturResponse.getVwgh()));
+        if (judikaturResponse.getVfgh() != null)
+            judikaturMetadaten.setVfghMetadaten(mapToVfghMetadaten(judikaturResponse.getVfgh()));
+        if (judikaturResponse.getLvwg() != null)
+            judikaturMetadaten.setLvwgMetadaten(mapToLvwgMetadaten(judikaturResponse.getLvwg()));
+        if (judikaturResponse.getDsk() != null)
+            judikaturMetadaten.setDskMetadaten(mapToDskMetadaten(judikaturResponse.getDsk()));
 
         return judikaturMetadaten;
     }
@@ -108,17 +114,20 @@ public class SoapResponseMapper {
 
     private static RisVfghMetadaten mapToVfghMetadaten(VfghResponse vfghResponse) {
         // TODO map all metadata
-        return new RisVfghMetadaten(vfghResponse.getGericht());
+        return new RisVfghMetadaten(vfghResponse.getGericht(),
+                vfghResponse.getEntscheidungsart().value());
     }
 
     private static RisVwghMetadaten mapToVwghMetadaten(VwghResponse vwghResponse) {
         // TODO map all metadata
-        return new RisVwghMetadaten(vwghResponse.getGericht());
+        return new RisVwghMetadaten(vwghResponse.getGericht(),
+                vwghResponse.getEntscheidungsart().value());
     }
 
     private static RisLvwgMetadaten mapToLvwgMetadaten(LvwgResponse lvwgResponse) {
         // TODO map all metadata
-        return new RisLvwgMetadaten(lvwgResponse.getGericht());
+        return new RisLvwgMetadaten(lvwgResponse.getGericht(),
+                lvwgResponse.getEntscheidungsart().value());
     }
 
     private static RisDskMetadaten mapToDskMetadaten(DskResponse dskResponse) {
