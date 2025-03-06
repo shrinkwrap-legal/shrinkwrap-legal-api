@@ -1,10 +1,12 @@
 package legal.shrinkwrap.api.adapter.ris.dto;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Setter
 @Getter
+@NoArgsConstructor
 public abstract class RisBaseMetadaten {
     private String gericht;
     private String entscheidungsart;

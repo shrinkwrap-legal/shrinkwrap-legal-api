@@ -3,15 +3,8 @@ package legal.shrinkwrap.api.adapter.ris;
 import at.gv.bka.ris.v26.soap.ws.client.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import legal.shrinkwrap.api.adapter.ris.dto.RisBvwgMetadaten;
-import legal.shrinkwrap.api.adapter.ris.dto.RisDskMetadaten;
-import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturMetadaten;
-import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
-import legal.shrinkwrap.api.adapter.ris.dto.RisLvwgMetadaten;
-import legal.shrinkwrap.api.adapter.ris.dto.RisMetadaten;
+import legal.shrinkwrap.api.adapter.ris.dto.*;
 import legal.shrinkwrap.api.utils.ObjectMapperWithXmlGregorianCalenderSupport;
-import legal.shrinkwrap.api.adapter.ris.dto.RisVfghMetadaten;
-import legal.shrinkwrap.api.adapter.ris.dto.RisVwghMetadaten;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +81,8 @@ public class SoapResponseMapper {
             judikaturMetadaten.setLvwgMetadaten(mapToLvwgMetadaten(judikaturResponse.getLvwg()));
         if (judikaturResponse.getDsk() != null)
             judikaturMetadaten.setDskMetadaten(mapToDskMetadaten(judikaturResponse.getDsk()));
-
+        if (judikaturResponse.getGbk() != null)
+            judikaturMetadaten.setGbkMetadaten(mapToGbkMetadaten(judikaturResponse.getGbk()));
         return judikaturMetadaten;
     }
 
@@ -132,7 +126,12 @@ public class SoapResponseMapper {
 
     private static RisDskMetadaten mapToDskMetadaten(DskResponse dskResponse) {
         // TODO map all metadata
-        return new RisDskMetadaten();
+        return new RisDskMetadaten(dskResponse.getEntscheidungsart().value());
+    }
+
+    private static RisGbkMetadaten mapToGbkMetadaten(GbkResponse gbkResponse) {
+        // TODO map all metadata
+        return new RisGbkMetadaten(gbkResponse.getEntscheidungsart().value());
     }
 
     private static String mapUrl(List<WebDocumentContentReference> referenceList) {

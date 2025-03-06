@@ -36,7 +36,11 @@ public class CaseLawEntity {
 
     private String applicationType; //Justiz, DSB, etc
 
-    private String court; //organ
+    private String organ; //organ
+
+    private String court;
+
+    private String decisionType; //VfGH, VwGH
 
     private String url;
 

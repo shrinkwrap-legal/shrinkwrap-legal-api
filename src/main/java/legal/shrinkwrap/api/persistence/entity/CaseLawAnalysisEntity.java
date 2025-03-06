@@ -8,10 +8,15 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
+@Entity
 @Table(name = "caselaw_analysis")
 @Getter
 @Setter
 public class CaseLawAnalysisEntity {
+    @Id
+    @GeneratedValue
+    private Long id;
+
     @ManyToOne(fetch = FetchType.LAZY)
     private CaseLawEntity caseLaw;
 
@@ -33,6 +38,6 @@ public class CaseLawAnalysisEntity {
     @Lob
     private String sentences;
 
-    @Column(name = "wordcount")
+    @Column(name = "word_count")
     private Long wordCount;
 }
