@@ -1,6 +1,7 @@
 package legal.shrinkwrap.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import legal.shrinkwrap.api.adapter.HtmlDownloadService;
 import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLaw;
 import legal.shrinkwrap.api.adapter.ris.RisSoapAdapter;
@@ -234,6 +235,11 @@ public class DocumentServiceImpl implements DocumentService {
                 sentencesFile);
 
         return dataset;
+    }
+
+    //@PostConstruct
+    public void initDB() {
+        doInitialImportFor(Year.of(2021));
     }
 
     @Override
