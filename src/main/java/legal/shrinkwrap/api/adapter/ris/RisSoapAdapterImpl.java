@@ -1,9 +1,6 @@
 package legal.shrinkwrap.api.adapter.ris;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -91,7 +88,7 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
 
         if(searchParameter.year() != null) {
             try {
-                ZonedDateTime datetimeStart = ZonedDateTime.of(LocalDate.of(searchParameter.year().getValue(), 1,1), LocalTime.MIN, ZoneId.of("Europe/Vienna"));
+                ZonedDateTime datetimeStart = ZonedDateTime.of(LocalDate.of(searchParameter.year().getValue(), 1,1), LocalTime.MIN, ZoneId.ofOffset("", ZoneOffset.ofHours(1)));
                 XMLGregorianCalendar decisionDateStart = DatatypeFactory.newInstance().newXMLGregorianCalendar(GregorianCalendar.from(datetimeStart));
                 decisionDateStart.setHour(DatatypeConstants.FIELD_UNDEFINED);
                 decisionDateStart.setMinute(DatatypeConstants.FIELD_UNDEFINED);
@@ -100,7 +97,7 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
                 JAXBElement<XMLGregorianCalendar> xmlStart = objectFactory.createJudikaturSearchRequestEntscheidungsdatumVon(decisionDateStart);
                 judikaturSearchRequest.setEntscheidungsdatumVon(xmlStart);
 
-                ZonedDateTime datetimeEnd = ZonedDateTime.of(LocalDate.of(searchParameter.year().getValue(), 12,31), LocalTime.MAX, ZoneId.of("Europe/Vienna"));
+                ZonedDateTime datetimeEnd = ZonedDateTime.of(LocalDate.of(searchParameter.year().getValue(), 12,31), LocalTime.MAX, ZoneId.ofOffset("", ZoneOffset.ofHours(1)));
                 XMLGregorianCalendar decisionDateEnd = DatatypeFactory.newInstance().newXMLGregorianCalendar(GregorianCalendar.from(datetimeEnd));
                 decisionDateEnd.setHour(DatatypeConstants.FIELD_UNDEFINED);
                 decisionDateEnd.setMinute(DatatypeConstants.FIELD_UNDEFINED);
