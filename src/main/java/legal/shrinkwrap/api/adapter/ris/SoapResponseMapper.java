@@ -126,7 +126,8 @@ public class SoapResponseMapper {
 
     private static RisDskMetadaten mapToDskMetadaten(DskResponse dskResponse) {
         // TODO map all metadata
-        return new RisDskMetadaten(dskResponse.getEntscheidungsart().value());
+        return new RisDskMetadaten(dskResponse.getEntscheidendeBehoerde(),
+                dskResponse.getEntscheidungsart().value());
     }
 
     private static RisGbkMetadaten mapToGbkMetadaten(GbkResponse gbkResponse) {
