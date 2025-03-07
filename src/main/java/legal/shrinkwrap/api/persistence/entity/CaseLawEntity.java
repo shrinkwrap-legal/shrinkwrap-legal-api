@@ -31,7 +31,7 @@ public class CaseLawEntity {
     @Column(name = "docnumber", nullable = false, unique = true)
     private String docNumber;
 
-    @Column
+    @Column(length = 2048)
     private String caseNumber;
 
     private String applicationType; //Justiz, DSB, etc
