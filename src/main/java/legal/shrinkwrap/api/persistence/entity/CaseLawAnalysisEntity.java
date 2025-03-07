@@ -21,7 +21,7 @@ public class CaseLawAnalysisEntity {
     private CaseLawEntity caseLaw;
 
     @Column(name = "analysis_type")
-    private String analysisType = "fullAnalysis";
+    private String analysisType = "text";
 
 
     @CreationTimestamp
@@ -30,8 +30,7 @@ public class CaseLawAnalysisEntity {
     @UpdateTimestamp
     private LocalDateTime updated;
 
-    @Column
-    @Lob
+    @Column(name="full_text", columnDefinition = "TEXT")
     private String fullText;
 
     @Column

@@ -11,12 +11,17 @@ import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
 import legal.shrinkwrap.api.dto.CaseLawRequestDto;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
+import legal.shrinkwrap.api.persistence.entity.CaseLawAnalysisEntity;
 import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
+import legal.shrinkwrap.api.persistence.repo.CaseLawAnalysisRepository;
 import legal.shrinkwrap.api.persistence.repo.CaseLawRepository;
 import legal.shrinkwrap.api.python.ShrinkwrapPythonRestService;
+import legal.shrinkwrap.api.utils.PandocTextWrapper;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -36,15 +41,20 @@ public class DocumentServiceImpl implements DocumentService {
 
     private final CaseLawRepository caseLawRepository;
 
+    private final CaseLawAnalysisRepository caseLawAnalysisRepository;
+
+
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public DocumentServiceImpl(RisSoapAdapter risSoapAdapter, HtmlDownloadService htmlDownloadService, CaselawTextService caselawTextService, FileHandlingService fileHandlingService, ShrinkwrapPythonRestService shrinkwrapPythonRestService, CaseLawRepository caseLawRepository) {
+    public DocumentServiceImpl(RisSoapAdapter risSoapAdapter, HtmlDownloadService htmlDownloadService, CaselawTextService caselawTextService, FileHandlingService fileHandlingService, ShrinkwrapPythonRestService shrinkwrapPythonRestService, CaseLawRepository caseLawRepository, CaseLawAnalysisRepository caseLawAnalysisRepository) {
         this.risSoapAdapter = risSoapAdapter;
         this.htmlDownloadService = htmlDownloadService;
         this.caselawTextService = caselawTextService;
         this.fileHandlingService = fileHandlingService;
         this.shrinkwrapPythonRestService = shrinkwrapPythonRestService;
         this.caseLawRepository = caseLawRepository;
+        this.caseLawAnalysisRepository = caseLawAnalysisRepository;
     }
 
     @Override
@@ -81,6 +91,7 @@ public class DocumentServiceImpl implements DocumentService {
             //html
             String htmlContent = htmlDownloadService.downloadHtml(entity.getHtmlUrl());
             CaseLawResponseDto dto = caselawTextService.prepareRISCaseLawHtml(htmlContent);
+            String textContent = PandocTextWrapper.convertHtmlToText(htmlContent);
             entity.setFullCleanHtml(dto.caselawHtml());
 
             caseLawEntity = caseLawRepository.save(entity);
@@ -109,12 +120,42 @@ public class DocumentServiceImpl implements DocumentService {
         entity.setHtmlUrl(judikaturResult.getHtmlDocumentUrl());
         entity.setLastChangedDate(judikaturResult.getMetadaten().getChanged());
         entity.setPublishedDate(judikaturResult.getMetadaten().getPublished());
-        entity.setCourt(judikaturResult.getMetadaten().getOrgan());
+        entity.setOrgan(judikaturResult.getMetadaten().getOrgan());
 
         //judikatur specific metadata
         entity.setEcli(metadata.getEcli());
         entity.setCaseNumber(metadata.getGeschaeftszahl().getFirst());
         entity.setDecisionDate(metadata.getEntscheidungsdatum());
+
+        if (judikaturResult.getJudikaturMetadaten().getVfghMetadaten() != null) {
+            entity.setDecisionType(judikaturResult.getJudikaturMetadaten().getVfghMetadaten().getEntscheidungsart());
+            entity.setCourt(judikaturResult.getJudikaturMetadaten().getVfghMetadaten().getGericht());
+        }
+        else if (judikaturResult.getJudikaturMetadaten().getVwghMetadaten() != null) {
+            entity.setDecisionType(judikaturResult.getJudikaturMetadaten().getVwghMetadaten().getEntscheidungsart());
+            entity.setCourt(judikaturResult.getJudikaturMetadaten().getVwghMetadaten().getGericht());
+        }
+        else if (judikaturResult.getJudikaturMetadaten().getLvwgMetadaten() != null) {
+            entity.setDecisionType(judikaturResult.getJudikaturMetadaten().getLvwgMetadaten().getEntscheidungsart());
+            entity.setCourt(judikaturResult.getJudikaturMetadaten().getLvwgMetadaten().getGericht());
+        }
+        else if (judikaturResult.getJudikaturMetadaten().getDskMetadaten() != null) {
+            entity.setDecisionType(judikaturResult.getJudikaturMetadaten().getDskMetadaten().getEntscheidungsart());
+            entity.setCourt(judikaturResult.getJudikaturMetadaten().getDskMetadaten().getGericht());
+        }
+        else if (judikaturResult.getJudikaturMetadaten().getBvwgMetadaten() != null) {
+            entity.setDecisionType(judikaturResult.getJudikaturMetadaten().getBvwgMetadaten().getEntscheidungsart());
+            entity.setCourt(judikaturResult.getJudikaturMetadaten().getBvwgMetadaten().getGericht());
+        }
+        else if (judikaturResult.getJudikaturMetadaten().getGbkMetadaten() != null) {
+            entity.setDecisionType(judikaturResult.getJudikaturMetadaten().getGbkMetadaten().getEntscheidungsart());
+            entity.setCourt(judikaturResult.getJudikaturMetadaten().getGbkMetadaten().getGericht());
+        }
+        else if (judikaturResult.getJudikaturMetadaten().getJustizMetadaten() != null) {
+            entity.setDecisionType(judikaturResult.getJudikaturMetadaten().getJustizMetadaten().getEntscheidungsart());
+            entity.setCourt(judikaturResult.getJudikaturMetadaten().getJustizMetadaten().getGericht());
+        }
+
 
         entity.setMetadata(judikaturResult.getMetadaten().getFullResponseAsJson());
 
@@ -193,5 +234,52 @@ public class DocumentServiceImpl implements DocumentService {
                 sentencesFile);
 
         return dataset;
+    }
+
+    @Override
+    public void doInitialImportFor(Year year) {
+        for (RisCourt court : RisCourt.values()) {
+            RisSearchResult results = risSoapAdapter.findCaseLawDocuments(
+                    RisSearchParameterCaseLaw.builder()
+                            .court(court)
+                            .year(year)
+                            .judikaturTyp(new RisSearchParameterCaseLaw.JudikaturTyp(false, true))
+                            .build()
+            );
+
+            for (RisJudikaturResult result : results.getJudikaturResults()) {
+                String docNumber = result.getMetadaten().getId();
+                Optional<CaseLawEntity> dbEntity = caseLawRepository.findCaseLawEntityByDocNumber(docNumber);
+                CaseLawEntity entity;
+                if (dbEntity.isPresent()) {
+                    entity = dbEntity.get();
+                }
+                else {
+                    entity = mapJudikaturResultToEntity(result);
+                    entity = caseLawRepository.save(entity);
+                }
+
+                //check if html exists, otherwise download
+                if (Strings.isEmpty(entity.getFullCleanHtml())) {
+                    String htmlContent = htmlDownloadService.downloadHtml(entity.getHtmlUrl());
+                    CaseLawResponseDto dto = caselawTextService.prepareRISCaseLawHtml(htmlContent);
+                    entity.setFullCleanHtml(dto.caselawHtml());
+
+                    String fullTextOnly = PandocTextWrapper.convertHtmlToText(htmlContent);
+                    long wordCount = fullTextOnly.split(" ").length;
+                    CaseLawAnalysisEntity analysisEntity = new CaseLawAnalysisEntity();
+                    analysisEntity.setWordCount(wordCount);
+                    analysisEntity.setCaseLaw(entity);
+                    analysisEntity.setFullText(fullTextOnly);
+
+                    entity = caseLawRepository.save(entity);
+                    analysisEntity = caseLawAnalysisRepository.save(analysisEntity);
+                }
+            }
+
+
+        }
+
+
     }
 }
