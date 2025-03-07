@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RisSoapAdapterImpl implements RisSoapAdapter {
     private final static Logger LOG = LoggerFactory.getLogger(RisSoapAdapterImpl.class);
-    private final Long MAX_SIZE = 10L;
+    private final Long MAX_SIZE = 1000000L;
     private final String STATUS_OK = "ok";
 
     private final OgdRisServiceSoap risSoap;
@@ -179,7 +179,7 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
             documents.addAll(searchDocumentsResult.getOgdDocumentResults().getOgdDocumentReference());
             resultSize = searchDocumentsResult.getOgdDocumentResults().getHits().getValue().longValue();
             pageCount++;
-            LOG.info(documents.size() + " documents found in page " + pageCount + " of " + resultSize + " - " + (documents.size()*100 / resultSize) + " %");
+            LOG.info(documents.size() + " documents found in page " + pageCount + " of " + resultSize + " - " + (documents.size()*100 / (Math.max(resultSize,1))) + " %");
         } while (documents.size() < resultSize && documents.size() < MAX_SIZE);
 
         return documents;
