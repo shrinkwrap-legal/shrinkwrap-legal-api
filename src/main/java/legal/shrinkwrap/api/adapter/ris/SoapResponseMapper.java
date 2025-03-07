@@ -131,7 +131,7 @@ public class SoapResponseMapper {
 
     private static RisGbkMetadaten mapToGbkMetadaten(GbkResponse gbkResponse) {
         // TODO map all metadata
-        return new RisGbkMetadaten(gbkResponse.getEntscheidungsart().value());
+        return new RisGbkMetadaten(gbkResponse.getKommission(), gbkResponse.getEntscheidungsart().value());
     }
 
     private static String mapUrl(List<WebDocumentContentReference> referenceList) {
