@@ -1,41 +1,23 @@
 package legal.shrinkwrap.api.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import legal.shrinkwrap.api.adapter.HtmlDownloadService;
-import legal.shrinkwrap.api.config.AdapterConfiguration;
-import legal.shrinkwrap.api.config.ChatClientConfiguration;
-import legal.shrinkwrap.api.config.ServiceConfiguration;
-import legal.shrinkwrap.api.dataset.CaseLawDataset;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import legal.shrinkwrap.api.adapter.HtmlDownloadService;
+import legal.shrinkwrap.api.dataset.CaseLawDataset;
 
 
 @SpringBootTest
+@Tag("integration")
 class CaselawAnalyzerServiceTest {
 
     @Autowired
