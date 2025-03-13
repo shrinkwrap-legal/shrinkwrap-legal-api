@@ -8,7 +8,7 @@ services:
       POSTGRES_DB: 'shrinkwrap'
       POSTGRES_PASSWORD: 'shrinkwrap'
     volumes:
-      - /home/shrinkwrap/data:/var/lib/postgresql/data
+      - /mnt/volume-shrinkwrap/postgresql/data:/var/lib/postgresql/data
   api:
     build:
       context: ./
