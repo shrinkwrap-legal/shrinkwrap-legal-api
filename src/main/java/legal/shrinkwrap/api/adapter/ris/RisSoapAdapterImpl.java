@@ -4,12 +4,14 @@ import java.time.*;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeConstants;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import at.gv.bka.ris.v26.soap.ws.client.*;
+import com.github.javaparser.utils.Log;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
@@ -211,6 +213,22 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
 
         List<RisJudikaturResult> judikaturResults =  documentResults.stream().map(SoapResponseMapper::mapToJudikaturResult).toList();
 
+        //for changedSince, we're not able to filter by rechtssatz/entscheidung in request, so we have to
+        //do afterward
+        if (searchParameter.changedInLastXDays() != null && searchParameter.judikaturTyp() != null) {
+            judikaturResults = judikaturResults.stream().filter(r -> {
+                switch (r.getJudikaturMetadaten().getDokumenttyp()) {
+                    case TEXT -> {
+                        return searchParameter.judikaturTyp().inEntscheidungstexten();
+                    }
+                    case RECHTSSATZ -> {
+                        return searchParameter.judikaturTyp().inRechtssaetzen();
+                    }
+                }
+                return false;
+            }).collect(Collectors.toList());
+            LOG.info("filtered to " + judikaturResults.size());
+        }
 
         return new RisSearchResult(judikaturResults);
     }
