@@ -1,5 +1,6 @@
 package legal.shrinkwrap.api.service;
 
+import jakarta.annotation.PostConstruct;
 import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLaw;
 import legal.shrinkwrap.api.adapter.ris.RisSoapAdapter;
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
