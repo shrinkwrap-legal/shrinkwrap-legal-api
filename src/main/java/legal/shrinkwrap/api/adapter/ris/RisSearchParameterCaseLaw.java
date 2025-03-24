@@ -11,6 +11,7 @@ public record RisSearchParameterCaseLaw(
         String ecli,
         String docNumber,
         Year year,
+        Integer changedInLastXDays,
         JudikaturTyp judikaturTyp
 ) {
     //Builder
@@ -20,6 +21,7 @@ public record RisSearchParameterCaseLaw(
         private String ecli;
         private String docNumber;
         private Year year;
+        private Integer changedInLastXDays;
         private RisSearchParameterCaseLaw.JudikaturTyp judikaturTyp = new JudikaturTyp(true, true);
 
         public RisSearchParameterCaseLawBuilder court(RisCourt court) {
@@ -37,6 +39,11 @@ public record RisSearchParameterCaseLaw(
             return this;
         }
 
+        public RisSearchParameterCaseLawBuilder changedInLastXDays(Integer changedInLastXDays) {
+            this.changedInLastXDays = changedInLastXDays;
+            return this;
+        }
+
         public RisSearchParameterCaseLawBuilder year(Year year) {
             this.year = year;
             return this;
@@ -48,7 +55,7 @@ public record RisSearchParameterCaseLaw(
         }
 
         public RisSearchParameterCaseLaw build() {
-            return new RisSearchParameterCaseLaw(court, ecli, docNumber, year, judikaturTyp);
+            return new RisSearchParameterCaseLaw(court, ecli, docNumber, year, changedInLastXDays, judikaturTyp);
         }
 
     }

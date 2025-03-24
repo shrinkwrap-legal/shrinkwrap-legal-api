@@ -108,47 +108,102 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
             } catch (DatatypeConfigurationException e) {
                 throw new RuntimeException(e);
             }
+        }
 
+        //Search by change date
+        if (searchParameter.changedInLastXDays() != null) {
+            risRequest.setSuche(null); //unsupported in change request
+
+            try {
+                OGDHistoryType ogdHistoryType = objectFactory.createOGDHistoryType();
+                ogdHistoryType.setIncludeDeletedDocuments(false);
+                switch (searchParameter.court()) {
+                    case Justiz -> {
+                        ogdHistoryType.setAnwendung(HistoryRequestApplicationType.JUSTIZ);
+                    }
+                    case VwGH -> {
+                        ogdHistoryType.setAnwendung(HistoryRequestApplicationType.VWGH);
+                    }
+                    case VfGH -> {
+                        ogdHistoryType.setAnwendung(HistoryRequestApplicationType.VFGH);
+                    }
+                    case BVwG -> {
+                        ogdHistoryType.setAnwendung(HistoryRequestApplicationType.BVWG);
+                    }
+                    case LVwG -> {
+                        ogdHistoryType.setAnwendung(HistoryRequestApplicationType.LVWG);
+                    }
+                    case DSB -> {
+                        ogdHistoryType.setAnwendung(HistoryRequestApplicationType.DSK);
+                    }
+                    case GBK -> {
+                        ogdHistoryType.setAnwendung(HistoryRequestApplicationType.GBK);
+                    }
+                }
+
+                ZonedDateTime datetimeStart = ZonedDateTime.now(ZoneId.of("Europe/Vienna")).minusDays(searchParameter.changedInLastXDays());
+                XMLGregorianCalendar decisionDateStart = DatatypeFactory.newInstance().newXMLGregorianCalendar(GregorianCalendar.from(datetimeStart));
+                decisionDateStart.setHour(DatatypeConstants.FIELD_UNDEFINED);
+                decisionDateStart.setMinute(DatatypeConstants.FIELD_UNDEFINED);
+                decisionDateStart.setSecond(DatatypeConstants.FIELD_UNDEFINED);
+                decisionDateStart.setMillisecond(DatatypeConstants.FIELD_UNDEFINED);
+                JAXBElement<XMLGregorianCalendar> xmlStart = objectFactory.createOGDHistoryTypeAenderungenVon(decisionDateStart);
+                ogdHistoryType.setAenderungenVon(xmlStart);
+
+                ZonedDateTime datetimeEnd = ZonedDateTime.now(ZoneId.of("Europe/Vienna")).plusDays(1);
+                XMLGregorianCalendar decisionDateEnd = DatatypeFactory.newInstance().newXMLGregorianCalendar(GregorianCalendar.from(datetimeEnd));
+                decisionDateEnd.setHour(DatatypeConstants.FIELD_UNDEFINED);
+                decisionDateEnd.setMinute(DatatypeConstants.FIELD_UNDEFINED);
+                decisionDateEnd.setSecond(DatatypeConstants.FIELD_UNDEFINED);
+                decisionDateEnd.setMillisecond(DatatypeConstants.FIELD_UNDEFINED);
+                JAXBElement<XMLGregorianCalendar> xmlEnd = objectFactory.createOGDHistoryTypeAenderungenBis(decisionDateEnd);
+                ogdHistoryType.setAenderungenBis(xmlEnd);
+                risRequest.setAenderungen(ogdHistoryType);
+            } catch (DatatypeConfigurationException e) {
+                throw new RuntimeException(e);
+            }
         }
 
 
+        if (searchParameter.changedInLastXDays() == null) {
 
-        JudikaturTypSucheinschraenkung judikaturTyp = objectFactory.createJudikaturTypSucheinschraenkung();
-        judikaturTyp.setSucheInRechtssaetzen(searchParameter.judikaturTyp().inRechtssaetzen());
-        judikaturTyp.setSucheInEntscheidungstexten(searchParameter.judikaturTyp().inEntscheidungstexten());
-        judikaturSearchRequest.setDokumenttyp(judikaturTyp);
+            JudikaturTypSucheinschraenkung judikaturTyp = objectFactory.createJudikaturTypSucheinschraenkung();
+            judikaturTyp.setSucheInRechtssaetzen(searchParameter.judikaturTyp().inRechtssaetzen());
+            judikaturTyp.setSucheInEntscheidungstexten(searchParameter.judikaturTyp().inEntscheidungstexten());
+            judikaturSearchRequest.setDokumenttyp(judikaturTyp);
 
-        switch (searchParameter.court()) {
-            case Justiz -> {
-                JustizSearchRequest justizSearchRequest = objectFactory.createJustizSearchRequest();
-                judikaturSearchRequest.setJustiz(justizSearchRequest);
-            }
-            case VfGH -> {
-                VfghSearchRequest vfghSearchRequest = objectFactory.createVfghSearchRequest();
-                judikaturSearchRequest.setVfgh(vfghSearchRequest);
-            }
-            case VwGH -> {
-                VwghSearchRequest vwghSearchRequest = objectFactory.createVwghSearchRequest();
-                judikaturSearchRequest.setVwgh(vwghSearchRequest);
-            }
-            case LVwG -> {
-                LvwgSearchRequest lvwgSearchRequest = objectFactory.createLvwgSearchRequest();
-                judikaturSearchRequest.setLvwg(lvwgSearchRequest);
-            }
-            case BVwG -> {
-                BvwgSearchRequest bvwgSearchRequest = objectFactory.createBvwgSearchRequest();
-                judikaturSearchRequest.setBvwg(bvwgSearchRequest);
-            }
-            case DSB -> {
-                DskSearchRequest dskSearchRequest = objectFactory.createDskSearchRequest();
-                judikaturSearchRequest.setDsk(dskSearchRequest);
-            }
-            case GBK -> {
-                GbkSearchRequest gbkSearchRequest = objectFactory.createGbkSearchRequest();
-                judikaturSearchRequest.setGbk(gbkSearchRequest);
-            }
-            case null, default -> {
-                throw new AdapterRequestException("Unknown court type "+searchParameter.court());
+            switch (searchParameter.court()) {
+                case Justiz -> {
+                    JustizSearchRequest justizSearchRequest = objectFactory.createJustizSearchRequest();
+                    judikaturSearchRequest.setJustiz(justizSearchRequest);
+                }
+                case VfGH -> {
+                    VfghSearchRequest vfghSearchRequest = objectFactory.createVfghSearchRequest();
+                    judikaturSearchRequest.setVfgh(vfghSearchRequest);
+                }
+                case VwGH -> {
+                    VwghSearchRequest vwghSearchRequest = objectFactory.createVwghSearchRequest();
+                    judikaturSearchRequest.setVwgh(vwghSearchRequest);
+                }
+                case LVwG -> {
+                    LvwgSearchRequest lvwgSearchRequest = objectFactory.createLvwgSearchRequest();
+                    judikaturSearchRequest.setLvwg(lvwgSearchRequest);
+                }
+                case BVwG -> {
+                    BvwgSearchRequest bvwgSearchRequest = objectFactory.createBvwgSearchRequest();
+                    judikaturSearchRequest.setBvwg(bvwgSearchRequest);
+                }
+                case DSB -> {
+                    DskSearchRequest dskSearchRequest = objectFactory.createDskSearchRequest();
+                    judikaturSearchRequest.setDsk(dskSearchRequest);
+                }
+                case GBK -> {
+                    GbkSearchRequest gbkSearchRequest = objectFactory.createGbkSearchRequest();
+                    judikaturSearchRequest.setGbk(gbkSearchRequest);
+                }
+                case null, default -> {
+                    throw new AdapterRequestException("Unknown court type " + searchParameter.court());
+                }
             }
         }
 
@@ -203,6 +258,9 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
             if(risRequest.getSuche().getBundesrecht() != null) {
                 risRequest.getSuche().getBundesrecht().setSeitennummer(seitennummer);
             }
+        } else if (risRequest != null && risRequest.getAenderungen() != null) {
+            risRequest.getAenderungen().setDokumenteProSeite(PageSize.ONE_HUNDRED);
+            risRequest.getAenderungen().setSeitennummer(seitennummer);
         }
 
     }

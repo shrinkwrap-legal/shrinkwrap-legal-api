@@ -35,4 +35,13 @@ public class RisSoapAdapterTest {
         assertThat(result).isNotNull();
         assertThat(result.getJudikaturResults()).hasSize(1);
     }
+
+    @Test
+    public void test_findDocumentForChanges() {
+        RisSearchResult result = risSoapAdapter.findCaseLawDocuments(RisSearchParameterCaseLaw.builder()
+                .changedInLastXDays(5)
+                .court(RisCourt.Justiz)
+                .build());
+        assertThat(result).isNotNull();
+    }
 }
