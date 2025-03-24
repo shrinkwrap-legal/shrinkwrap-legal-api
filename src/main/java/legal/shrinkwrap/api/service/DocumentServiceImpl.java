@@ -1,7 +1,6 @@
 package legal.shrinkwrap.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.annotation.PostConstruct;
 import legal.shrinkwrap.api.adapter.HtmlDownloadService;
 import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLaw;
 import legal.shrinkwrap.api.adapter.ris.RisSoapAdapter;
@@ -237,55 +236,36 @@ public class DocumentServiceImpl implements DocumentService {
         return dataset;
     }
 
-    //@PostConstruct
-    public void initDB() {
-        doInitialImportFor(Year.of(2021));
-    }
 
     @Override
-    public void doInitialImportFor(Year year) {
-        for (RisCourt court : RisCourt.values()) {
-            RisSearchResult results = risSoapAdapter.findCaseLawDocuments(
-                    RisSearchParameterCaseLaw.builder()
-                            .court(court)
-                            .year(year)
-                            .judikaturTyp(new RisSearchParameterCaseLaw.JudikaturTyp(false, true))
-                            .build()
-            );
-
-            for (RisJudikaturResult result : results.getJudikaturResults()) {
-                String docNumber = result.getMetadaten().getId();
-                Optional<CaseLawEntity> dbEntity = caseLawRepository.findCaseLawEntityByDocNumber(docNumber);
-                CaseLawEntity entity;
-                if (dbEntity.isPresent()) {
-                    entity = dbEntity.get();
-                }
-                else {
-                    entity = mapJudikaturResultToEntity(result);
-                    entity = caseLawRepository.save(entity);
-                }
-
-                //check if html exists, otherwise download
-                if (Strings.isEmpty(entity.getFullCleanHtml())) {
-                    String htmlContent = htmlDownloadService.downloadHtml(entity.getHtmlUrl());
-                    CaseLawResponseDto dto = caselawTextService.prepareRISCaseLawHtml(htmlContent);
-                    entity.setFullCleanHtml(dto.caselawHtml());
-
-                    String fullTextOnly = PandocTextWrapper.convertHtmlToText(htmlContent);
-                    long wordCount = fullTextOnly.split(" ").length;
-                    CaseLawAnalysisEntity analysisEntity = new CaseLawAnalysisEntity();
-                    analysisEntity.setWordCount(wordCount);
-                    analysisEntity.setCaseLaw(entity);
-                    analysisEntity.setFullText(fullTextOnly);
-
-                    entity = caseLawRepository.save(entity);
-                    analysisEntity = caseLawAnalysisRepository.save(analysisEntity);
-                }
-            }
-
-
+    public void importJudikaturResult(RisJudikaturResult result) {
+        String docNumber = result.getMetadaten().getId();
+        Optional<CaseLawEntity> dbEntity = caseLawRepository.findCaseLawEntityByDocNumber(docNumber);
+        CaseLawEntity entity;
+        if (dbEntity.isPresent()) {
+            entity = dbEntity.get();
+        } else {
+            entity = mapJudikaturResultToEntity(result);
+            entity = caseLawRepository.save(entity);
         }
 
+        //check if html exists, otherwise download
+        if (Strings.isEmpty(entity.getFullCleanHtml())) {
+            String htmlContent = htmlDownloadService.downloadHtml(entity.getHtmlUrl());
+            CaseLawResponseDto dto = caselawTextService.prepareRISCaseLawHtml(htmlContent);
+            entity.setFullCleanHtml(dto.caselawHtml());
 
+            String fullTextOnly = PandocTextWrapper.convertHtmlToText(htmlContent);
+            long wordCount = fullTextOnly.split(" ").length;
+            CaseLawAnalysisEntity analysisEntity = new CaseLawAnalysisEntity();
+            analysisEntity.setWordCount(wordCount);
+            analysisEntity.setCaseLaw(entity);
+            analysisEntity.setFullText(fullTextOnly);
+
+            entity = caseLawRepository.save(entity);
+            analysisEntity = caseLawAnalysisRepository.save(analysisEntity);
+        }
     }
+
+
 }

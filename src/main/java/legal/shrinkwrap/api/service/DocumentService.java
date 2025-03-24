@@ -1,5 +1,6 @@
 package legal.shrinkwrap.api.service;
 
+import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
 import legal.shrinkwrap.api.dto.CaseLawRequestDto;
@@ -13,5 +14,5 @@ public interface DocumentService {
 
     CaseLawDataset getCaselawDatasetForECLI(String ecli);
 
-    void doInitialImportFor(Year year);
+    void importJudikaturResult(RisJudikaturResult result);
 }
