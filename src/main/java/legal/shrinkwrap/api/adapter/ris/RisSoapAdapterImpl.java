@@ -16,6 +16,7 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
 
+import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -217,6 +218,12 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
         //do afterward
         if (searchParameter.changedInLastXDays() != null && searchParameter.judikaturTyp() != null) {
             judikaturResults = judikaturResults.stream().filter(r -> {
+                if (r.getJudikaturMetadaten() == null || r.getJudikaturMetadaten().getDokumenttyp() == null) {
+                    if (searchParameter.court() == RisCourt.GBK) {
+                        return true;
+                    }
+                    return false;
+                }
                 switch (r.getJudikaturMetadaten().getDokumenttyp()) {
                     case TEXT -> {
                         return searchParameter.judikaturTyp().inEntscheidungstexten();
