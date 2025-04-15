@@ -8,7 +8,7 @@ RUN dpkg -i pandoc-3.6.3-1-amd64.deb
 
 # install new ris certificate
 RUN wget https://repo.harica.gr/certs/HARICA-TLS-Root-2021-RSA.pem
-RUN keytool -import -trustcacerts -file HARICA-TLS-Root-2021-RSA.pem -alias HARICA-TLS-RSA -keystore /usr/lib/jvm/java-21-amazon-corretto/bin/cacerts -storepass changeit -noprompt
+RUN keytool -import -trustcacerts -file HARICA-TLS-Root-2021-RSA.pem -alias HARICA-TLS-RSA -keystore /usr/lib/jvm/java-21-amazon-corretto/lib/security/cacerts -storepass changeit -noprompt
 
 RUN addgroup --system spring && adduser --system spring --home /user/spring && adduser spring spring
 USER spring:spring
@@ -34,3 +34,4 @@ EXPOSE 8080
 
 # Run the app
 ENTRYPOINT ["java","-jar","target/API-0.0.1-SNAPSHOT.jar"]
+#ENTRYPOINT ["/bin/bash"]
