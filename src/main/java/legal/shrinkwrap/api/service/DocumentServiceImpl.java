@@ -18,6 +18,7 @@ import legal.shrinkwrap.api.persistence.repo.CaseLawRepository;
 import legal.shrinkwrap.api.python.ShrinkwrapPythonRestService;
 import legal.shrinkwrap.api.utils.PandocTextWrapper;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -43,7 +44,8 @@ public class DocumentServiceImpl implements DocumentService {
 
     private final CaseLawAnalysisRepository caseLawAnalysisRepository;
 
-
+    @Value("${download-missing-judicature}")
+    private Boolean downloadMissing;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -72,6 +74,10 @@ public class DocumentServiceImpl implements DocumentService {
 
         //if no match, get from RIS, and save to db
         if (dbEntity.isEmpty()) {
+            if (!downloadMissing) {
+                //no downloading - so nothing to return here
+                return null;
+            }
             RisSearchParameterCaseLaw.RisSearchParameterCaseLawBuilder builder = RisSearchParameterCaseLaw.builder();
             builder.court(requestDto.court());
             if (requestDto.ecli() != null) {
