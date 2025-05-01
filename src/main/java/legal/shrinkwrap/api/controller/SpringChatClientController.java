@@ -15,7 +15,7 @@ public class SpringChatClientController {
 
     private final ChatClient chatClient;
 
-    public SpringChatClientController(@Qualifier("ollamaChatClientBuilder") ChatClient.Builder chatClientBuilder) {
+    public SpringChatClientController(ChatClient.Builder chatClientBuilder) {
         this.chatClient = chatClientBuilder.build();
     }
 

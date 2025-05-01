@@ -27,13 +27,5 @@ public class ChatClientConfiguration {
         return chatClientBuilderConfigurer.configure(builder);
     }
 
-    @Bean
-    @Scope("prototype")
-    @Qualifier("ollamaChatClientBuilder")
-    ChatClient.Builder ollamaChatClientBuilder(ChatClientBuilderConfigurer chatClientBuilderConfigurer,
-                                               @Qualifier("ollamaChatModel") ChatModel chatModel) {
-        ChatClient.Builder builder = ChatClient.builder(chatModel);
-        return chatClientBuilderConfigurer.configure(builder);
-    }
 
 }
