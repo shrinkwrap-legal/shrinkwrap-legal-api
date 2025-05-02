@@ -24,6 +24,9 @@ public class CaseLawAnalysisEntity {
     @Column(name = "analysis_type")
     private String analysisType = "text";
 
+    @Column(name = "analysis_subtype")
+    private String analysisSubType;
+
     @Column(name = "analysis_version")
     private Integer analysisVersion = 1;
 
