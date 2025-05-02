@@ -32,7 +32,7 @@ public class CaselawTextService {
      * @param uncleanedRisHTML
      * @return
      */
-    public CaseLawResponseDto prepareRISCaseLawHtml(String uncleanedRisHTML) {
+    public String prepareRISCaseLawHtml(String uncleanedRisHTML) {
         //some initial HTML preprocessing, e.g. removing double nbsp;
         uncleanedRisHTML = uncleanedRisHTML.replaceAll("(\\u00a0|&nbsp;|&#160;)+", "\u00a0");
 
@@ -82,9 +82,7 @@ public class CaselawTextService {
         fullText = fullText.replaceAll("[ ]+", " ");
         long wordCount = fullText.split(" ").length;
 
-        CaseLawResponseDto response = new CaseLawResponseDto(wordCount, fullHtml.htmlAll(true), null);
-
         //now, in html only the text should be left
-        return response;
+        return fullHtml.htmlAll(true);
     }
 }

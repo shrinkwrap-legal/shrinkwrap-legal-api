@@ -70,6 +70,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public CaseLawResponseDto getDocument(CaseLawRequestDto requestDto) {
+        CaseLawResponseDto ret = new CaseLawResponseDto();
         CaseLawEntity caseLawEntity = null;
         Optional<CaseLawEntity> dbEntity = Optional.empty();
 
@@ -106,8 +107,8 @@ public class DocumentServiceImpl implements DocumentService {
 
             //html
             String htmlContent = htmlDownloadService.downloadHtml(entity.getHtmlUrl());
-            CaseLawResponseDto dto = caselawTextService.prepareRISCaseLawHtml(htmlContent);
-            entity.setFullCleanHtml(dto.caselawHtml());
+            String cleanHtml = caselawTextService.prepareRISCaseLawHtml(htmlContent);
+            entity.setFullCleanHtml(cleanHtml);
 
             caseLawEntity = caseLawRepository.save(entity);
         } else {
@@ -119,6 +120,7 @@ public class DocumentServiceImpl implements DocumentService {
             CaseLawAnalysisEntity textAnalysisEntity = createTextConversion(caseLawEntity);
             caseLawAnalysisRepository.save(textAnalysisEntity);
             textEntity = Optional.of(textAnalysisEntity);
+            ret.setWordCount(textAnalysisEntity.getWordCount());
         }
 
         Optional<CaseLawAnalysisEntity> summary = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("summary", caseLawEntity.getId());
@@ -140,18 +142,21 @@ public class DocumentServiceImpl implements DocumentService {
             }
         }
 
-        Object summaryObj = null;
+        CaselawSummaryCivilCase summaryObj = null;
         if (summary.isPresent()) {
             try {
-                summaryObj = MAPPER.readValue(summary.get().getAnalysis(), Object.class);
+                summaryObj = MAPPER.readValue(summary.get().getAnalysis(), CaselawSummaryCivilCase.class);
+                ret.setSummaryType("civilCase");
+                ret.setSummary(summaryObj);
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
         }
 
 
-        CaseLawResponseDto res = new CaseLawResponseDto(textEntity.get().getWordCount(),null,summaryObj);
-        return res;
+
+        ret.setWordCount(textEntity.get().getWordCount());
+        return ret;
     }
 
     private CaselawSummaryCivilCase analyzeCivilCaseLaw(CaseLawEntity caseLawEntity, CaseLawAnalysisEntity textEntity) {
@@ -248,7 +253,7 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
         //get "clean" html
-        CaseLawResponseDto textDto = caselawTextService.prepareRISCaseLawHtml(fullHtml);
+        String cleanHtml = caselawTextService.prepareRISCaseLawHtml(fullHtml);
 
         //get text and sentences, if possible
         String textOnly = null;
@@ -257,7 +262,7 @@ public class DocumentServiceImpl implements DocumentService {
         try {
             textOnly = fileHandlingService.loadFile(ecli, ".text.txt");
             if (textOnly == null) {
-                textOnly = shrinkwrapPythonRestService.getTextFromHtml(textDto.caselawHtml());
+                textOnly = shrinkwrapPythonRestService.getTextFromHtml(cleanHtml);
                 fileHandlingService.saveFile(ecli,".text.txt", textOnly);
             }
 
@@ -286,7 +291,7 @@ public class DocumentServiceImpl implements DocumentService {
                 null,
                 null,
                 null,
-                textDto.caselawHtml(),
+                cleanHtml,
                 sentencesFile);
 
         return dataset;
@@ -308,8 +313,8 @@ public class DocumentServiceImpl implements DocumentService {
         //check if html exists, otherwise download
         if (Strings.isEmpty(entity.getFullCleanHtml())) {
             String htmlContent = htmlDownloadService.downloadHtml(entity.getHtmlUrl());
-            CaseLawResponseDto dto = caselawTextService.prepareRISCaseLawHtml(htmlContent);
-            entity.setFullCleanHtml(dto.caselawHtml());
+            String cleanHtml = caselawTextService.prepareRISCaseLawHtml(htmlContent);
+            entity.setFullCleanHtml(cleanHtml);
 
             CaseLawAnalysisEntity analysisEntity = createTextConversion(entity);
 

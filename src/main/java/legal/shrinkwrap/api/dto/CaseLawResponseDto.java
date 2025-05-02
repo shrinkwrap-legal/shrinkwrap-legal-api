@@ -2,10 +2,17 @@ package legal.shrinkwrap.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.*;
 
-import java.util.Map;
-
-public record CaseLawResponseDto(@JsonProperty("wordCount") Long wordCount,
-                                 @JsonIgnore String caselawHtml,
-                                 @JsonProperty("summary") Object summary) {
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
+@Builder
+public class CaseLawResponseDto {
+    @JsonProperty("wordCount") Long wordCount;
+    String summaryType = null;
+    Integer analysisVersion = 1;
+    CaselawSummaryCivilCase summary;
 }
+

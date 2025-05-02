@@ -74,9 +74,8 @@ public class FetchJudikaturTest extends SpringTest {
         assertThat(result.getJudikaturResults()).isNotNull().hasSize(1000);
 
         String fullHtml = htmlDownloadService.downloadHtml(result.getJudikaturResults().getFirst().getHtmlDocumentUrl());
-        CaseLawResponseDto content = caselawTextService.prepareRISCaseLawHtml(fullHtml);
-        assertThat(content).isNotNull();
-        assertThat(content.caselawHtml()).isNotNull();
+        String cleanHtml = caselawTextService.prepareRISCaseLawHtml(fullHtml);
+        assertThat(cleanHtml).isNotNull();
     }
 
     @Test
@@ -111,11 +110,11 @@ public class FetchJudikaturTest extends SpringTest {
             log.info("new " + entity.getEcli());
 
             String htmlContent = htmlDownloadService.downloadHtml(entity.getHtmlUrl());
-            CaseLawResponseDto dto = caselawTextService.prepareRISCaseLawHtml(htmlContent);
-            entity.setFullCleanHtml(dto.caselawHtml());
+            String cleanHtml = caselawTextService.prepareRISCaseLawHtml(htmlContent);
+            entity.setFullCleanHtml(cleanHtml);
 
             //text only
-            String textFromHtml = shrinkwrapPythonRestService.getTextFromHtml(dto.caselawHtml());
+            String textFromHtml = shrinkwrapPythonRestService.getTextFromHtml(cleanHtml);
             CaseLawAnalysisEntity aEntity = new CaseLawAnalysisEntity();
             aEntity.setFullText(textFromHtml);
             aEntity.setCaseLaw(entity);
@@ -146,7 +145,7 @@ public class FetchJudikaturTest extends SpringTest {
         for (RisJudikaturResult result : results.getJudikaturResults()) {
 
             String htmlContent = htmlDownloadService.downloadHtml(result.getHtmlDocumentUrl());
-            CaseLawResponseDto dto = caselawTextService.prepareRISCaseLawHtml(htmlContent);
+            String cleanHtml = caselawTextService.prepareRISCaseLawHtml(htmlContent);
             String fullText = htmlDownloadService.html2text(htmlContent);
 
             CaseLawAnalysisEntity entity =  new CaseLawAnalysisEntity();
@@ -175,14 +174,14 @@ public class FetchJudikaturTest extends SpringTest {
         List<CaseLawDataset> dataset = new ArrayList<>();
         result.getJudikaturResults().forEach(r -> {
             String fullHtml = htmlDownloadService.downloadHtml(r.getHtmlDocumentUrl());
-            CaseLawResponseDto content = caselawTextService.prepareRISCaseLawHtml(fullHtml);
+            String content = caselawTextService.prepareRISCaseLawHtml(fullHtml);
             dataset.add(new CaseLawDataset(
                     r.getMetadaten().getId(),
                     r.getMetadaten().getApplicationType().value(),
                     r.getMetadaten().getOrgan(),
                     r.getMetadaten().getPublished(),
                     r.getMetadaten().getChanged(), r.getMetadaten().getUrl(), r.getHtmlDocumentUrl(), String.join(";", r.getJudikaturMetadaten().getGeschaeftszahl()),
-                    r.getJudikaturMetadaten().getEcli(), null, null, null, content.caselawHtml(), null));
+                    r.getJudikaturMetadaten().getEcli(), null, null, null, content, null));
 
         });
 
