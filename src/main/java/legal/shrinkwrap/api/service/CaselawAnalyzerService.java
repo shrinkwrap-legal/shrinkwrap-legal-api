@@ -29,6 +29,7 @@ public class CaselawAnalyzerService {
 
     private final Map<String, Template> templates = new HashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    JsonSchemaGenerator schemaGen = new JsonSchemaGenerator(objectMapper);
 
     private final ChatClient chatClient;
 
