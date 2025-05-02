@@ -7,6 +7,7 @@ services:
       POSTGRES_USER: 'shrinkwrap'
       POSTGRES_DB: 'shrinkwrap'
       POSTGRES_PASSWORD: 'shrinkwrap'
+    restart: unless-stopped
     volumes:
       - /mnt/volume-shrinkwrap/postgresql/data:/var/lib/postgresql/data
   api:
@@ -15,5 +16,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "127.0.0.1:8080:8080"
+    restart: unless-stopped
     depends_on:
       - database
