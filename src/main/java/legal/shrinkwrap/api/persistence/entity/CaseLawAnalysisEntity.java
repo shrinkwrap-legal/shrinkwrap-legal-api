@@ -23,6 +23,9 @@ public class CaseLawAnalysisEntity {
     @Column(name = "analysis_type")
     private String analysisType = "text";
 
+    @Column(name = "analysis_version")
+    private Integer analysisVersion = 1;
+
 
     @CreationTimestamp
     private LocalDateTime created;

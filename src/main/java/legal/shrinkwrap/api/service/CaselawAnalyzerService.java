@@ -1,7 +1,10 @@
 package legal.shrinkwrap.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.jsonSchema.jakarta.JsonSchema;
+import com.fasterxml.jackson.module.jsonSchema.jakarta.JsonSchemaGenerator;
 import com.github.jknack.handlebars.Template;
+import legal.shrinkwrap.api.adapter.ris.rest.dto.CaselawSummaryCivilCase;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.NotImplementedException;
@@ -57,11 +60,7 @@ public class CaselawAnalyzerService {
 
 
 
-    public void summarizeCaselaw(CaseLawDataset caselaw) {
-        if (caselaw.sentences().isEmpty()) {
-            throw new NotImplementedException();
-        }
-        String text = caselaw.sentences();
+    public Object summarizeCaselaw(String text) {
         TextModel model = new TextModel(text);
 
         try {
@@ -80,7 +79,7 @@ public class CaselawAnalyzerService {
             String cleanedAi = aireturn.replaceAll("```json", "").replaceAll("```", "");
             Map jsonReturn = objectMapper.readValue(cleanedAi, Map.class);
 
-            System.out.println(aireturn);
+            return jsonReturn;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

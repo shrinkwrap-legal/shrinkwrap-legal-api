@@ -44,12 +44,14 @@ public class DocumentServiceImpl implements DocumentService {
 
     private final CaseLawAnalysisRepository caseLawAnalysisRepository;
 
+    private final CaselawAnalyzerService caselawAnalyzerService;
+
     @Value("${download-missing-judicature}")
     private Boolean downloadMissing;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public DocumentServiceImpl(RisSoapAdapter risSoapAdapter, HtmlDownloadService htmlDownloadService, CaselawTextService caselawTextService, FileHandlingService fileHandlingService, ShrinkwrapPythonRestService shrinkwrapPythonRestService, CaseLawRepository caseLawRepository, CaseLawAnalysisRepository caseLawAnalysisRepository) {
+    public DocumentServiceImpl(RisSoapAdapter risSoapAdapter, HtmlDownloadService htmlDownloadService, CaselawTextService caselawTextService, FileHandlingService fileHandlingService, ShrinkwrapPythonRestService shrinkwrapPythonRestService, CaseLawRepository caseLawRepository, CaseLawAnalysisRepository caseLawAnalysisRepository, CaselawAnalyzerService caselawAnalyzerService) {
         this.risSoapAdapter = risSoapAdapter;
         this.htmlDownloadService = htmlDownloadService;
         this.caselawTextService = caselawTextService;
@@ -57,6 +59,7 @@ public class DocumentServiceImpl implements DocumentService {
         this.shrinkwrapPythonRestService = shrinkwrapPythonRestService;
         this.caseLawRepository = caseLawRepository;
         this.caseLawAnalysisRepository = caseLawAnalysisRepository;
+        this.caselawAnalyzerService = caselawAnalyzerService;
     }
 
     @Override
@@ -80,6 +83,7 @@ public class DocumentServiceImpl implements DocumentService {
             }
             RisSearchParameterCaseLaw.RisSearchParameterCaseLawBuilder builder = RisSearchParameterCaseLaw.builder();
             builder.court(requestDto.court());
+            builder.judikaturTyp(new RisSearchParameterCaseLaw.JudikaturTyp(false, true));
             if (requestDto.ecli() != null) {
                 builder.ecli(requestDto.ecli());
             }
@@ -97,7 +101,6 @@ public class DocumentServiceImpl implements DocumentService {
             //html
             String htmlContent = htmlDownloadService.downloadHtml(entity.getHtmlUrl());
             CaseLawResponseDto dto = caselawTextService.prepareRISCaseLawHtml(htmlContent);
-            String textContent = PandocTextWrapper.convertHtmlToText(htmlContent);
             entity.setFullCleanHtml(dto.caselawHtml());
 
             caseLawEntity = caseLawRepository.save(entity);
@@ -105,7 +108,21 @@ public class DocumentServiceImpl implements DocumentService {
             caseLawEntity = dbEntity.get();
         }
 
-        //try loading analysis from repository
+        Optional<CaseLawAnalysisEntity> summary = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("summary", caseLawEntity.getId());
+        if (!summary.isPresent()) {
+            //do it, save
+
+            Optional<CaseLawAnalysisEntity> textEntity = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("text", caseLawEntity.getId());
+            if (!textEntity.isPresent()) {
+                CaseLawAnalysisEntity textAnalysisEntity = createTextConversion(caseLawEntity);
+                caseLawAnalysisRepository.save(textAnalysisEntity);
+                textEntity = Optional.of(textAnalysisEntity);
+            }
+
+            String text = textEntity.get().getFullText();
+            caselawAnalyzerService.summarizeCaselaw(text);
+
+        }
 
         //if no match, make analysis, save to db
 
@@ -261,16 +278,21 @@ public class DocumentServiceImpl implements DocumentService {
             CaseLawResponseDto dto = caselawTextService.prepareRISCaseLawHtml(htmlContent);
             entity.setFullCleanHtml(dto.caselawHtml());
 
-            String fullTextOnly = PandocTextWrapper.convertHtmlToText(htmlContent);
-            long wordCount = fullTextOnly.split(" ").length;
-            CaseLawAnalysisEntity analysisEntity = new CaseLawAnalysisEntity();
-            analysisEntity.setWordCount(wordCount);
-            analysisEntity.setCaseLaw(entity);
-            analysisEntity.setFullText(fullTextOnly);
+            CaseLawAnalysisEntity analysisEntity = createTextConversion(entity);
 
             entity = caseLawRepository.save(entity);
             analysisEntity = caseLawAnalysisRepository.save(analysisEntity);
         }
+    }
+
+    private CaseLawAnalysisEntity createTextConversion(CaseLawEntity entity) {
+        String fullTextOnly = PandocTextWrapper.convertHtmlToText(entity.getFullCleanHtml());
+        long wordCount = fullTextOnly.split(" ").length;
+        CaseLawAnalysisEntity analysisEntity = new CaseLawAnalysisEntity();
+        analysisEntity.setWordCount(wordCount);
+        analysisEntity.setCaseLaw(entity);
+        analysisEntity.setFullText(fullTextOnly);
+        return analysisEntity;
     }
 
 
