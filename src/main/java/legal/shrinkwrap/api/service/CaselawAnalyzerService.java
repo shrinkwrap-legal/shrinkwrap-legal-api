@@ -1,11 +1,14 @@
 package legal.shrinkwrap.api.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.jsonSchema.jakarta.JsonSchema;
 import com.fasterxml.jackson.module.jsonSchema.jakarta.JsonSchemaGenerator;
+import com.fasterxml.jackson.module.jsonSchema.jakarta.types.ObjectSchema;
 import com.github.jknack.handlebars.Template;
-import legal.shrinkwrap.api.adapter.ris.rest.dto.CaselawSummaryCivilCase;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
+import legal.shrinkwrap.api.dto.CaselawSummaryCivilCase;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.logging.log4j.util.Strings;
@@ -16,6 +19,7 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.api.ResponseFormat;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import com.github.jknack.handlebars.Handlebars;
@@ -61,13 +65,18 @@ public class CaselawAnalyzerService {
 
 
 
-    public Object summarizeCaselaw(String text) {
+    public CaselawSummaryCivilCase summarizeCaselaw(String text) {
         TextModel model = new TextModel(text);
 
         try {
             String system = templates.get("summary.system").apply(model);
             String user = templates.get("summary").apply(model);
 
+            //try generating json schema
+            ObjectSchema jsonSchema = schemaGen.generateSchema(CaselawSummaryCivilCase.class).asObjectSchema();
+            jsonSchema.setAdditionalProperties(ObjectSchema.NoAdditionalProperties.instance);
+            String schema = objectMapper.writeValueAsString(jsonSchema);
+            ResponseFormat format = new ResponseFormat(ResponseFormat.Type.JSON_SCHEMA, schema);
             Message systemMessage = new SystemMessage(system);
             Message userMessage = new UserMessage(user);
             OpenAiChatOptions options = OpenAiChatOptions.builder()
@@ -78,7 +87,13 @@ public class CaselawAnalyzerService {
 
             //sometimes, openai will start with "```"
             String cleanedAi = aireturn.replaceAll("```json", "").replaceAll("```", "");
-            Map jsonReturn = objectMapper.readValue(cleanedAi, Map.class);
+            CaselawSummaryCivilCase jsonReturn = null;
+            try {
+                jsonReturn = objectMapper.readValue(cleanedAi, CaselawSummaryCivilCase.class);
+            } catch (JsonProcessingException e) {
+                System.out.println("could not match");
+                return null;
+            }
 
             return jsonReturn;
         } catch (IOException e) {

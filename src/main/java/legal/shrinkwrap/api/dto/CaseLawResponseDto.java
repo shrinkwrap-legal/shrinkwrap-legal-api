@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Map;
 
-public record CaseLawResponseDto(@JsonProperty("wordCount") Integer wordCount,
-                                 @JsonIgnore String caselawHtml) {
+public record CaseLawResponseDto(@JsonProperty("wordCount") Long wordCount,
+                                 @JsonIgnore String caselawHtml,
+                                 @JsonProperty("summary") Object summary) {
 }

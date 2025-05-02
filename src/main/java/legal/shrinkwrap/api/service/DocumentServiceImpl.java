@@ -1,5 +1,6 @@
 package legal.shrinkwrap.api.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import legal.shrinkwrap.api.adapter.HtmlDownloadService;
 import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLaw;
@@ -8,14 +9,17 @@ import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturMetadaten;
 import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
 import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
+import legal.shrinkwrap.api.adapter.ris.rest.dto.enums.OgdApplikationEnum;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
 import legal.shrinkwrap.api.dto.CaseLawRequestDto;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
+import legal.shrinkwrap.api.dto.CaselawSummaryCivilCase;
 import legal.shrinkwrap.api.persistence.entity.CaseLawAnalysisEntity;
 import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
 import legal.shrinkwrap.api.persistence.repo.CaseLawAnalysisRepository;
 import legal.shrinkwrap.api.persistence.repo.CaseLawRepository;
 import legal.shrinkwrap.api.python.ShrinkwrapPythonRestService;
+import legal.shrinkwrap.api.utils.ObjectMapperWithXmlGregorianCalenderSupport;
 import legal.shrinkwrap.api.utils.PandocTextWrapper;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,6 +49,8 @@ public class DocumentServiceImpl implements DocumentService {
     private final CaseLawAnalysisRepository caseLawAnalysisRepository;
 
     private final CaselawAnalyzerService caselawAnalyzerService;
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Value("${download-missing-judicature}")
     private Boolean downloadMissing;
@@ -108,28 +114,44 @@ public class DocumentServiceImpl implements DocumentService {
             caseLawEntity = dbEntity.get();
         }
 
-        Optional<CaseLawAnalysisEntity> summary = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("summary", caseLawEntity.getId());
-        if (!summary.isPresent()) {
-            //do it, save
-
-            Optional<CaseLawAnalysisEntity> textEntity = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("text", caseLawEntity.getId());
-            if (!textEntity.isPresent()) {
-                CaseLawAnalysisEntity textAnalysisEntity = createTextConversion(caseLawEntity);
-                caseLawAnalysisRepository.save(textAnalysisEntity);
-                textEntity = Optional.of(textAnalysisEntity);
-            }
-
-            String text = textEntity.get().getFullText();
-            caselawAnalyzerService.summarizeCaselaw(text);
-
+        Optional<CaseLawAnalysisEntity> textEntity = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("text", caseLawEntity.getId());
+        if (!textEntity.isPresent()) {
+            CaseLawAnalysisEntity textAnalysisEntity = createTextConversion(caseLawEntity);
+            caseLawAnalysisRepository.save(textAnalysisEntity);
+            textEntity = Optional.of(textAnalysisEntity);
         }
 
-        //if no match, make analysis, save to db
+        Optional<CaseLawAnalysisEntity> summary = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("summary", caseLawEntity.getId());
+        if (!summary.isPresent() && caseLawEntity.getApplicationType().equalsIgnoreCase(OgdApplikationEnum.Justiz.toString())) {
+            //do it, save
+
+            String text = textEntity.get().getFullText();
+            CaselawSummaryCivilCase o = caselawAnalyzerService.summarizeCaselaw(text);
+            if (o != null) {
+                CaseLawAnalysisEntity analysisEntity = new CaseLawAnalysisEntity();
+                analysisEntity.setCaseLaw(caseLawEntity);
+                analysisEntity.setAnalysisType("summary");
+                analysisEntity.setAnalysisVersion(1);
+                try {
+                    analysisEntity.setAnalysis(MAPPER.writeValueAsString(o));
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
+                }
+                summary = Optional.of(caseLawAnalysisRepository.save(analysisEntity));
+            }
+        }
+
+        Object summaryObj = null;
+        if (summary.isPresent()) {
+            try {
+                summaryObj = MAPPER.readValue(summary.get().getAnalysis(), Object.class);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
 
-
-
-        CaseLawResponseDto res = caselawTextService.prepareRISCaseLawHtml(caseLawEntity.getFullCleanHtml());
+        CaseLawResponseDto res = new CaseLawResponseDto(textEntity.get().getWordCount(),null,summaryObj);
         return res;
     }
 

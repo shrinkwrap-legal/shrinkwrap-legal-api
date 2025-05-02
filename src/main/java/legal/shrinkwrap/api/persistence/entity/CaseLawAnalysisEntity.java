@@ -3,6 +3,7 @@ package legal.shrinkwrap.api.persistence.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -26,7 +27,6 @@ public class CaseLawAnalysisEntity {
     @Column(name = "analysis_version")
     private Integer analysisVersion = 1;
 
-
     @CreationTimestamp
     private LocalDateTime created;
 
@@ -35,6 +35,10 @@ public class CaseLawAnalysisEntity {
 
     @Column(name="full_text", columnDefinition = "TEXT")
     private String fullText;
+
+    @Column(name="analysis", columnDefinition = "JSON")
+    @ColumnTransformer(write = "?::json")
+    private String analysis;
 
     @Column
     @Lob

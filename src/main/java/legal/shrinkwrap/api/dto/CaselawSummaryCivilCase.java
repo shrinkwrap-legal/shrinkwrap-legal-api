@@ -1,9 +1,16 @@
-package legal.shrinkwrap.api.adapter.ris.rest.dto;
+package legal.shrinkwrap.api.dto;
 
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
+@Getter
+@Setter
 public class CaselawSummaryCivilCase {
+    @JsonProperty(required = true)
     String art;
     String ausgang;
     String rechtsmittel;
@@ -11,7 +18,7 @@ public class CaselawSummaryCivilCase {
     String begehren;
     String gegenvorbringen;
     List<String> zusammenfassung_3_absaetze;
-    List<String> zusammenfassung_3_saetze;
+    String zusammenfassung_3_saetze;
     String zeitungstitel_boulevard;
     String zeitungstitel_oeffentlich;
     String zeitungstitel_rechtszeitschrift;

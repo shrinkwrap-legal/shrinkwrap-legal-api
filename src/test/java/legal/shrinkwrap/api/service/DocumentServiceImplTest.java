@@ -18,9 +18,10 @@ class DocumentServiceImplTest extends SpringTest {
 
     @Test
     void getDocument() {
-        String docNumber="JJT_20240131_OLG0009_0320BS00233_23H0000_000";
+        String docNumber="JJT_20250326_OGH0002_0060OB00047_25T0000_000";
         CaseLawRequestDto dto = new CaseLawRequestDto(null, docNumber, RisCourt.Justiz);
         CaseLawResponseDto document = documentService.getDocument(dto);
+        document = documentService.getDocument(dto);
     }
 
     @Test

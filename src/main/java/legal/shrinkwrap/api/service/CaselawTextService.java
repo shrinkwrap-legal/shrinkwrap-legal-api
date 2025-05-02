@@ -80,9 +80,9 @@ public class CaselawTextService {
         //word count (approx.)
         String fullText = fullHtml.text();
         fullText = fullText.replaceAll("[ ]+", " ");
-        int wordCount = fullText.split(" ").length;
+        long wordCount = fullText.split(" ").length;
 
-        CaseLawResponseDto response = new CaseLawResponseDto(wordCount, fullHtml.htmlAll(true));
+        CaseLawResponseDto response = new CaseLawResponseDto(wordCount, fullHtml.htmlAll(true), null);
 
         //now, in html only the text should be left
         return response;
