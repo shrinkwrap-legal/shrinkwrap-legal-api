@@ -120,7 +120,8 @@ public class DocumentServiceImpl implements DocumentService {
             CaseLawAnalysisEntity textAnalysisEntity = createTextConversion(caseLawEntity);
             caseLawAnalysisRepository.save(textAnalysisEntity);
             textEntity = Optional.of(textAnalysisEntity);
-            ret.setWordCount(textAnalysisEntity.getWordCount());
+        } else {
+            ret.setWordCount(textEntity.get().getWordCount());
         }
 
         Optional<CaseLawAnalysisEntity> summary = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("summary", caseLawEntity.getId());
