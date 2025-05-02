@@ -10,7 +10,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "caselaw_analysis")
+@Table(name = "caselaw_analysis", indexes = {
+        @Index(name = "analysis_type_index", columnList = "analysis_type"),
+        @Index(name="case_law_id", columnList = "case_law_id")
+})
 @Getter
 @Setter
 public class CaseLawAnalysisEntity {
