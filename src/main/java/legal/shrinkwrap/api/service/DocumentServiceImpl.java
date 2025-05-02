@@ -123,10 +123,7 @@ public class DocumentServiceImpl implements DocumentService {
 
         Optional<CaseLawAnalysisEntity> summary = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("summary", caseLawEntity.getId());
         if (!summary.isPresent() && caseLawEntity.getApplicationType().equalsIgnoreCase(OgdApplikationEnum.Justiz.toString())) {
-            //do it, save
-
-            String text = textEntity.get().getFullText();
-            CaselawSummaryCivilCase o = caselawAnalyzerService.summarizeCaselaw(text);
+            CaselawSummaryCivilCase o = this.analyzeCivilCaseLaw(caseLawEntity, textEntity.get());
             if (o != null) {
                 CaseLawAnalysisEntity analysisEntity = new CaseLawAnalysisEntity();
                 analysisEntity.setCaseLaw(caseLawEntity);
@@ -137,7 +134,9 @@ public class DocumentServiceImpl implements DocumentService {
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
-                summary = Optional.of(caseLawAnalysisRepository.save(analysisEntity));
+                if (analysisEntity != null) {
+                    summary = Optional.of(caseLawAnalysisRepository.save(analysisEntity));
+                }
             }
         }
 
@@ -153,6 +152,18 @@ public class DocumentServiceImpl implements DocumentService {
 
         CaseLawResponseDto res = new CaseLawResponseDto(textEntity.get().getWordCount(),null,summaryObj);
         return res;
+    }
+
+    private CaselawSummaryCivilCase analyzeCivilCaseLaw(CaseLawEntity caseLawEntity, CaseLawAnalysisEntity textEntity) {
+        //not yet for criminal cases
+        if (caseLawEntity.getCaseNumber().matches("^\\d+Os\\d+.*")) {
+            return null;
+        }
+
+        String text = textEntity.getFullText();
+        CaselawSummaryCivilCase o = caselawAnalyzerService.summarizeCaselaw(text);
+
+        return o;
     }
 
     public static CaseLawEntity mapJudikaturResultToEntity(RisJudikaturResult judikaturResult) {
