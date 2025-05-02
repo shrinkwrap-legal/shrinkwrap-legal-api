@@ -27,7 +27,7 @@ COPY --chown=spring:spring config ./config
 RUN mvn -B clean package -DskipTests
 
 # Set the default active profile
-ENV SPRING_PROFILES_ACTIVE=test
+ENV SPRING_PROFILES_ACTIVE=prod
 
 # Expose the port on which the app runs
 EXPOSE 8080
