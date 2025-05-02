@@ -10,7 +10,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "caselaw", indexes = {@Index(name = "docnumber_index", columnList = "docnumber")})
+@Table(name = "caselaw", indexes = {@Index(name = "docnumber_index", columnList = "docnumber"),
+        @Index(name="court_index", columnList = "court")})
 @Getter
 @Setter
 @ToString
