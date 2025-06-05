@@ -10,8 +10,10 @@ import org.springframework.context.annotation.Import;
 
 import legal.shrinkwrap.api.service.CaselawAnalyzerService;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
+@EnableScheduling
 @Import({CommonServiceConfiguration.class})
 public class ServiceConfiguration {
 
