@@ -26,7 +26,7 @@
         <openapi-generator-version>7.10.0</openapi-generator-version>
 
         <springdoc-version>2.8.5</springdoc-version>
-        <jackson.version>2.19.0</jackson.version>
+        <jackson.version>2.18.2</jackson.version>
         <record.builder.version>45</record.builder.version>
         <lombok.version>1.18.36</lombok.version>
     </properties>
