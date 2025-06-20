@@ -9,10 +9,11 @@ import com.fasterxml.jackson.module.jsonSchema.jakarta.types.ObjectSchema;
 import com.github.jknack.handlebars.Template;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
 import legal.shrinkwrap.api.dto.CaselawSummaryCivilCase;
+import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;
@@ -66,13 +67,18 @@ public class CaselawAnalyzerService {
     }
 
 
-
     public CaselawSummaryCivilCase summarizeCaselaw(String text) {
-        TextModel model = new TextModel(text);
+        return summarizeCaselaw(text, null);
+    }
+
+    public CaselawSummaryCivilCase summarizeCaselaw(String text, CaseLawEntity entity) {
+        boolean isCriminal = entity != null && StringUtils.defaultString(entity.getCaseNumber()).matches("[\\d]+Os.*");
+        TextModel model = new TextModel(text, isCriminal);
 
         try {
             String system = templates.get("summary.system").apply(model);
             String user = templates.get("summary").apply(model);
+            user = user.replaceAll("\n\n","\n").replaceAll("\r\n\r\n","\r\n");
 
             //try generating json schema
             ObjectSchema jsonSchema = schemaGen.generateSchema(CaselawSummaryCivilCase.class).asObjectSchema();
@@ -192,5 +198,5 @@ public class CaselawAnalyzerService {
     private static final record SentenceModel(int id, String sentence) {
     }
 
-    private static final record TextModel(String text) {}
+    private static final record TextModel(String text, Boolean criminal) {}
 }
