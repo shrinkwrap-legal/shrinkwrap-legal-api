@@ -7,6 +7,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
+import legal.shrinkwrap.api.dto.CaseLawRequestDto;
+import legal.shrinkwrap.api.dto.CaseLawResponseDto;
+import legal.shrinkwrap.api.dto.CaselawSummaryCivilCase;
+import legal.shrinkwrap.api.persistence.entity.CaseLawAnalysisEntity;
+import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +47,17 @@ class CaselawAnalyzerServiceTest {
         CaseLawDataset caselawDatasetForECLI = documentService.getCaselawDatasetForECLI(ecli);
         caselawAnalyzerService.summarizeCaselaw(caselawDatasetForECLI.sentences());
         caselawAnalyzerService.analyzeCaselaw(caselawDatasetForECLI);
+    }
+
+    @Test
+    public void singleCaseLawSummary() throws InterruptedException {
+        String ecli = "ECLI:AT:OGH0002:2024:008OBA00004";
+        CaseLawRequestDto dto = new CaseLawRequestDto(ecli, null, RisCourt.Justiz);
+        CaseLawEntity entity = documentService.downloadCaseLaw(dto);
+        CaseLawAnalysisEntity analysisEntity = DocumentServiceImpl.createTextConversion(entity);
+        CaselawSummaryCivilCase caselawSummaryCivilCase = caselawAnalyzerService.summarizeCaselaw(analysisEntity.getFullText());
+        System.out.println(caselawSummaryCivilCase.toString());
+
     }
 
     @Test
