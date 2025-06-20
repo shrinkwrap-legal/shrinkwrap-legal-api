@@ -9,7 +9,8 @@ Lorem ipsum dolor sit amet, sed diam nonumy eirmod tempor invidunt ut labore. St
 ```
 Enthält das Gerichtsurteil keinen Sachverhalt, gib "KEIN SACHVERHALT aus.
 {{#if criminal}}
-4. Fasse das Klagsbegehren in einem Satz zusammen. Warum kam es zum Gerichtsprozess, was möchte der Beklagte bzw die Staatsanwaltschaft erreichen? Fasse die vorgebrachten Gegenargument die Gegenseite in einem Satz zusammen.
+4. Fasse das Klagsbegehren in einem Satz zusammen. Warum kam es zum Gerichtsprozess, was möchte der Angeklagte erreichen, bzw was möchte die Staatsanwaltschaft erreichen? Fasse die vorgebrachten Argumente des Angeklagten in einem Satz zusammen, auf denen er eine geringere Strafe oder eine Aufhebung des Urteils argumentiert. Falls sich die Staatsanwaltschaft äußert, fasse deren Gegenargumente in einem Satz zusammen. Falls keine Argumente der Staatsanwalt enthalten sind, will die Staatsanwaltschaft, dass das Urteil der Vorinstanzen vom Berufungsgericht bestätigt wird.
+4a. Wurde dieses Berufungsverfahren vom Angeklagten, der Staatsanwaltschaft oder sonstjemanden eingebracht?
 {{ else  }}
 4. Fasse das Klagsbegehren in einem Satz zusammen. Warum kam es zum Gerichtsprozess, was möchte der Kläger bzw die Klägerin erreichen? Fasse die vorgebrachten Gegenargument des Beklagten in einem Satz zusammen.
 {{/if}}
@@ -69,8 +70,16 @@ Liste die Informationen wie oben geführt als JSON. Verwende dieses Schema:
 "ausgang": "",
 "rechtsmittel": "",
 "sachverhalt": "",
+
+{{#if criminal}}
+"berufende_partei": "", //"Angeklagter", "Staatsanwaltschaft"
+"begehren_angeklagter": "",
+"begehren_staatsanwaltschaft": "",
+{{ else }}
 "begehren": "",
 "gegenvorbringen": "",
+{{/if}}
+
 "zusammenfassung_3_absaetze": ["", "", ""],
 "zusammenfassung_3_saetze": "",
 "zeitungstitel_boulevard": "",
