@@ -165,13 +165,8 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     private CaselawSummaryCivilCase analyzeCivilCaseLaw(CaseLawEntity caseLawEntity, CaseLawAnalysisEntity textEntity) {
-        //not yet for criminal cases
-        if (caseLawEntity.getCaseNumber().matches("^\\d+Os\\d+.*")) {
-            return null;
-        }
-
         String text = textEntity.getFullText();
-        CaselawSummaryCivilCase o = caselawAnalyzerService.summarizeCaselaw(text);
+        CaselawSummaryCivilCase o = caselawAnalyzerService.summarizeCaselaw(text, caseLawEntity);
 
         return o;
     }

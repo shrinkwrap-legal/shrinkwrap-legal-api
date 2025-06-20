@@ -72,7 +72,7 @@ public class CaselawAnalyzerService {
     }
 
     public CaselawSummaryCivilCase summarizeCaselaw(String text, CaseLawEntity entity) {
-        boolean isCriminal = entity != null && StringUtils.defaultString(entity.getCaseNumber()).matches("[\\d]+Os.*");
+        boolean isCriminal = entity != null && StringUtils.defaultString(entity.getCaseNumber()).matches("^[\\d]+Os.*");
         TextModel model = new TextModel(text, isCriminal);
 
         try {
