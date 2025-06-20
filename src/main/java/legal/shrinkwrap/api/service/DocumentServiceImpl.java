@@ -19,14 +19,12 @@ import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
 import legal.shrinkwrap.api.persistence.repo.CaseLawAnalysisRepository;
 import legal.shrinkwrap.api.persistence.repo.CaseLawRepository;
 import legal.shrinkwrap.api.python.ShrinkwrapPythonRestService;
-import legal.shrinkwrap.api.utils.ObjectMapperWithXmlGregorianCalenderSupport;
 import legal.shrinkwrap.api.utils.PandocTextWrapper;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -88,28 +86,7 @@ public class DocumentServiceImpl implements DocumentService {
                 //no downloading - so nothing to return here
                 return null;
             }
-            RisSearchParameterCaseLaw.RisSearchParameterCaseLawBuilder builder = RisSearchParameterCaseLaw.builder();
-            builder.court(requestDto.court());
-            builder.judikaturTyp(new RisSearchParameterCaseLaw.JudikaturTyp(false, true));
-            if (requestDto.ecli() != null) {
-                builder.ecli(requestDto.ecli());
-            }
-            else if (requestDto.docNumber() != null) {
-                builder.docNumber(requestDto.docNumber());
-            }
-
-            RisSearchResult result = risSoapAdapter.findCaseLawDocuments(builder.build());
-            if(result == null) {
-                return null;
-            }
-            RisJudikaturResult judikaturResult = result.getJudikaturResults().getFirst();
-            CaseLawEntity entity = mapJudikaturResultToEntity(judikaturResult);
-
-            //html
-            String htmlContent = htmlDownloadService.downloadHtml(entity.getHtmlUrl());
-            String cleanHtml = caselawTextService.prepareRISCaseLawHtml(htmlContent);
-            entity.setFullCleanHtml(cleanHtml);
-
+            CaseLawEntity entity = downloadCaseLaw(requestDto);
             caseLawEntity = caseLawRepository.save(entity);
         } else {
             caseLawEntity = dbEntity.get();
@@ -159,6 +136,32 @@ public class DocumentServiceImpl implements DocumentService {
 
         ret.setWordCount(textEntity.get().getWordCount());
         return ret;
+    }
+
+    @Override
+    public CaseLawEntity downloadCaseLaw(CaseLawRequestDto requestDto) {
+        RisSearchParameterCaseLaw.RisSearchParameterCaseLawBuilder builder = RisSearchParameterCaseLaw.builder();
+        builder.court(requestDto.court());
+        builder.judikaturTyp(new RisSearchParameterCaseLaw.JudikaturTyp(false, true));
+        if (requestDto.ecli() != null) {
+            builder.ecli(requestDto.ecli());
+        }
+        else if (requestDto.docNumber() != null) {
+            builder.docNumber(requestDto.docNumber());
+        }
+
+        RisSearchResult result = risSoapAdapter.findCaseLawDocuments(builder.build());
+        if(result == null) {
+            return null;
+        }
+        RisJudikaturResult judikaturResult = result.getJudikaturResults().getFirst();
+        CaseLawEntity entity = mapJudikaturResultToEntity(judikaturResult);
+
+        //html
+        String htmlContent = htmlDownloadService.downloadHtml(entity.getHtmlUrl());
+        String cleanHtml = caselawTextService.prepareRISCaseLawHtml(htmlContent);
+        entity.setFullCleanHtml(cleanHtml);
+        return entity;
     }
 
     private CaselawSummaryCivilCase analyzeCivilCaseLaw(CaseLawEntity caseLawEntity, CaseLawAnalysisEntity textEntity) {
@@ -325,7 +328,7 @@ public class DocumentServiceImpl implements DocumentService {
         }
     }
 
-    private CaseLawAnalysisEntity createTextConversion(CaseLawEntity entity) {
+    public static CaseLawAnalysisEntity createTextConversion(CaseLawEntity entity) {
         String fullTextOnly = PandocTextWrapper.convertHtmlToText(entity.getFullCleanHtml());
         long wordCount = fullTextOnly.split(" ").length;
         CaseLawAnalysisEntity analysisEntity = new CaseLawAnalysisEntity();

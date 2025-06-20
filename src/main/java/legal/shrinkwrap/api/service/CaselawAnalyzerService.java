@@ -9,6 +9,8 @@ import com.fasterxml.jackson.module.jsonSchema.jakarta.types.ObjectSchema;
 import com.github.jknack.handlebars.Template;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
 import legal.shrinkwrap.api.dto.CaselawSummaryCivilCase;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.logging.log4j.util.Strings;
@@ -28,7 +30,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-
+@Slf4j
 public class CaselawAnalyzerService {
 
     private final Map<String, Template> templates = new HashMap<>();
@@ -102,6 +104,7 @@ public class CaselawAnalyzerService {
 
     }
 
+    @Deprecated
     public void analyzeCaselaw(CaseLawDataset caselaw) {
         try {
             List<String> sentences = null;
