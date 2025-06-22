@@ -102,7 +102,9 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
         Optional<CaseLawAnalysisEntity> summary = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("summary", caseLawEntity.getId());
-        if (!summary.isPresent() && caseLawEntity.getApplicationType().equalsIgnoreCase(OgdApplikationEnum.Justiz.toString())) {
+        if (summary.isEmpty() && (
+                caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.Justiz.toString()) ||
+                        caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString()))) {
             CaselawSummaryCivilCase o = this.analyzeCivilCaseLaw(caseLawEntity, textEntity.get());
             if (o != null) {
                 CaseLawAnalysisEntity analysisEntity = new CaseLawAnalysisEntity();
