@@ -111,7 +111,12 @@ public class DocumentServiceImpl implements DocumentService {
                 analysisEntity.setCaseLaw(caseLawEntity);
                 analysisEntity.setAnalysisType("summary");
                 analysisEntity.setAnalysisVersion(1);
-                analysisEntity.setAnalysisSubType("civilCase");
+                if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString())) {
+                    analysisEntity.setAnalysisSubType("vfghCase");
+                }
+                else {
+                    analysisEntity.setAnalysisSubType("civilCase");
+                }
                 try {
                     analysisEntity.setAnalysis(MAPPER.writeValueAsString(o));
                 } catch (JsonProcessingException e) {
