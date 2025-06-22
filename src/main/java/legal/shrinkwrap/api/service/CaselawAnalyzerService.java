@@ -72,6 +72,7 @@ public class CaselawAnalyzerService {
     }
 
     public CaselawSummaryCivilCase summarizeCaselaw(String text, CaseLawEntity entity) {
+        log.info("requesting summary for " + entity.getDocNumber());
         boolean isCriminal = entity != null && StringUtils.defaultString(entity.getCaseNumber()).matches("^[\\d]+Os.*");
         TextModel model = new TextModel(text, isCriminal);
 

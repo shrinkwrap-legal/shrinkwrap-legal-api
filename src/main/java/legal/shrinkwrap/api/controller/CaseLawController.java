@@ -34,7 +34,6 @@ public class CaseLawController {
     @GetMapping(value = "case-law/shrinkwrap", produces = MediaType.APPLICATION_JSON_VALUE)
     public CaseLawResponseDto getShrinkwrapDocument(@Valid @ParameterObject CaseLawRequestDto requestDto) {
 
-        LOG.info("Request {}", requestDto);
         if (locks.contains(requestDto)) {
             try {
                 //try for 40s, then do it anyway
@@ -43,7 +42,7 @@ public class CaseLawController {
                     if (!locks.contains(requestDto)) {
                         break;
                     }
-                    log.info("trying to acquire lock " + i + " for " + requestDto);
+                    LOG.info("trying to acquire lock " + i + " for " + requestDto);
                 }
 
             } catch (InterruptedException e) {

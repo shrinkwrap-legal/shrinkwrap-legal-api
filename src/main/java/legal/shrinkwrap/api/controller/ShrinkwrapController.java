@@ -1,6 +1,7 @@
 package legal.shrinkwrap.api.controller;
 
 
+import jakarta.annotation.PostConstruct;
 import legal.shrinkwrap.api.dto.GeneralDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
