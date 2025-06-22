@@ -7,6 +7,7 @@ import com.fasterxml.jackson.module.jsonSchema.jakarta.JsonSchema;
 import com.fasterxml.jackson.module.jsonSchema.jakarta.JsonSchemaGenerator;
 import com.fasterxml.jackson.module.jsonSchema.jakarta.types.ObjectSchema;
 import com.github.jknack.handlebars.Template;
+import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
 import legal.shrinkwrap.api.dto.CaselawSummaryCivilCase;
 import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
@@ -72,9 +73,10 @@ public class CaselawAnalyzerService {
     }
 
     public CaselawSummaryCivilCase summarizeCaselaw(String text, CaseLawEntity entity) {
-        log.info("requesting summary for " + entity.getDocNumber());
+        log.info("requesting summary for " + (entity != null ?entity.getDocNumber(): "unknown"));
         boolean isCriminal = entity != null && StringUtils.defaultString(entity.getCaseNumber()).matches("^[\\d]+Os.*");
-        TextModel model = new TextModel(text, isCriminal);
+        boolean isVfGH = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString());
+        TextModel model = new TextModel(text, isCriminal, isVfGH);
 
         try {
             String system = templates.get("summary.system").apply(model);
@@ -199,5 +201,5 @@ public class CaselawAnalyzerService {
     private static final record SentenceModel(int id, String sentence) {
     }
 
-    private static final record TextModel(String text, Boolean criminal) {}
+    private static final record TextModel(String text, Boolean criminal, Boolean VfGH) {}
 }

@@ -16,9 +16,9 @@ public class CaselawSummaryCivilCase {
     String ausgang;
     String rechtsmittel;
     String sachverhalt;
-    @JsonAlias("begehren_angeklagter")
+    @JsonAlias({"begehren_angeklagter","begehren_beschwerdefuehrer"})
     String begehren;
-    @JsonAlias("begehren_staatsanwaltschaft")
+    @JsonAlias({"begehren_staatsanwaltschaft","gegenargumente_staat"})
     String gegenvorbringen;
     String berufende_partei;
     List<String> zusammenfassung_3_absaetze;
