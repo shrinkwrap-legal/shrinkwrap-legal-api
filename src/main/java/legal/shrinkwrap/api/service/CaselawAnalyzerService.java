@@ -24,6 +24,8 @@ import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.ResponseFormat;
+import org.springframework.ai.tokenizer.JTokkitTokenCountEstimator;
+import org.springframework.ai.tokenizer.TokenCountEstimator;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import com.github.jknack.handlebars.Handlebars;
@@ -34,9 +36,10 @@ import java.util.*;
 
 @Slf4j
 public class CaselawAnalyzerService {
-
+    private final Integer MAX_TOKEN = 100000;
     private final Map<String, Template> templates = new HashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final TokenCountEstimator tokenCountEstimator = new JTokkitTokenCountEstimator();
     JsonSchemaGenerator schemaGen = new JsonSchemaGenerator(objectMapper);
 
     private final ChatClient chatClient;
@@ -73,7 +76,6 @@ public class CaselawAnalyzerService {
     }
 
     public CaselawSummaryCivilCase summarizeCaselaw(String text, CaseLawEntity entity) {
-        log.info("requesting summary for " + (entity != null ?entity.getDocNumber(): "unknown"));
         boolean isCriminal = entity != null && StringUtils.defaultString(entity.getCaseNumber()).matches("^[\\d]+Os.*");
         boolean isVfGH = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString());
         TextModel model = new TextModel(text, isCriminal, isVfGH);
@@ -93,6 +95,13 @@ public class CaselawAnalyzerService {
             OpenAiChatOptions options = OpenAiChatOptions.builder()
                     .model("gpt-4o-mini").build();
             Prompt p = new Prompt(List.of(systemMessage, userMessage), options);
+            int tokenEstimation = tokenCountEstimator.estimate(system) + tokenCountEstimator.estimate(user);
+            if (tokenEstimation > MAX_TOKEN) {
+                log.info("skipping summary " + (entity != null ? entity.getDocNumber() : "unknown ") + ", approx " + tokenEstimation + " token");
+                return null;
+            }
+            log.info("requesting summary " + (entity != null ? entity.getDocNumber() : "unknown ") + ", approx " + tokenEstimation + " token");
+
             ChatResponse chatResponse = chatClient.prompt(p).call().chatResponse();
             String aireturn  = chatResponse.getResult().getOutput().getText();
 
@@ -102,7 +111,7 @@ public class CaselawAnalyzerService {
             try {
                 jsonReturn = objectMapper.readValue(cleanedAi, CaselawSummaryCivilCase.class);
             } catch (JsonProcessingException e) {
-                System.out.println("could not match");
+                log.error("could not match");
                 return null;
             }
 
