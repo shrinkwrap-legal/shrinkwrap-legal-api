@@ -24,11 +24,14 @@ public class CaselawSummaryCivilCase {
     @JsonAlias({"begehren_staatsanwaltschaft","gegenargumente_staat"})
     String gegenvorbringen;
     String berufende_partei;
+    @JsonAlias("entscheidung_gericht_2_saetze")
+    String entscheidung_gericht;
     List<String> zusammenfassung_3_absaetze;
     String zusammenfassung_3_saetze;
     String zeitungstitel_boulevard;
     String zeitungstitel_oeffentlich;
     String zeitungstitel_rechtszeitschrift;
+    @JsonAlias("schlussfolgerungen_gericht")
     List<String> schlussfolgerungen;
     List<String> wichtige_normen;
     List<String> hauptrechtsgebiete;
