@@ -6,6 +6,7 @@ Untenstehend folgt {{#if VfGH}}eine österreichische Entscheidung des österreic
 1. Um welche Art von Urteil handelt es sich? Beschluss, Urteil, Erkenntnis
 1a. Um welches Rechtsmittel handelt es sich? Ordentliche Revision, Außerordentliche Revision, Ordentlicher Revisionsrekurs,Außerordentlicher Revisionsrekurs, Ordentliche Berufung, Außerordentliche Berufung, Ordentlicher Rekurs, Außerordentlicher Rekurs, Erstinstanz, EuGH-Vorabentscheidungsvorlage
 {{/if}}
+1b. Handelt es sich um eine Vorlage vor dem EuGH?
 2. Wie ist das Verfahren ausgegangen: Gab es eine Zurückweisung, eine Stattgabe, eine Bestätigung, eine Abweisung oder Gemischt?
 3. Fasse den Sachverhalt in höchstens drei Sätzen zusammen. Der Sachverhalt beschreibt was vorgefallen ist. Was Gegenstand des Verfahrens ist. Die Tatsachen, die zum Verfahren geführt haben. {{#if criminal}} Was hat der Angeklagte oder die Angeklagte getan, um angeklagt zu werden? Welche Tat hat ihn vor Gericht gebracht? {{/if}} Was ist vorgefallen? Greife NICHT dem Urteil voraus. Rechtliche Aussagen Gerichts, das die Entscheidung erlässt sind KEIN Sachverhalt. Der Sachverhalt wird oft am Anfang in Präteritum wiedergegeben. Vermische dabei keine Sätze, die eine neue Bedeutung ergeben. KEINE BEGEHREN. Begehren sind die Argumentationen und Vorbringen der Parteien. Oftmals kommen Wörter wie "begehrte" und "bestritt" vor.
 Verwende die Form:
@@ -76,10 +77,14 @@ Liste die Informationen wie oben geführt als JSON. Verwende dieses Schema:
 ```json
 {
 "art": "",
+"eugh_vorlage": null; // False/True or null if unknown,
 "ausgang": "",
+{{#if VfGH}}
+"verfahrensart": "",
+{{ else }}
 "rechtsmittel": "",
+{{/if}}
 "sachverhalt": "",
-
 {{#if criminal}}
 "berufende_partei": "", //"Angeklagter", "Staatsanwaltschaft"
 "begehren_angeklagter": "",

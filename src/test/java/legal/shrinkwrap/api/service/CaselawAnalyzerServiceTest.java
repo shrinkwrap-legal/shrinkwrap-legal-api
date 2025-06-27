@@ -61,6 +61,27 @@ class CaselawAnalyzerServiceTest {
     }
 
     @Test
+    public void singleCaseLawSummaryEuGH() throws InterruptedException {
+        String ecli = "ECLI:AT:OGH0002:2025:0080OB00021.25H.0526.000";
+        CaseLawRequestDto dto = new CaseLawRequestDto(ecli, null, RisCourt.Justiz);
+        CaseLawEntity entity = documentService.downloadCaseLaw(dto);
+        CaseLawAnalysisEntity analysisEntity = DocumentServiceImpl.createTextConversion(entity);
+        CaselawSummaryCivilCase caselawSummaryCivilCase = caselawAnalyzerService.summarizeCaselaw(analysisEntity.getFullText());
+        System.out.println(caselawSummaryCivilCase.toString());
+
+    }
+    @Test
+    public void singleCaseLawSummaryVfGH() throws InterruptedException {
+        String ecli = "ECLI:AT:VFGH:2016:G7.2016";
+        CaseLawRequestDto dto = new CaseLawRequestDto(ecli, null, RisCourt.VfGH);
+        CaseLawEntity entity = documentService.downloadCaseLaw(dto);
+        CaseLawAnalysisEntity analysisEntity = DocumentServiceImpl.createTextConversion(entity);
+        CaselawSummaryCivilCase caselawSummaryCivilCase = caselawAnalyzerService.summarizeCaselaw(analysisEntity.getFullText());
+        System.out.println(caselawSummaryCivilCase.toString());
+
+    }
+
+    @Test
     void analyzeCaselaw() {
         Path directoryPath = Paths.get("c:\\tmp\\shrinkwrap");
 

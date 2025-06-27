@@ -13,8 +13,11 @@ import java.util.List;
 public class CaselawSummaryCivilCase {
     @JsonProperty(required = true)
     String art;
+    @JsonProperty("eugh_vorlage")
+    Boolean eugh;
     String ausgang;
     String rechtsmittel;
+    String verfahrensart;
     String sachverhalt;
     @JsonAlias({"begehren_angeklagter","begehren_beschwerdefuehrer"})
     String begehren;
