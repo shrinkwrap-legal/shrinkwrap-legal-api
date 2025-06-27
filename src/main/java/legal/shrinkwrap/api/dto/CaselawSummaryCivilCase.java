@@ -13,7 +13,7 @@ import java.util.List;
 public class CaselawSummaryCivilCase {
     @JsonProperty(required = true)
     String art;
-    @JsonProperty("eugh_vorlage")
+    @JsonAlias("eugh_vorlage")
     Boolean eugh;
     String ausgang;
     String rechtsmittel;
