@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.jsonSchema.jakarta.JsonSchemaGenerator;
 import com.fasterxml.jackson.module.jsonSchema.jakarta.types.ObjectSchema;
+import com.github.jknack.handlebars.Options;
 import com.github.jknack.handlebars.Template;
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
@@ -47,6 +48,17 @@ public class CaselawAnalyzerService {
         chatClient = chatClientBuilder.build();
 
         Handlebars handlebars = new Handlebars();
+        handlebars.registerHelper("germanNumber", (Object numberStr, Options options) -> {
+            Integer number = Integer.parseInt(numberStr.toString());
+            return switch (number) {
+                case 1 -> "einen";
+                case 2 -> "zwei";
+                case 3 -> "drei";
+                case 4 -> "vier";
+                case 5 -> "fünf";
+                default -> null;
+            };
+        });
         try {
             Resource resource = resourceLoader.getResource("classpath:prompts/parts.hbs");
             String s = IOUtils.toString(resource.getInputStream(), StandardCharsets.UTF_8);
@@ -68,7 +80,7 @@ public class CaselawAnalyzerService {
         }
     }
 
-
+    @Deprecated
     public SummaryAnalysis summarizeCaselaw(String text) {
         return summarizeCaselaw(text, null);
     }
@@ -76,7 +88,10 @@ public class CaselawAnalyzerService {
     public SummaryAnalysis summarizeCaselaw(String text, CaseLawEntity entity) {
         boolean isCriminal = entity != null && StringUtils.defaultString(entity.getCaseNumber()).matches("^[\\d]+Os.*");
         boolean isVfGH = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString());
-        TextModel model = new TextModel(text, isCriminal, isVfGH);
+        int wordCount = text.split(" ").length;
+        int numberOfSentences = getNumberOfSentencesSuitableByWordCount(wordCount);
+
+        TextModel model = new TextModel(text, isCriminal, isVfGH, numberOfSentences);
 
         try {
             String system = templates.get("summary.system").apply(model);
@@ -215,7 +230,23 @@ public class CaselawAnalyzerService {
     private static final record SentenceModel(int id, String sentence) {
     }
 
-    private static final record TextModel(String text, Boolean criminal, Boolean VfGH) {}
+    private static final record TextModel(String text, Boolean criminal, Boolean VfGH, int numberOfSentences) {}
+
+    private int getNumberOfSentencesSuitableByWordCount(int wordCount) {
+        if (wordCount < 200) {
+            return 1;
+        }
+        if (wordCount < 700) {
+            return 2;
+        }
+        if (wordCount < 4000) {
+            return 3;
+        }
+        if (wordCount < 8000) {
+            return 4;
+        }
+        return 5;
+    }
 
     public static final record SummaryAnalysis(CaselawSummaryCivilCase summary, String fullPrompt) {};
 }

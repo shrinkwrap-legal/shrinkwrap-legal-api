@@ -8,7 +8,7 @@ Untenstehend folgt {{#if VfGH}}eine österreichische Entscheidung des österreic
 {{/if}}
 1b. Handelt es sich um eine Vorlage vor dem EuGH? Das bedeutet, wird das Verfahren durch diesen Beschluss unterbrochen und auf eine Entscheidung des EuGH gewartet?
 2. Wie ist das Verfahren ausgegangen: Gab es eine Zurückweisung, eine Stattgabe, eine Bestätigung, eine Abweisung oder Gemischt?
-3. Fasse den Sachverhalt in höchstens drei Sätzen zusammen. Der Sachverhalt beschreibt was vorgefallen ist. Was Gegenstand des Verfahrens ist. Die Tatsachen, die zum Verfahren geführt haben. {{#if criminal}} Was hat der Angeklagte oder die Angeklagte getan, um angeklagt zu werden? Welche Tat hat ihn vor Gericht gebracht? {{/if}} Was ist vorgefallen? Greife NICHT dem Urteil voraus. Rechtliche Aussagen Gerichts, das die Entscheidung erlässt sind KEIN Sachverhalt. Der Sachverhalt wird oft am Anfang in Präteritum wiedergegeben. Vermische dabei keine Sätze, die eine neue Bedeutung ergeben. KEINE BEGEHREN. Begehren sind die Argumentationen und Vorbringen der Parteien. Oftmals kommen Wörter wie "begehrte" und "bestritt" vor.
+3. Fasse den Sachverhalt in höchstens {{ germanNumber numberOfSentences }} Sätzen zusammen. Der Sachverhalt beschreibt was vorgefallen ist. Was Gegenstand des Verfahrens ist. Die Tatsachen, die zum Verfahren geführt haben. {{#if criminal}} Was hat der Angeklagte oder die Angeklagte getan, um angeklagt zu werden? Welche Tat hat ihn vor Gericht gebracht? {{/if}} Was ist vorgefallen? Greife NICHT dem Urteil voraus. Rechtliche Aussagen Gerichts, das die Entscheidung erlässt sind KEIN Sachverhalt. Der Sachverhalt wird oft am Anfang in Präteritum wiedergegeben. Vermische dabei keine Sätze, die eine neue Bedeutung ergeben. KEINE BEGEHREN. Begehren sind die Argumentationen und Vorbringen der Parteien. Oftmals kommen Wörter wie "begehrte" und "bestritt" vor.
 Verwende die Form:
 ```
 Lorem ipsum dolor sit amet, sed diam nonumy eirmod tempor invidunt ut labore. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
@@ -25,8 +25,8 @@ Enthält das Gerichtsurteil keinen Sachverhalt, gib "KEIN SACHVERHALT aus.
 5. Basierend auf Sachverhalt und den vorgebrachten Argumenten, fasse in zwei Sätzen zusammen, wie das Gericht entschieden hat und warum es so entschieden hat.
 6. Liste die wichtigsten juristischen rechtlichen Schlussfolgerungen des Gerichts klar und präzise in kurzen Sätzen zusammen. Wie wurden Rechtsvorschriften ausgelegt, welche Rechtsvorschriften waren besonders relevant? Welche speziellen rechtlichen Aspekte und und Subsumptionen wurden in dem Urteil getroffen? Welche Auslegungen von Gesetzestext wurden getroffen? Alle Schlussfolgerungen müssen in sich geschlossen sein. Weitere Aspekte aus dem Urteil dürfen nicht erforderlich sein. Jede Schlussfolgerung sollte eine konkrete Norm nennen.
 7. Liste die wichtigsten Normen, über die im Urteil juristisch entschieden wird. Liste nur die Normen und Gesetze, die Hauptgegenstand des Urteils sind. Verwende die Form "NORM § 1 Abs 3".
-8. Fasse das gesamte Urteil in drei bis fünf Absätzen zusammen. Verwende Zeilenumbrüche. Verwende pro Absatz drei Sätze. KEINE KOSTENENTSCHEIDUNGEN. KEINE BEGEHREN.
-9. Fasse das gesamte Urteil in drei Sätzen zusammen. KEINE KOSTENENTSCHEIDUNGEN. KEINE BEGEHREN.
+8. Fasse das gesamte Urteil in {{ germanNumber numberOfSentences }} Absätzen zusammen. Verwende Zeilenumbrüche. Verwende pro Absatz drei Sätze. KEINE KOSTENENTSCHEIDUNGEN. KEINE BEGEHREN.
+9. Fasse das gesamte Urteil in {{ germanNumber numberOfSentences }} Sätzen zusammen. KEINE KOSTENENTSCHEIDUNGEN. KEINE BEGEHREN.
 10. Entwirf verschiedene schlagkräftige Zeitungsartikel für das Urteil.
 10a: Für eine Boulevardzeitung schlagkräftig und auf das wesentliche reduziert in der Form "BVwGH: At vero eos et accusam et justo duo dolores et ea rebum.".
 10b: Für ein öffentlich-rechtliches Medium sachlich und ausgewogen in der Form "Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus".
@@ -103,12 +103,12 @@ Liste die Informationen aus dem obigen Gerichtsurteil wie oben geführt als JSON
 "gegenvorbringen": "",
 {{/if}}
 {{/if}}
-"entscheidung_gericht_2_saetze": "",
+"entscheidung_gericht_{{ numberOfSentences }}_saetze": "",
 "schlussfolgerungen_gericht": [
 "", "", "", ...
 ],
-"zusammenfassung_3_absaetze": ["", "", ""],
-"zusammenfassung_3_saetze": "",
+"zusammenfassung_{{ numberOfSentences }}_absaetze": ["", "", ""],
+"zusammenfassung_{{ numberOfSentences }}_saetze": "",
 "zeitungstitel_boulevard": "",
 "zeitungstitel_oeffentlich": "",
 "zeitungstitel_rechtszeitschrift": "",
