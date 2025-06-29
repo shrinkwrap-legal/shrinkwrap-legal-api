@@ -102,20 +102,25 @@ public class CaselawAnalyzerService {
             }
             log.info("requesting summary " + (entity != null ? entity.getDocNumber() : "unknown ") + ", approx " + tokenEstimation + " token");
 
-            ChatResponse chatResponse = chatClient.prompt(p).call().chatResponse();
-            String aireturn  = chatResponse.getResult().getOutput().getText();
+            for (int j = 0; j < 2; j++) {
+                ChatResponse chatResponse = chatClient.prompt(p).call().chatResponse();
+                String aireturn = chatResponse.getResult().getOutput().getText();
 
-            //sometimes, openai will start with "```"
-            String cleanedAi = aireturn.replaceAll("```json", "").replaceAll("```", "");
-            CaselawSummaryCivilCase jsonReturn = null;
-            try {
-                jsonReturn = objectMapper.readValue(cleanedAi, CaselawSummaryCivilCase.class);
-            } catch (JsonProcessingException e) {
-                log.error("could not match");
-                return null;
+                //sometimes, openai will start with "```"
+                String cleanedAi = aireturn.replaceAll("```json", "").replaceAll("```", "");
+                CaselawSummaryCivilCase jsonReturn = null;
+                try {
+                    jsonReturn = objectMapper.readValue(cleanedAi, CaselawSummaryCivilCase.class);
+                    return jsonReturn;
+                } catch (JsonProcessingException e) {
+                    if (j == 0) {
+                        log.error("could not match, retry");
+                    } else {
+                        log.error("could not match on retry");
+                    }
+                }
             }
-
-            return jsonReturn;
+            return null;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -211,4 +216,6 @@ public class CaselawAnalyzerService {
     }
 
     private static final record TextModel(String text, Boolean criminal, Boolean VfGH) {}
+
+    private static final record SummaryAnalysis(CaselawSummaryCivilCase summary, String fullPrompt) {};
 }
