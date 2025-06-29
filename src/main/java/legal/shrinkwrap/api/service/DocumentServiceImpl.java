@@ -9,7 +9,6 @@ import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturMetadaten;
 import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
 import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
-import legal.shrinkwrap.api.adapter.ris.rest.dto.enums.OgdApplikationEnum;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
 import legal.shrinkwrap.api.dto.CaseLawRequestDto;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
@@ -105,12 +104,13 @@ public class DocumentServiceImpl implements DocumentService {
         if (summary.isEmpty() && (
                 caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.Justiz.toString()) ||
                         caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString()))) {
-            CaselawSummaryCivilCase o = this.analyzeCivilCaseLaw(caseLawEntity, textEntity.get());
+            CaselawAnalyzerService.SummaryAnalysis o = this.analyzeCivilCaseLaw(caseLawEntity, textEntity.get());
             if (o != null) {
                 CaseLawAnalysisEntity analysisEntity = new CaseLawAnalysisEntity();
                 analysisEntity.setCaseLaw(caseLawEntity);
                 analysisEntity.setAnalysisType("summary");
                 analysisEntity.setAnalysisVersion(1);
+                analysisEntity.setFullText(o.fullPrompt());
                 if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString())) {
                     analysisEntity.setAnalysisSubType("vfghCase");
                 }
@@ -118,7 +118,7 @@ public class DocumentServiceImpl implements DocumentService {
                     analysisEntity.setAnalysisSubType("civilCase");
                 }
                 try {
-                    analysisEntity.setAnalysis(MAPPER.writeValueAsString(o));
+                    analysisEntity.setAnalysis(MAPPER.writeValueAsString(o.summary()));
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
@@ -171,9 +171,9 @@ public class DocumentServiceImpl implements DocumentService {
         return entity;
     }
 
-    private CaselawSummaryCivilCase analyzeCivilCaseLaw(CaseLawEntity caseLawEntity, CaseLawAnalysisEntity textEntity) {
+    private CaselawAnalyzerService.SummaryAnalysis analyzeCivilCaseLaw(CaseLawEntity caseLawEntity, CaseLawAnalysisEntity textEntity) {
         String text = textEntity.getFullText();
-        CaselawSummaryCivilCase o = caselawAnalyzerService.summarizeCaselaw(text, caseLawEntity);
+        CaselawAnalyzerService.SummaryAnalysis o = caselawAnalyzerService.summarizeCaselaw(text, caseLawEntity);
 
         return o;
     }

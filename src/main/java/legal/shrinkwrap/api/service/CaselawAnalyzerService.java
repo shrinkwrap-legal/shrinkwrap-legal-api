@@ -1,9 +1,7 @@
 package legal.shrinkwrap.api.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.module.jsonSchema.jakarta.JsonSchema;
 import com.fasterxml.jackson.module.jsonSchema.jakarta.JsonSchemaGenerator;
 import com.fasterxml.jackson.module.jsonSchema.jakarta.types.ObjectSchema;
 import com.github.jknack.handlebars.Template;
@@ -71,11 +69,11 @@ public class CaselawAnalyzerService {
     }
 
 
-    public CaselawSummaryCivilCase summarizeCaselaw(String text) {
+    public SummaryAnalysis summarizeCaselaw(String text) {
         return summarizeCaselaw(text, null);
     }
 
-    public CaselawSummaryCivilCase summarizeCaselaw(String text, CaseLawEntity entity) {
+    public SummaryAnalysis summarizeCaselaw(String text, CaseLawEntity entity) {
         boolean isCriminal = entity != null && StringUtils.defaultString(entity.getCaseNumber()).matches("^[\\d]+Os.*");
         boolean isVfGH = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString());
         TextModel model = new TextModel(text, isCriminal, isVfGH);
@@ -111,7 +109,9 @@ public class CaselawAnalyzerService {
                 CaselawSummaryCivilCase jsonReturn = null;
                 try {
                     jsonReturn = objectMapper.readValue(cleanedAi, CaselawSummaryCivilCase.class);
-                    return jsonReturn;
+
+                    SummaryAnalysis sa = new SummaryAnalysis(jsonReturn, p.toString());
+                    return sa;
                 } catch (JsonProcessingException e) {
                     if (j == 0) {
                         log.error("could not match, retry");
@@ -217,5 +217,5 @@ public class CaselawAnalyzerService {
 
     private static final record TextModel(String text, Boolean criminal, Boolean VfGH) {}
 
-    private static final record SummaryAnalysis(CaselawSummaryCivilCase summary, String fullPrompt) {};
+    public static final record SummaryAnalysis(CaselawSummaryCivilCase summary, String fullPrompt) {};
 }

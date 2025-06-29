@@ -55,7 +55,7 @@ class CaselawAnalyzerServiceTest {
         CaseLawRequestDto dto = new CaseLawRequestDto(ecli, null, RisCourt.Justiz);
         CaseLawEntity entity = documentService.downloadCaseLaw(dto);
         CaseLawAnalysisEntity analysisEntity = DocumentServiceImpl.createTextConversion(entity);
-        CaselawSummaryCivilCase caselawSummaryCivilCase = caselawAnalyzerService.summarizeCaselaw(analysisEntity.getFullText());
+        CaselawSummaryCivilCase caselawSummaryCivilCase = caselawAnalyzerService.summarizeCaselaw(analysisEntity.getFullText()).summary();
         System.out.println(caselawSummaryCivilCase.toString());
 
     }
@@ -66,7 +66,7 @@ class CaselawAnalyzerServiceTest {
         CaseLawRequestDto dto = new CaseLawRequestDto(ecli, null, RisCourt.Justiz);
         CaseLawEntity entity = documentService.downloadCaseLaw(dto);
         CaseLawAnalysisEntity analysisEntity = DocumentServiceImpl.createTextConversion(entity);
-        CaselawSummaryCivilCase caselawSummaryCivilCase = caselawAnalyzerService.summarizeCaselaw(analysisEntity.getFullText());
+        CaselawSummaryCivilCase caselawSummaryCivilCase = caselawAnalyzerService.summarizeCaselaw(analysisEntity.getFullText()).summary();
         System.out.println(caselawSummaryCivilCase.toString());
 
     }
@@ -76,7 +76,7 @@ class CaselawAnalyzerServiceTest {
         CaseLawRequestDto dto = new CaseLawRequestDto(ecli, null, RisCourt.VfGH);
         CaseLawEntity entity = documentService.downloadCaseLaw(dto);
         CaseLawAnalysisEntity analysisEntity = DocumentServiceImpl.createTextConversion(entity);
-        CaselawSummaryCivilCase caselawSummaryCivilCase = caselawAnalyzerService.summarizeCaselaw(analysisEntity.getFullText());
+        CaselawSummaryCivilCase caselawSummaryCivilCase = caselawAnalyzerService.summarizeCaselaw(analysisEntity.getFullText()).summary();
         System.out.println(caselawSummaryCivilCase.toString());
 
     }
