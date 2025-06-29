@@ -1,4 +1,4 @@
-Untenstehend folgt {{#if VfGH}}eine österreichische Entscheidung des österreichischen Verfassungsgerichtshofs (VfGH){{else}}ein österreichisches Gerichtsurteil{{/if}}. Du extrahierst mehrere Eigenschaften. Kosten sind irrelevant. Es ist nicht notwendig zu analysieren, wer Kosten trägt.
+Untenstehend folgt {{#if VfGH}}eine {{#if isPart}}auszugsweise abgedruckte{{/if}} österreichische Entscheidung des österreichischen Verfassungsgerichtshofs (VfGH){{else}}ein {{#if isPart}}auszugsweise abgedrucktes{{/if}} österreichisches Gerichtsurteil{{/if}}. Du extrahierst mehrere Eigenschaften. Kosten sind irrelevant. Es ist nicht notwendig zu analysieren, wer Kosten trägt.
 {{#if VfGH}}
 1. Um welche Art von Entscheidung handelt es sich? Beschluss, Erkenntnis
 1a. Um welches Verfahren handelt es sich? Verordnungsprüfung, Gesetzesprüfung, Bescheidbeschwerde, Erkenntnisbeschwerde, Untersuchungsausschuss, Wahlüberprüfung, Kompetenzkonflikt, Vermögensansprüche, Staatsverträge, Sonstige
@@ -107,7 +107,7 @@ Liste die Informationen aus dem obigen Gerichtsurteil wie oben geführt als JSON
 "schlussfolgerungen_gericht": [
 "", "", "", ...
 ],
-"zusammenfassung_{{ numberOfSentences }}_absaetze": ["", "", ""],
+"zusammenfassung_{{ numberOfSentences }}_absaetze": ["... ... ...", "... ... ...", "... ... ..."],
 "zusammenfassung_{{ numberOfSentences }}_saetze": "",
 "zeitungstitel_boulevard": "",
 "zeitungstitel_oeffentlich": "",

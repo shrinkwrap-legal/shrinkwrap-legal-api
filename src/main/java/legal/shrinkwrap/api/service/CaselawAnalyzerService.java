@@ -36,6 +36,7 @@ import java.util.*;
 @Slf4j
 public class CaselawAnalyzerService {
     private final Integer MAX_TOKEN = 100000;
+    private final Integer TOKEN_SYSTEM_AND_PROMPT_ESTIMATION;
     private final Map<String, Template> templates = new HashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final TokenCountEstimator tokenCountEstimator = new JTokkitTokenCountEstimator();
@@ -75,6 +76,12 @@ public class CaselawAnalyzerService {
             template = handlebars.compileInline(s);
             templates.put("summary.system", template);
 
+            //token estimation for system/user
+            TextModel dummyModel = new TextModel("",true, false, 3, true);
+            String system = templates.get("summary.system").apply(dummyModel);
+            String user = templates.get("summary").apply(dummyModel);
+            TOKEN_SYSTEM_AND_PROMPT_ESTIMATION = tokenCountEstimator.estimate(system + " " + user);
+            log.info("loaded summary prompts, " + TOKEN_SYSTEM_AND_PROMPT_ESTIMATION + " token(s)");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -88,10 +95,34 @@ public class CaselawAnalyzerService {
     public SummaryAnalysis summarizeCaselaw(String text, CaseLawEntity entity) {
         boolean isCriminal = entity != null && StringUtils.defaultString(entity.getCaseNumber()).matches("^[\\d]+Os.*");
         boolean isVfGH = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString());
+        boolean isPart = false;
         int wordCount = text.split(" ").length;
         int numberOfSentences = getNumberOfSentencesSuitableByWordCount(wordCount);
+        int tokenEstimation = TOKEN_SYSTEM_AND_PROMPT_ESTIMATION + tokenCountEstimator.estimate(text);
+        if (tokenEstimation > (MAX_TOKEN *2)) {
+            log.info("skipping summary " + (entity != null ? entity.getDocNumber() : "unknown ") + ", approx " + tokenEstimation + " token");
+            return null;
+        }
+        else if (tokenEstimation > MAX_TOKEN) {
+            int overhead  = tokenEstimation - MAX_TOKEN;
+            int textLength = text.length();
+            int cuttingCenter = textLength / 2;
+            //try to cut some text from the middle
+            for (float charsPerToken = 1.6f;charsPerToken < 5f; charsPerToken += 0.1f) {
+                int charsToCut = Math.round(overhead * charsPerToken);
+                String textToCut = text.substring(cuttingCenter - charsToCut/2, cuttingCenter + charsToCut/2);
+                int cutToken = tokenCountEstimator.estimate(textToCut);
+                if (cutToken > overhead) {
+                    text = text.substring(0, cuttingCenter - charsToCut / 2) + "...\n\n (...) \n\n..." + text.substring(cuttingCenter + charsToCut / 2);
+                    log.info("cut " + cutToken + " token(s) at " + Math.round(charsPerToken * 10) / 10f + " char per token");
+                    break;
+                }
+            }
+            isPart = true;
+            tokenEstimation = TOKEN_SYSTEM_AND_PROMPT_ESTIMATION + tokenCountEstimator.estimate(text);
+        }
 
-        TextModel model = new TextModel(text, isCriminal, isVfGH, numberOfSentences);
+        TextModel model = new TextModel(text, isCriminal, isVfGH, numberOfSentences, isPart);
 
         try {
             String system = templates.get("summary.system").apply(model);
@@ -108,11 +139,6 @@ public class CaselawAnalyzerService {
             OpenAiChatOptions options = OpenAiChatOptions.builder()
                     .model("gpt-4o-mini").build();
             Prompt p = new Prompt(List.of(systemMessage, userMessage), options);
-            int tokenEstimation = tokenCountEstimator.estimate(system) + tokenCountEstimator.estimate(user);
-            if (tokenEstimation > MAX_TOKEN) {
-                log.info("skipping summary " + (entity != null ? entity.getDocNumber() : "unknown ") + ", approx " + tokenEstimation + " token");
-                return null;
-            }
             log.info("requesting summary " + (entity != null ? entity.getDocNumber() : "unknown ") + ", approx " + tokenEstimation + " token");
 
             for (int j = 0; j < 2; j++) {
@@ -230,7 +256,7 @@ public class CaselawAnalyzerService {
     private static final record SentenceModel(int id, String sentence) {
     }
 
-    private static final record TextModel(String text, Boolean criminal, Boolean VfGH, int numberOfSentences) {}
+    private static final record TextModel(String text, Boolean criminal, Boolean VfGH, int numberOfSentences, boolean isPart) {}
 
     private int getNumberOfSentencesSuitableByWordCount(int wordCount) {
         if (wordCount < 200) {
