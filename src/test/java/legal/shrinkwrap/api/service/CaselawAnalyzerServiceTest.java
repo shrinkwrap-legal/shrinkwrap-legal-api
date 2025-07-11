@@ -6,13 +6,17 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
+import com.googlecode.concurrenttrees.radix.node.concrete.DefaultCharSequenceNodeFactory;
+import com.googlecode.concurrenttrees.solver.LCSubstringSolverForMinLength;
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.dto.CaseLawRequestDto;
-import legal.shrinkwrap.api.dto.CaseLawResponseDto;
 import legal.shrinkwrap.api.dto.CaselawSummaryCivilCase;
 import legal.shrinkwrap.api.persistence.entity.CaseLawAnalysisEntity;
 import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
+import legal.shrinkwrap.api.utils.SentenceHashingTools;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +61,59 @@ class CaselawAnalyzerServiceTest {
         CaseLawAnalysisEntity analysisEntity = DocumentServiceImpl.createTextConversion(entity);
         CaselawSummaryCivilCase caselawSummaryCivilCase = caselawAnalyzerService.summarizeCaselaw(analysisEntity.getFullText(), entity).summary();
         System.out.println(caselawSummaryCivilCase.toString());
+
+    }
+
+    @Test
+    public void testSentenceSplitSimilarity() throws InterruptedException {
+        String ecli1 = "ECLI:AT:BVWG:2025:I424.2304252.1.00";
+        String ecli2 = "ECLI:AT:BVWG:2025:I423.2305904.1.00";
+        CaseLawRequestDto dto1 = new CaseLawRequestDto(ecli1, null, RisCourt.BVwG);
+        CaseLawEntity entity1 = documentService.downloadCaseLaw(dto1);
+        CaseLawAnalysisEntity analysisEntity1 = DocumentServiceImpl.createTextConversion(entity1);
+        List<SentenceHashingTools.HashedSentence> sentenceModel1 = SentenceHashingTools.getSentenceModel(analysisEntity1.getFullText());
+        String sentence1Hash = sentenceModel1.stream().map(SentenceHashingTools.HashedSentence::getCharacter).collect(StringBuilder::new, StringBuilder::append, StringBuilder::append).toString();
+
+        CaseLawRequestDto dto2 = new CaseLawRequestDto(ecli2, null, RisCourt.BVwG);
+        CaseLawEntity entity2 = documentService.downloadCaseLaw(dto2);
+        CaseLawAnalysisEntity analysisEntity2 = DocumentServiceImpl.createTextConversion(entity2);
+        List<SentenceHashingTools.HashedSentence> sentenceModel2 = SentenceHashingTools.getSentenceModel(analysisEntity2.getFullText());
+        String sentence2Hash = sentenceModel2.stream().map(SentenceHashingTools.HashedSentence::getCharacter).collect(StringBuilder::new, StringBuilder::append, StringBuilder::append).toString();
+
+        LCSubstringSolverForMinLength solver = new LCSubstringSolverForMinLength(new DefaultCharSequenceNodeFactory());
+        solver.add(sentence1Hash);
+        solver.add(sentence2Hash);
+        List<CharSequence> longestCommonSubstring = solver.getLongestCommonSubstringsForLength(6);
+
+        List<List<SentenceHashingTools.HashedSentence>> sentencesToReplace1 = new ArrayList<>();
+        List<List<SentenceHashingTools.HashedSentence>> sentencesToReplace2 = new ArrayList<>();
+        for (CharSequence common : longestCommonSubstring) {
+            {
+                int startPos = sentence1Hash.indexOf(common.toString());
+                int endPos = startPos + common.length();
+                SentenceHashingTools.HashedSentence sentence1 = sentenceModel1.get(startPos);
+                SentenceHashingTools.HashedSentence sentence2 = sentenceModel1.get(endPos);
+                sentencesToReplace1.add(List.of(sentence1, sentence2));
+            }
+            {
+                int startPos = sentence2Hash.indexOf(common.toString());
+                int endPos = startPos + common.length();
+                SentenceHashingTools.HashedSentence sentence1 = sentenceModel2.get(startPos);
+                SentenceHashingTools.HashedSentence sentence2 = sentenceModel2.get(endPos);
+                sentencesToReplace2.add(List.of(sentence1, sentence2));
+            }
+        }
+
+        String fullText1 = SentenceHashingTools.replaceCommonSentence(analysisEntity1.getFullText(), sentencesToReplace1);
+        String fullText2 = SentenceHashingTools.replaceCommonSentence(analysisEntity2.getFullText(), sentencesToReplace2);
+
+        System.out.println(1);
+
+        //print out duplicate fragments
+
+
+        //CaselawSummaryCivilCase caselawSummaryCivilCase = caselawAnalyzerService.summarizeCaselaw(analysisEntity.getFullText(), entity).summary();
+        //System.out.println(caselawSummaryCivilCase.toString());
 
     }
 

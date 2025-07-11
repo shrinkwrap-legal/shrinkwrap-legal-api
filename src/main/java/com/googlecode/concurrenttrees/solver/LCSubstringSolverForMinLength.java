@@ -107,7 +107,28 @@ public class LCSubstringSolverForMinLength {
                     encounteredSubstrings.add(nodeKeyPair.key);
                 }
             }
-            return encounteredSubstrings;
+
+            // Only keep substrings that are not contained in any longer substring
+            return filterMaximalSubstrings(encounteredSubstrings);
+        }
+
+        static List<CharSequence> filterMaximalSubstrings(List<CharSequence> substrings) {
+            List<CharSequence> result = new ArrayList<>();
+            substrings.sort((a, b) -> Integer.compare(b.length(), a.length()));
+            for (int i = 0; i < substrings.size(); i++) {
+                CharSequence candidate = substrings.get(i);
+                boolean isSubstringOfAnother = false;
+                for (int j = 0; j < result.size(); j++) {
+                    if (result.get(j).toString().contains(candidate)) {
+                        isSubstringOfAnother = true;
+                        break;
+                    }
+                }
+                if (!isSubstringOfAnother) {
+                    result.add(candidate);
+                }
+            }
+            return result;
         }
 
         /**
