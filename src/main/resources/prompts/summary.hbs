@@ -1,7 +1,11 @@
-Untenstehend folgt {{#if VfGH}}eine {{#if isPart}}auszugsweise abgedruckte{{/if}} österreichische Entscheidung des österreichischen Verfassungsgerichtshofs (VfGH){{else}}ein {{#if isPart}}auszugsweise abgedrucktes{{/if}} österreichisches Gerichtsurteil{{/if}}. Du extrahierst mehrere Eigenschaften. Kosten sind irrelevant. Es ist nicht notwendig zu analysieren, wer Kosten trägt.
+Untenstehend folgt {{#if VfGH}}eine {{#if isPart}}auszugsweise abgedruckte{{/if}} österreichische Entscheidung des österreichischen Verfassungsgerichtshofs (VfGH){{else if VwGH}}eine {{#if isPart}}auszugsweise abgedruckte{{/if}} österreichische Entscheidung des österreichischen Verwaltungsgerichtshofs (VwGH){{else}}ein {{#if isPart}}auszugsweise abgedrucktes{{/if}} österreichisches Gerichtsurteil{{/if}}. Du extrahierst mehrere Eigenschaften. Kosten sind irrelevant. Es ist nicht notwendig zu analysieren, wer Kosten trägt.
 {{#if VfGH}}
 1. Um welche Art von Entscheidung handelt es sich? Beschluss, Erkenntnis
 1a. Um welches Verfahren handelt es sich? Verordnungsprüfung, Gesetzesprüfung, Bescheidbeschwerde, Erkenntnisbeschwerde, Untersuchungsausschuss, Wahlüberprüfung, Kompetenzkonflikt, Vermögensansprüche, Staatsverträge, Sonstige
+{{else if VfGH}}
+1. Um welche Art von Entscheidung handelt es sich? Beschluss, Erkenntnis
+1a. Um welches Verfahren handelt es sich? ordentliche Revision, außerordentliche Revision, Fristsetzungsantrag,
+Feststellungsantrag, Kompetenzkonflikt, Sonstige
 {{else}}
 1. Um welche Art von Urteil handelt es sich? Beschluss, Urteil, Erkenntnis
 1a. Um welches Rechtsmittel handelt es sich? Ordentliche Revision, Außerordentliche Revision, Ordentlicher Revisionsrekurs,Außerordentlicher Revisionsrekurs, Ordentliche Berufung, Außerordentliche Berufung, Ordentlicher Rekurs, Außerordentlicher Rekurs, Erstinstanz, EuGH-Vorabentscheidungsvorlage
@@ -42,7 +46,9 @@ Verfahrensrecht
 {{ else }}
 {{#if VfGH}}
 
-{{else}}
+{{else if VwGH}}
+
+{{ else }}
 Verwaltungsrecht
 Besoldungsrecht
 Dienstrecht
@@ -98,6 +104,9 @@ Liste die Informationen aus dem obigen Gerichtsurteil wie oben geführt als JSON
 {{#if VfGH}}
 "begehren_beschwerdefuehrer": "",
 "gegenargumente_staat": "",
+{{else if VwGH}}
+"begehren_beschwerdefuehrer": "",
+"gegenargumente_staat_oder_behoerde": "",
 {{else}}
 "begehren": "",
 "gegenvorbringen": "",

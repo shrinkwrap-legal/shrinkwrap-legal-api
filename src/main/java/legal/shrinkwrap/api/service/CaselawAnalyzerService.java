@@ -77,7 +77,7 @@ public class CaselawAnalyzerService {
             templates.put("summary.system", template);
 
             //token estimation for system/user
-            TextModel dummyModel = new TextModel("",true, false, 3, true);
+            TextModel dummyModel = new TextModel("",true, false, 3, true, false);
             String system = templates.get("summary.system").apply(dummyModel);
             String user = templates.get("summary").apply(dummyModel);
             TOKEN_SYSTEM_AND_PROMPT_ESTIMATION = tokenCountEstimator.estimate(system + " " + user);
@@ -95,6 +95,7 @@ public class CaselawAnalyzerService {
     public SummaryAnalysis summarizeCaselaw(String text, CaseLawEntity entity) {
         boolean isCriminal = entity != null && StringUtils.defaultString(entity.getCaseNumber()).matches("^[\\d]+Os.*");
         boolean isVfGH = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString());
+        boolean isVwGH = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.VwGH.toString());
         boolean isPart = false;
         int wordCount = text.split(" ").length;
         int numberOfSentences = getNumberOfSentencesSuitableByWordCount(wordCount);
@@ -122,7 +123,7 @@ public class CaselawAnalyzerService {
             tokenEstimation = TOKEN_SYSTEM_AND_PROMPT_ESTIMATION + tokenCountEstimator.estimate(text);
         }
 
-        TextModel model = new TextModel(text, isCriminal, isVfGH, numberOfSentences, isPart);
+        TextModel model = new TextModel(text, isCriminal, isVfGH, numberOfSentences, isPart, isVwGH);
 
         try {
             String system = templates.get("summary.system").apply(model);
@@ -256,7 +257,7 @@ public class CaselawAnalyzerService {
     private static final record SentenceModel(int id, String sentence) {
     }
 
-    private static final record TextModel(String text, Boolean criminal, Boolean VfGH, int numberOfSentences, boolean isPart) {}
+    private static final record TextModel(String text, Boolean criminal, Boolean VfGH, int numberOfSentences, boolean isPart, boolean VwGH) {}
 
     private int getNumberOfSentencesSuitableByWordCount(int wordCount) {
         if (wordCount < 200) {
