@@ -91,6 +91,10 @@ public class SentenceHashingTools {
         return resultingText.toString();
     }
 
+    public static String getHashFromModel(List<HashedSentence> sentenceModel) {
+        return sentenceModel.stream().map(HashedSentence::getCharacter).collect(StringBuilder::new, StringBuilder::append, StringBuilder::append).toString();
+    }
+
     @Getter
     @Setter
     public static class HashedSentence {

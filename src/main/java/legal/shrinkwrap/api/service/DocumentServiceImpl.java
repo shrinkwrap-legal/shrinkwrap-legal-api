@@ -19,14 +19,13 @@ import legal.shrinkwrap.api.persistence.repo.CaseLawAnalysisRepository;
 import legal.shrinkwrap.api.persistence.repo.CaseLawRepository;
 import legal.shrinkwrap.api.python.ShrinkwrapPythonRestService;
 import legal.shrinkwrap.api.utils.PandocTextWrapper;
+import legal.shrinkwrap.api.utils.SentenceHashingTools;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class DocumentServiceImpl implements DocumentService {
@@ -325,6 +324,11 @@ public class DocumentServiceImpl implements DocumentService {
 
             CaseLawAnalysisEntity analysisEntity = createTextConversion(entity);
 
+            List<SentenceHashingTools.HashedSentence> sentenceModel = SentenceHashingTools.getSentenceModel(analysisEntity.getFullText());
+            String sentenceHash = SentenceHashingTools.getHashFromModel(sentenceModel);
+            analysisEntity.setSentenceHash(sentenceHash);
+            analysisEntity.setAnalysisVersion(2);
+
             entity = caseLawRepository.save(entity);
             analysisEntity = caseLawAnalysisRepository.save(analysisEntity);
         }
@@ -339,6 +343,5 @@ public class DocumentServiceImpl implements DocumentService {
         analysisEntity.setFullText(fullTextOnly);
         return analysisEntity;
     }
-
 
 }

@@ -52,4 +52,7 @@ public class CaseLawAnalysisEntity {
 
     @Column(name = "word_count")
     private Long wordCount;
+
+    @Column(name = "sentence_hash", length = 65000)
+    private String sentenceHash;
 }
