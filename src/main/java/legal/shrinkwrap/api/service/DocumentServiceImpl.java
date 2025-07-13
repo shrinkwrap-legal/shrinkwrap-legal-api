@@ -102,7 +102,8 @@ public class DocumentServiceImpl implements DocumentService {
         Optional<CaseLawAnalysisEntity> summary = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("summary", caseLawEntity.getId());
         if (summary.isEmpty() && (
                 caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.Justiz.toString()) ||
-                        caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString()))) {
+                        caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString()) ||
+                        caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VwGH.toString()))) {
             CaselawAnalyzerService.SummaryAnalysis o = this.analyzeCivilCaseLaw(caseLawEntity, textEntity.get());
             if (o != null) {
                 CaseLawAnalysisEntity analysisEntity = new CaseLawAnalysisEntity();
@@ -324,11 +325,6 @@ public class DocumentServiceImpl implements DocumentService {
 
             CaseLawAnalysisEntity analysisEntity = createTextConversion(entity);
 
-            List<SentenceHashingTools.HashedSentence> sentenceModel = SentenceHashingTools.getSentenceModel(analysisEntity.getFullText());
-            String sentenceHash = SentenceHashingTools.getHashFromModel(sentenceModel);
-            analysisEntity.setSentenceHash(sentenceHash);
-            analysisEntity.setAnalysisVersion(2);
-
             entity = caseLawRepository.save(entity);
             analysisEntity = caseLawAnalysisRepository.save(analysisEntity);
         }
@@ -337,10 +333,16 @@ public class DocumentServiceImpl implements DocumentService {
     public static CaseLawAnalysisEntity createTextConversion(CaseLawEntity entity) {
         String fullTextOnly = PandocTextWrapper.convertHtmlToText(entity.getFullCleanHtml());
         long wordCount = fullTextOnly.split(" ").length;
+
+        List<SentenceHashingTools.HashedSentence> sentenceModel = SentenceHashingTools.getSentenceModel(fullTextOnly);
+        String sentenceHash = SentenceHashingTools.getHashFromModel(sentenceModel);
+
         CaseLawAnalysisEntity analysisEntity = new CaseLawAnalysisEntity();
         analysisEntity.setWordCount(wordCount);
         analysisEntity.setCaseLaw(entity);
         analysisEntity.setFullText(fullTextOnly);
+        analysisEntity.setSentenceHash(sentenceHash);
+        analysisEntity.setAnalysisVersion(2);
         return analysisEntity;
     }
 
