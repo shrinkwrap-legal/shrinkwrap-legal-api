@@ -23,7 +23,7 @@ public class SentenceHashingTools {
     public static List<HashedSentence> getSentenceModel(String fullText) {
         int minSentenceLength = 10;
 
-        String[] sentences = fullText.split("\\.");
+        String [] sentences = splitFullText(fullText);
         List<Character> bytes = new ArrayList<>();
         List<HashedSentence> sentenceToChar = new ArrayList<>();
 
@@ -64,9 +64,18 @@ public class SentenceHashingTools {
         return sentenceToChar;
     }
 
+    private static String[] splitFullText(String fullText) {
+        //split at "." and newline - for this, insert split characters
+        fullText = fullText.replaceAll("\\.",".<SPLITHERE>");
+        fullText = fullText.replaceAll("\n","\n<SPLITHERE>");
+
+        String[] sentences = fullText.split("<SPLITHERE>");
+        return sentences;
+    }
+
     public static String replaceCommonSentence(String fullText, List<List<HashedSentence>> sentencesToReplace) {
         //get original sentences again
-        String[] sentences = fullText.split("\\.");
+        String[] sentences = splitFullText(fullText);
 
         //order sentencesToReplace by beginPos
         sentencesToReplace.sort(Comparator.comparingInt(o -> o.get(0).getBeginPos()));
@@ -78,15 +87,15 @@ public class SentenceHashingTools {
         int lastEndPos = 0;
         for (List<HashedSentence> sentenceList : sentencesToReplace) {
             int beginPos = sentenceList.get(0).getBeginPos();
-            String sentenceBefore = String.join(".", Arrays.copyOfRange(sentences, lastEndPos, beginPos));
-            resultingText.append(sentenceBefore).append(".").append(" (...) ");
+            String sentenceBefore = String.join("", Arrays.copyOfRange(sentences, lastEndPos, beginPos));
+            resultingText.append(sentenceBefore).append(" (...) ");
 
             lastEndPos = sentenceList.get(sentenceList.size()-1).getEndPos();
         }
 
         //add last segment
-        String lastSentence = String.join(".", Arrays.copyOfRange(sentences, lastEndPos, sentences.length));
-        resultingText.append(".").append(lastSentence);
+        String lastSentence = String.join("", Arrays.copyOfRange(sentences, lastEndPos, sentences.length));
+        resultingText.append(lastSentence);
 
         return resultingText.toString();
     }
