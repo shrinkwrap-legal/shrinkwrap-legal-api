@@ -306,7 +306,7 @@ public class DocumentServiceImpl implements DocumentService {
 
 
     @Override
-    public void importJudikaturResult(RisJudikaturResult result) {
+    public CaseLawEntity importJudikaturResult(RisJudikaturResult result) {
         String docNumber = result.getMetadaten().getId();
         Optional<CaseLawEntity> dbEntity = caseLawRepository.findCaseLawEntityByDocNumber(docNumber);
         CaseLawEntity entity;
@@ -325,9 +325,19 @@ public class DocumentServiceImpl implements DocumentService {
 
             CaseLawAnalysisEntity analysisEntity = createTextConversion(entity);
 
+            //try to find identical entries, if any
+            if (analysisEntity.getSentenceHash() != null) {
+                Optional<CaseLawAnalysisEntity> identical = caseLawAnalysisRepository.findFirstBySentenceHashAndIdenticalToIsNull(analysisEntity.getSentenceHash());
+                if (identical.isPresent()) {
+                    analysisEntity.setIdenticalTo(identical.get().getCaseLaw());
+                }
+            }
+
             entity = caseLawRepository.save(entity);
             analysisEntity = caseLawAnalysisRepository.save(analysisEntity);
         }
+
+        return entity;
     }
 
     public static CaseLawAnalysisEntity createTextConversion(CaseLawEntity entity) {

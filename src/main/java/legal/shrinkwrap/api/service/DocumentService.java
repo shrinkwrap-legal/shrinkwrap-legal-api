@@ -6,8 +6,6 @@ import legal.shrinkwrap.api.dto.CaseLawResponseDto;
 import legal.shrinkwrap.api.dto.CaseLawRequestDto;
 import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
 
-import java.time.Year;
-
 
 public interface DocumentService {
 
@@ -17,5 +15,5 @@ public interface DocumentService {
 
     CaseLawDataset getCaselawDatasetForECLI(String ecli);
 
-    void importJudikaturResult(RisJudikaturResult result);
+    CaseLawEntity importJudikaturResult(RisJudikaturResult result);
 }

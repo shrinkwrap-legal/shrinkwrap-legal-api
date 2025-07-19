@@ -12,7 +12,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "caselaw_analysis", indexes = {
         @Index(name = "analysis_type_index", columnList = "analysis_type"),
-        @Index(name="case_law_id", columnList = "case_law_id")
+        @Index(name="case_law_id", columnList = "case_law_id"),
+        @Index(name="sentence_hash_index", columnList = "sentence_hash")
 })
 @Getter
 @Setter
@@ -55,4 +56,7 @@ public class CaseLawAnalysisEntity {
 
     @Column(name = "sentence_hash", length = 65000)
     private String sentenceHash;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private CaseLawEntity identicalTo;
 }
