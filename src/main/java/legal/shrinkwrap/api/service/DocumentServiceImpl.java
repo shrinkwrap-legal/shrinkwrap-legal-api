@@ -100,6 +100,11 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
         Optional<CaseLawAnalysisEntity> summary = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("summary", caseLawEntity.getId());
+        CaseLawEntity identicalCaseLawEntity = textEntity.get().getIdenticalTo();
+        if (summary.isEmpty() && identicalCaseLawEntity != null) {
+            summary = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("summary", identicalCaseLawEntity.getId());
+        }
+
         if (summary.isEmpty() && (
                 caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.Justiz.toString()) ||
                         caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString()) ||
@@ -107,7 +112,13 @@ public class DocumentServiceImpl implements DocumentService {
             CaselawAnalyzerService.SummaryAnalysis o = this.analyzeCivilCaseLaw(caseLawEntity, textEntity.get());
             if (o != null) {
                 CaseLawAnalysisEntity analysisEntity = new CaseLawAnalysisEntity();
-                analysisEntity.setCaseLaw(caseLawEntity);
+                if (identicalCaseLawEntity != null) {
+                    analysisEntity.setCaseLaw(identicalCaseLawEntity);
+                }
+                else {
+                    analysisEntity.setCaseLaw(caseLawEntity);
+                }
+
                 analysisEntity.setAnalysisType("summary");
                 analysisEntity.setAnalysisVersion(1);
                 analysisEntity.setFullText(o.fullPrompt());
