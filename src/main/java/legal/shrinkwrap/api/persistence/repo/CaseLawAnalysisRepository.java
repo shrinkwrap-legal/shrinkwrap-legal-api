@@ -1,6 +1,8 @@
 package legal.shrinkwrap.api.persistence.repo;
 
 import legal.shrinkwrap.api.persistence.entity.CaseLawAnalysisEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -14,5 +16,5 @@ public interface CaseLawAnalysisRepository extends JpaRepository<CaseLawAnalysis
     Optional<CaseLawAnalysisEntity> findFirstBySentenceHashAndIdenticalToIsNull(String sentenceHash);
 
     @Deprecated
-    List<CaseLawAnalysisEntity> findAllBySentenceHashIsNullAndAnalysisType(String analysisType);
+    Page<CaseLawAnalysisEntity> findAllBySentenceHashIsNullAndAnalysisType(String analysisType, Pageable pageable);
 }

@@ -20,14 +20,19 @@ import legal.shrinkwrap.api.persistence.repo.CaseLawRepository;
 import legal.shrinkwrap.api.python.ShrinkwrapPythonRestService;
 import legal.shrinkwrap.api.utils.PandocTextWrapper;
 import legal.shrinkwrap.api.utils.SentenceHashingTools;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.*;
 
 @Service
+@Slf4j
 public class DocumentServiceImpl implements DocumentService {
 
     private final RisSoapAdapter risSoapAdapter;
@@ -370,12 +375,20 @@ public class DocumentServiceImpl implements DocumentService {
     @Deprecated
     @Override
     public void createSentenceHashForExistingEntries() {
-        this.caseLawAnalysisRepository.findAllBySentenceHashIsNullAndAnalysisType("text").forEach(analysisEntity -> {
-            String fullText = analysisEntity.getFullText();
-            List<SentenceHashingTools.HashedSentence> sentenceModel = SentenceHashingTools.getSentenceModel(fullText);
-            String sentenceHash = SentenceHashingTools.getHashFromModel(sentenceModel);
-            analysisEntity.setSentenceHash(sentenceHash);
-            caseLawAnalysisRepository.save(analysisEntity);
-        });
+        Pageable pageable = PageRequest.of(0, 100);
+        Page<CaseLawAnalysisEntity> page;
+        do {
+            page = caseLawAnalysisRepository.findAllBySentenceHashIsNullAndAnalysisType("text", pageable);
+            for (CaseLawAnalysisEntity analysisEntity : page.getContent()) {
+                String fullText = analysisEntity.getFullText();
+                List<SentenceHashingTools.HashedSentence> sentenceModel = SentenceHashingTools.getSentenceModel(fullText);
+                String sentenceHash = SentenceHashingTools.getHashFromModel(sentenceModel);
+                analysisEntity.setSentenceHash(sentenceHash);
+                caseLawAnalysisRepository.save(analysisEntity);
+
+            }
+            pageable = page.nextPageable();
+            log.info("Processed " + page.getTotalElements() + " entries");
+        } while (!page.isLast());
     }
 }
