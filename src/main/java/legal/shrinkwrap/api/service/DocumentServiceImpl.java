@@ -368,6 +368,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Deprecated
+    @Override
     public void createSentenceHashForExistingEntries() {
         this.caseLawAnalysisRepository.findAllBySentenceHashIsNullAndAnalysisType("text").forEach(analysisEntity -> {
             String fullText = analysisEntity.getFullText();

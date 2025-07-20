@@ -16,4 +16,7 @@ public interface DocumentService {
     CaseLawDataset getCaselawDatasetForECLI(String ecli);
 
     CaseLawEntity importJudikaturResult(RisJudikaturResult result);
+
+    @Deprecated
+    void createSentenceHashForExistingEntries();
 }
