@@ -367,4 +367,14 @@ public class DocumentServiceImpl implements DocumentService {
         return analysisEntity;
     }
 
+    @Deprecated
+    public void createSentenceHashForExistingEntries() {
+        this.caseLawAnalysisRepository.findAllBySentenceHashIsNullAndAnalysisType("text").forEach(analysisEntity -> {
+            String fullText = analysisEntity.getFullText();
+            List<SentenceHashingTools.HashedSentence> sentenceModel = SentenceHashingTools.getSentenceModel(fullText);
+            String sentenceHash = SentenceHashingTools.getHashFromModel(sentenceModel);
+            analysisEntity.setSentenceHash(sentenceHash);
+            caseLawAnalysisRepository.save(analysisEntity);
+        });
+    }
 }

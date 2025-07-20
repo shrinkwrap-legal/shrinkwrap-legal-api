@@ -3,6 +3,7 @@ package legal.shrinkwrap.api.persistence.repo;
 import legal.shrinkwrap.api.persistence.entity.CaseLawAnalysisEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface CaseLawAnalysisRepository extends JpaRepository<CaseLawAnalysisEntity, Long> {
@@ -11,4 +12,7 @@ public interface CaseLawAnalysisRepository extends JpaRepository<CaseLawAnalysis
 
     // Find all analyses by analysisType and sentence_hash not referencing another caselaw
     Optional<CaseLawAnalysisEntity> findFirstBySentenceHashAndIdenticalToIsNull(String sentenceHash);
+
+    @Deprecated
+    List<CaseLawAnalysisEntity> findAllBySentenceHashIsNullAndAnalysisType(String analysisType);
 }
