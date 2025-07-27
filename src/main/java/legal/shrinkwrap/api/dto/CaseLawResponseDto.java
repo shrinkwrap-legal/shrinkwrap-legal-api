@@ -14,5 +14,6 @@ public class CaseLawResponseDto {
     String summaryType = null;
     Integer analysisVersion = 1;
     CaselawSummaryCivilCase summary;
+    CaseLawSummaryPromptsDto prompts;
 }
 

@@ -12,6 +12,7 @@ import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
 import legal.shrinkwrap.api.dto.CaseLawRequestDto;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
+import legal.shrinkwrap.api.dto.CaseLawSummaryPromptsDto;
 import legal.shrinkwrap.api.dto.CaselawSummaryCivilCase;
 import legal.shrinkwrap.api.persistence.entity.CaseLawAnalysisEntity;
 import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
@@ -132,6 +133,9 @@ public class DocumentServiceImpl implements DocumentService {
                 if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString())) {
                     analysisEntity.setAnalysisSubType("vfghCase");
                 }
+                if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VwGH.toString())) {
+                    analysisEntity.setAnalysisSubType("vwghCase");
+                }
                 else {
                     analysisEntity.setAnalysisSubType("civilCase");
                 }
@@ -152,6 +156,14 @@ public class DocumentServiceImpl implements DocumentService {
                 summaryObj = MAPPER.readValue(summary.get().getAnalysis(), CaselawSummaryCivilCase.class);
                 ret.setSummaryType("civilCase");
                 ret.setSummary(summaryObj);
+
+                if (requestDto.includePrompts() != null && requestDto.includePrompts() == true) {
+                    CaseLawSummaryPromptsDto prompts = new CaseLawSummaryPromptsDto();
+                    prompts.setUserPrompt(summary.get().getUserPrompt());
+                    prompts.setSystemPrompt(summary.get().getSystemPrompt());
+                    prompts.setModel(summary.get().getAiModel());
+                    ret.setPrompts(prompts);
+                }
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
