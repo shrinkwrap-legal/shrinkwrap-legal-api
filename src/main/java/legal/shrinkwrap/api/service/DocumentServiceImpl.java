@@ -126,7 +126,9 @@ public class DocumentServiceImpl implements DocumentService {
 
                 analysisEntity.setAnalysisType("summary");
                 analysisEntity.setAnalysisVersion(1);
-                analysisEntity.setFullText(o.fullPrompt());
+                analysisEntity.setUserPrompt(o.userPrompt());
+                analysisEntity.setSystemPrompt(o.systemPrompt());
+                analysisEntity.setAiModel(o.model());
                 if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString())) {
                     analysisEntity.setAnalysisSubType("vfghCase");
                 }
