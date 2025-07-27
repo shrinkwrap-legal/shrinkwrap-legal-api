@@ -36,7 +36,7 @@ class DocumentServiceImplTest extends SpringTest {
     @Test
     void getDocument() {
         String docNumber="JJT_20250326_OGH0002_0060OB00047_25T0000_000";
-        CaseLawRequestDto dto = new CaseLawRequestDto(null, docNumber, RisCourt.Justiz);
+        CaseLawRequestDto dto = new CaseLawRequestDto(null, docNumber, RisCourt.Justiz, false);
         CaseLawResponseDto document = documentService.getDocument(dto);
         document = documentService.getDocument(dto);
     }
@@ -44,7 +44,7 @@ class DocumentServiceImplTest extends SpringTest {
     @Test
     void testGetDatasetForEcli() {
         String ecli = "ECLI:AT:OGH0002:2024:008OBA00004";
-        CaseLawRequestDto dto = new CaseLawRequestDto(ecli, null, null);
+        CaseLawRequestDto dto = new CaseLawRequestDto(ecli, null, null, false);
         documentService.getCaselawDatasetForECLI(ecli);
     }
 

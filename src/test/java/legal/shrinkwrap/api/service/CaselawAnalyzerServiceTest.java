@@ -56,7 +56,7 @@ class CaselawAnalyzerServiceTest {
     @Test
     public void singleCaseLawSummary() throws InterruptedException {
         String ecli = "ECLI:AT:OGH0002:2024:008OBA00004";
-        CaseLawRequestDto dto = new CaseLawRequestDto(ecli, null, RisCourt.Justiz);
+        CaseLawRequestDto dto = new CaseLawRequestDto(ecli, null, RisCourt.Justiz, false);
         CaseLawEntity entity = documentService.downloadCaseLaw(dto);
         CaseLawAnalysisEntity analysisEntity = DocumentServiceImpl.createTextConversion(entity);
         CaselawSummaryCivilCase caselawSummaryCivilCase = caselawAnalyzerService.summarizeCaselaw(analysisEntity.getFullText(), entity).summary();
@@ -68,13 +68,13 @@ class CaselawAnalyzerServiceTest {
     public void testSentenceSplitSimilarity() throws InterruptedException {
         String ecli1 = "ECLI:AT:BVWG:2025:I424.2304252.1.00";
         String ecli2 = "ECLI:AT:BVWG:2025:I423.2305904.1.00";
-        CaseLawRequestDto dto1 = new CaseLawRequestDto(ecli1, null, RisCourt.BVwG);
+        CaseLawRequestDto dto1 = new CaseLawRequestDto(ecli1, null, RisCourt.BVwG, false);
         CaseLawEntity entity1 = documentService.downloadCaseLaw(dto1);
         CaseLawAnalysisEntity analysisEntity1 = DocumentServiceImpl.createTextConversion(entity1);
         List<SentenceHashingTools.HashedSentence> sentenceModel1 = SentenceHashingTools.getSentenceModel(analysisEntity1.getFullText());
         String sentence1Hash = sentenceModel1.stream().map(SentenceHashingTools.HashedSentence::getCharacter).collect(StringBuilder::new, StringBuilder::append, StringBuilder::append).toString();
 
-        CaseLawRequestDto dto2 = new CaseLawRequestDto(ecli2, null, RisCourt.BVwG);
+        CaseLawRequestDto dto2 = new CaseLawRequestDto(ecli2, null, RisCourt.BVwG, false);
         CaseLawEntity entity2 = documentService.downloadCaseLaw(dto2);
         CaseLawAnalysisEntity analysisEntity2 = DocumentServiceImpl.createTextConversion(entity2);
         List<SentenceHashingTools.HashedSentence> sentenceModel2 = SentenceHashingTools.getSentenceModel(analysisEntity2.getFullText());
@@ -120,7 +120,7 @@ class CaselawAnalyzerServiceTest {
     @Test
     public void singleCaseLawSummaryEuGH() throws InterruptedException {
         String ecli = "ECLI:AT:OGH0002:2025:0080OB00021.25H.0526.000";
-        CaseLawRequestDto dto = new CaseLawRequestDto(ecli, null, RisCourt.Justiz);
+        CaseLawRequestDto dto = new CaseLawRequestDto(ecli, null, RisCourt.Justiz, false);
         CaseLawEntity entity = documentService.downloadCaseLaw(dto);
         CaseLawAnalysisEntity analysisEntity = DocumentServiceImpl.createTextConversion(entity);
         CaselawSummaryCivilCase caselawSummaryCivilCase = caselawAnalyzerService.summarizeCaselaw(analysisEntity.getFullText(), entity).summary();
@@ -130,7 +130,7 @@ class CaselawAnalyzerServiceTest {
     @Test
     public void singleCaseLawSummaryVfGH() throws InterruptedException {
         String ecli = "ECLI:AT:VFGH:2016:G7.2016";
-        CaseLawRequestDto dto = new CaseLawRequestDto(ecli, null, RisCourt.VfGH);
+        CaseLawRequestDto dto = new CaseLawRequestDto(ecli, null, RisCourt.VfGH, false);
         CaseLawEntity entity = documentService.downloadCaseLaw(dto);
         CaseLawAnalysisEntity analysisEntity = DocumentServiceImpl.createTextConversion(entity);
         CaselawSummaryCivilCase caselawSummaryCivilCase = caselawAnalyzerService.summarizeCaselaw(analysisEntity.getFullText(), entity).summary();
