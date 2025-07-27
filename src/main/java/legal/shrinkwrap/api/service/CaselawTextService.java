@@ -66,7 +66,8 @@ public class CaselawTextService {
                         title.equalsIgnoreCase("Kopf") ||
                         title.equalsIgnoreCase("Leitsatz") ||
                         title.equalsIgnoreCase("Rechtssatz") ||
-                        title.equalsIgnoreCase("Spruch")) {
+                        title.equalsIgnoreCase("Spruch") ||
+                        title.equalsIgnoreCase("Betreff")) {
                     beforeTextElem = false;
                 }
 
