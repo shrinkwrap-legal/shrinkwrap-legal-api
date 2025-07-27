@@ -153,7 +153,7 @@ public class CaselawAnalyzerService {
                 try {
                     jsonReturn = objectMapper.readValue(cleanedAi, CaselawSummaryCivilCase.class);
 
-                    SummaryAnalysis sa = new SummaryAnalysis(jsonReturn, user, system, AI_MODEL);
+                    SummaryAnalysis sa = new SummaryAnalysis(jsonReturn, system, user, AI_MODEL);
                     return sa;
                 } catch (JsonProcessingException e) {
                     if (j == 0) {
