@@ -37,6 +37,7 @@ import java.util.*;
 public class CaselawAnalyzerService {
     private final Integer MAX_TOKEN = 100000;
     private final Integer TOKEN_SYSTEM_AND_PROMPT_ESTIMATION;
+    private final String AI_MODEL = "gpt-4o-mini";
     private final Map<String, Template> templates = new HashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final TokenCountEstimator tokenCountEstimator = new JTokkitTokenCountEstimator();
@@ -138,7 +139,7 @@ public class CaselawAnalyzerService {
             Message systemMessage = new SystemMessage(system);
             Message userMessage = new UserMessage(user);
             OpenAiChatOptions options = OpenAiChatOptions.builder()
-                    .model("gpt-4o-mini").build();
+                    .model(AI_MODEL).build();
             Prompt p = new Prompt(List.of(systemMessage, userMessage), options);
             log.info("requesting summary " + (entity != null ? entity.getDocNumber() : "unknown ") + ", approx " + tokenEstimation + " token");
 
@@ -152,7 +153,7 @@ public class CaselawAnalyzerService {
                 try {
                     jsonReturn = objectMapper.readValue(cleanedAi, CaselawSummaryCivilCase.class);
 
-                    SummaryAnalysis sa = new SummaryAnalysis(jsonReturn, p.toString());
+                    SummaryAnalysis sa = new SummaryAnalysis(jsonReturn, user, system, AI_MODEL);
                     return sa;
                 } catch (JsonProcessingException e) {
                     if (j == 0) {
@@ -275,5 +276,5 @@ public class CaselawAnalyzerService {
         return 5;
     }
 
-    public static final record SummaryAnalysis(CaselawSummaryCivilCase summary, String fullPrompt) {};
+    public static final record SummaryAnalysis(CaselawSummaryCivilCase summary, String systemPrompt, String userPrompt, String model) {};
 }

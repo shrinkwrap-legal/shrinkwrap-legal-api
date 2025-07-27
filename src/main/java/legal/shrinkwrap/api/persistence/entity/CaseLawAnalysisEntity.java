@@ -59,4 +59,13 @@ public class CaseLawAnalysisEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private CaseLawEntity identicalTo;
+
+    @Column(name="system_prompt", columnDefinition = "TEXT")
+    private String systemPrompt;
+
+    @Column(name="user_prompt", columnDefinition = "TEXT")
+    private String userPrompt;
+
+    @Column(name="ai_model")
+    private String aiModel;
 }
