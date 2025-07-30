@@ -414,22 +414,26 @@ public class DocumentServiceImpl implements DocumentService {
         do {
             page = caseLawRepository.findAll(pageable);
             for (CaseLawEntity entity : page.getContent()) {
-                if (!Strings.isEmpty(entity.getFullCleanHtml())) {
-                    CaseLawAnalysisEntity analysisEntity = createTextConversion(entity);
+                Optional<CaseLawAnalysisEntity> textEntity = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("text", entity.getId());
+                if (!textEntity.isPresent()) {
+                    if (!Strings.isEmpty(entity.getFullCleanHtml())) {
+                        CaseLawAnalysisEntity analysisEntity = createTextConversion(entity);
 
-                    //try to find identical entries, if any
-                    if (analysisEntity.getSentenceHash() != null) {
-                        Optional<CaseLawAnalysisEntity> identical = caseLawAnalysisRepository.findFirstBySentenceHashAndIdenticalToIsNull(analysisEntity.getSentenceHash());
-                        if (identical.isPresent()) {
-                            analysisEntity.setIdenticalTo(identical.get().getCaseLaw());
+                        //try to find identical entries, if any
+                        if (analysisEntity.getSentenceHash() != null) {
+                            Optional<CaseLawAnalysisEntity> identical = caseLawAnalysisRepository.findFirstBySentenceHashAndIdenticalToIsNull(analysisEntity.getSentenceHash());
+                            if (identical.isPresent()) {
+                                analysisEntity.setIdenticalTo(identical.get().getCaseLaw());
+                            }
                         }
-                    }
 
-                    analysisEntity = caseLawAnalysisRepository.save(analysisEntity);
+                        analysisEntity = caseLawAnalysisRepository.save(analysisEntity);
+                    }
                 }
+
             }
             pageable = page.nextPageable();
-            log.info(page.getTotalElements() + " entries left");
+            log.info(page.getNumber() + " / " + page.getTotalPages() + " pages");
         } while (!page.isLast());
     }
 }
