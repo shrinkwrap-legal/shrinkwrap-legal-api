@@ -405,4 +405,31 @@ public class DocumentServiceImpl implements DocumentService {
             log.info("Processed " + page.getTotalElements() + " entries");
         } while (!page.isLast());
     }
+
+    @Deprecated
+    @Override
+    public void regenerateTextConversion() {
+        Pageable pageable = PageRequest.of(0, 100);
+        Page<CaseLawEntity> page;
+        do {
+            page = caseLawRepository.findAll(pageable);
+            for (CaseLawEntity entity : page.getContent()) {
+                if (!Strings.isEmpty(entity.getFullCleanHtml())) {
+                    CaseLawAnalysisEntity analysisEntity = createTextConversion(entity);
+
+                    //try to find identical entries, if any
+                    if (analysisEntity.getSentenceHash() != null) {
+                        Optional<CaseLawAnalysisEntity> identical = caseLawAnalysisRepository.findFirstBySentenceHashAndIdenticalToIsNull(analysisEntity.getSentenceHash());
+                        if (identical.isPresent()) {
+                            analysisEntity.setIdenticalTo(identical.get().getCaseLaw());
+                        }
+                    }
+
+                    analysisEntity = caseLawAnalysisRepository.save(analysisEntity);
+                }
+            }
+            pageable = page.nextPageable();
+            log.info(page.getTotalElements() + " entries left");
+        } while (!page.isLast());
+    }
 }

@@ -19,4 +19,7 @@ public interface DocumentService {
 
     @Deprecated
     void createSentenceHashForExistingEntries();
+
+    @Deprecated
+    void regenerateTextConversion();
 }
