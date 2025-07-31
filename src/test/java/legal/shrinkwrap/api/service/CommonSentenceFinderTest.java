@@ -43,8 +43,6 @@ public class CommonSentenceFinderTest {
         log.info("Finished processing {} cases",courtCaseRecords.size());
 
 
-        GeneralizedSuffixTree<Integer> lookupTree = new GeneralizedSuffixTree<>();
-
         AtomicInteger counter = new AtomicInteger(0);
         AtomicInteger counterFiltered = new AtomicInteger(0);
         List<Pair<CharSequence, Collection<CourtCaseRecord>>> longestCommonSubstring = new ArrayList<>();
@@ -52,34 +50,16 @@ public class CommonSentenceFinderTest {
             //filter immediately
             //filter to judgements that have keys in different months
             if (nodes.stream().map(CourtCaseRecord::month).distinct().count() > MIN_MONTHS) {
-                if (lookupTree.getSearchResults(sequence.toString()).isEmpty()) {
-                    lookupTree.put(sequence.toString(), -1);
-                    longestCommonSubstring.add(new Pair<>(sequence,nodes));
-                    if (counter.incrementAndGet() % 100 == 0) {
-                        log.info("Found {} longest common substrings",counter.get());
-                    };
-                } else {
-                    if (counterFiltered.incrementAndGet() % 100 == 0) {
-                        log.info("Filtered {} longest common substrings",counterFiltered.get());
-                    };
+                longestCommonSubstring.add(new Pair<>(sequence, nodes));
+                if (counter.incrementAndGet() % 100 == 0) {
+                    log.info("Found {} longest common substrings", counter.get());
                 }
             }
         });
 
         log.info("Found {} longest common substrings after filter", longestCommonSubstring.size());
 
-        //Filter again, other direction
-        GeneralizedSuffixTree<Integer> lookupTree2 = new GeneralizedSuffixTree<>();
-        Collections.reverse(longestCommonSubstring);
-        Iterator<Pair<CharSequence, Collection<CourtCaseRecord>>> iterator = longestCommonSubstring.iterator();
-        while (iterator.hasNext()) {
-            Pair<CharSequence, Collection<CourtCaseRecord>> pair = iterator.next();
-            if (lookupTree2.getSearchResults(pair.first().toString()).isEmpty()) {
-                lookupTree2.put(pair.first().toString(), -1);
-            } else {
-                iterator.remove();
-            }
-        }
+       GeneralizedSuffixTree.filterSubstrings(longestCommonSubstring);
 
         log.info("Found {} longest common substrings after filter 2", longestCommonSubstring.size());
 
@@ -92,15 +72,6 @@ public class CommonSentenceFinderTest {
 
         System.out.println(fullOutput);
 
-
-
-
-        /*solver.add(sentences.get(0));
-        solver.add(sentences.get(1));
-        List<CharSequence> longestCommonSubstring = solver.getLongestCommonSubstringsForLength(4);
-        assertEquals(2, longestCommonSubstring.size());
-        assertEquals("asdfasdf",longestCommonSubstring.get(0).toString());
-        assertEquals("testte",longestCommonSubstring.get(1).toString());*/
     }
 
     public record CourtCaseRecord(int case_law_id, String ecli, String url, Date decision_date, int month, String sentence_hash){}
