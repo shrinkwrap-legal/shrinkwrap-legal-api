@@ -3,6 +3,10 @@ package legal.shrinkwrap.api.persistence.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -12,6 +16,12 @@ public class CommonSentences {
     @Id
     @GeneratedValue
     private Long id;
+
+    @CreationTimestamp
+    private LocalDateTime created;
+
+    @UpdateTimestamp
+    private LocalDateTime updated;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private CaseLawEntity caseLaw;
