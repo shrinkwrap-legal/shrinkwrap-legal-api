@@ -19,7 +19,7 @@ public class CommonSentenceServiceTest {
     public void setUp() {
         commonSentencesRepository = Mockito.mock(CommonSentencesRepository.class);
         Mockito.when(commonSentencesRepository.findAllSentenceHash()).thenReturn(List.of("123456789","asdfasdf","fghfgh") );
-        commonSentenceService = new CommonSentenceService(commonSentencesRepository);
+        commonSentenceService = new CommonSentenceService(commonSentencesRepository, null, null);
     }
 
     @Test
