@@ -16,6 +16,8 @@ public class CommonSentences {
     @ManyToOne(fetch = FetchType.LAZY)
     private CaseLawEntity caseLaw;
 
+    private String applicationType; //Justiz, DSB, etc
+
     @Column(name="sentence_hash", length = 10000, unique = true)
     private String sentenceHash;
 
