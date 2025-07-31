@@ -48,7 +48,7 @@ public class CommonSentenceFinderTest {
         AtomicInteger counter = new AtomicInteger(0);
         AtomicInteger counterFiltered = new AtomicInteger(0);
         List<Pair<CharSequence, Collection<CourtCaseRecord>>> longestCommonSubstring = new ArrayList<>();
-        myGeneralizedSuffixTree.findAllCommonSubstringsOfSizeInMinKeys(MIN_LENGTH, MIN_JUDGEMENTS, true, (sequence, nodes) -> {
+        myGeneralizedSuffixTree.findAllCommonSubstringsOfSizeInMinKeys(MIN_LENGTH, MIN_JUDGEMENTS, true, true, (sequence, nodes) -> {
             //filter immediately
             //filter to judgements that have keys in different months
             if (nodes.stream().map(CourtCaseRecord::month).distinct().count() > MIN_MONTHS) {

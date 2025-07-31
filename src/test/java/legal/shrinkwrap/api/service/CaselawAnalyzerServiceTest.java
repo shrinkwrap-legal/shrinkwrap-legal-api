@@ -1,22 +1,23 @@
 package legal.shrinkwrap.api.service;
 
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-import com.googlecode.concurrenttrees.radix.node.concrete.DefaultCharSequenceNodeFactory;
-import com.googlecode.concurrenttrees.solver.LCSubstringSolverForMinLength;
+import com.google.common.io.Resources;
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.dto.CaseLawRequestDto;
 import legal.shrinkwrap.api.dto.CaselawSummaryCivilCase;
 import legal.shrinkwrap.api.persistence.entity.CaseLawAnalysisEntity;
 import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
 import legal.shrinkwrap.api.utils.SentenceHashingTools;
+import net.mezzdev.suffixtree.GeneralizedSuffixTree;
+import net.mezzdev.suffixtree.Pair;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,26 +81,31 @@ class CaselawAnalyzerServiceTest {
         List<SentenceHashingTools.HashedSentence> sentenceModel2 = SentenceHashingTools.getSentenceModel(analysisEntity2.getFullText());
         String sentence2Hash = sentenceModel2.stream().map(SentenceHashingTools.HashedSentence::getCharacter).collect(StringBuilder::new, StringBuilder::append, StringBuilder::append).toString();
 
-        LCSubstringSolverForMinLength solver = new LCSubstringSolverForMinLength(new DefaultCharSequenceNodeFactory());
-        solver.add(sentence1Hash);
-        solver.add(sentence2Hash);
-        List<CharSequence> longestCommonSubstring = solver.getLongestCommonSubstringsForLength(6);
+        GeneralizedSuffixTree<CaseLawEntity> solver = new GeneralizedSuffixTree<>();
+        solver.put(sentence1Hash, entity1);
+        solver.put(sentence2Hash, entity2);
+        List<Pair<CharSequence, Collection<CaseLawEntity>>> longestCommonSubstring = new ArrayList<>();
+        solver.findAllCommonSubstringsOfSizeInMinKeys(4, 2, false, true, (c, i) -> {
+            longestCommonSubstring.add(new Pair<>(c, i));
+        });
+        GeneralizedSuffixTree.filterSubstrings(longestCommonSubstring);
+
 
         List<List<SentenceHashingTools.HashedSentence>> sentencesToReplace1 = new ArrayList<>();
         List<List<SentenceHashingTools.HashedSentence>> sentencesToReplace2 = new ArrayList<>();
-        for (CharSequence common : longestCommonSubstring) {
+        for (Pair<CharSequence, Collection<CaseLawEntity>> common : longestCommonSubstring) {
             {
-                int startPos = sentence1Hash.indexOf(common.toString());
-                int endPos = startPos + common.length();
+                int startPos = sentence1Hash.indexOf(common.first().toString());
+                int endPos = startPos + common.first().length();
                 SentenceHashingTools.HashedSentence sentence1 = sentenceModel1.get(startPos);
-                SentenceHashingTools.HashedSentence sentence2 = sentenceModel1.get(endPos);
+                SentenceHashingTools.HashedSentence sentence2 = sentenceModel1.get(endPos-1);
                 sentencesToReplace1.add(List.of(sentence1, sentence2));
             }
             {
-                int startPos = sentence2Hash.indexOf(common.toString());
-                int endPos = startPos + common.length();
+                int startPos = sentence2Hash.indexOf(common.first().toString());
+                int endPos = startPos + common.first().length();
                 SentenceHashingTools.HashedSentence sentence1 = sentenceModel2.get(startPos);
-                SentenceHashingTools.HashedSentence sentence2 = sentenceModel2.get(endPos);
+                SentenceHashingTools.HashedSentence sentence2 = sentenceModel2.get(endPos-1);
                 sentencesToReplace2.add(List.of(sentence1, sentence2));
             }
         }
@@ -155,5 +161,28 @@ class CaselawAnalyzerServiceTest {
         }
     }
 
+    @Test
+    public void testGetCommonSentences() throws InterruptedException, IOException {
+        URL resource = getClass().getClassLoader().getResource("commonSentences.txt");
+        String all = Resources.toString(resource, StandardCharsets.UTF_8);
+        String output = "";
+        int num = 0;
+        for (String sentence : all.split("\n")) {
+            String ecli = sentence.split(";")[0].trim();
+            String fragment = sentence.split(";",2)[1].trim();
+
+            CaseLawRequestDto dto1 = new CaseLawRequestDto(ecli, null, RisCourt.BVwG, false);
+            CaseLawEntity entity1 = documentService.downloadCaseLaw(dto1);
+            CaseLawAnalysisEntity analysisEntity1 = DocumentServiceImpl.createTextConversion(entity1);
+            String commonSentence = SentenceHashingTools.getCommonSentence(analysisEntity1.getFullText(), fragment);
+            if (commonSentence == null) {
+                continue;
+            }
+            System.out.println(sentence + " ==>  " + commonSentence.replaceAll("[\r\n]"," "));
+            output += fragment + " ==>  " + commonSentence.replaceAll("[\r\n]"," ");
+            num++;
+        }
+        System.out.println(1);
+    }
 
 }

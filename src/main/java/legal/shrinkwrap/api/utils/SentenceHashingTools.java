@@ -73,6 +73,23 @@ public class SentenceHashingTools {
         return sentences;
     }
 
+    public static String getCommonSentence(String fullText, String sentence) {
+        String[] sentences = splitFullText(fullText);
+        List<HashedSentence> sentenceModel = getSentenceModel(fullText);
+
+        //find sequence that is given
+        String fullSentence = getHashFromModel(sentenceModel);
+
+        int startPos = fullSentence.indexOf(sentence);
+        if (startPos == -1) {
+            return null;
+        }
+
+        int beginPos = sentenceModel.get(startPos).getBeginPos();
+        int endPos = sentenceModel.get(startPos+sentence.length()-1).getEndPos();
+        return String.join("", Arrays.copyOfRange(sentences, beginPos, endPos+1));
+    }
+
     public static String replaceCommonSentence(String fullText, List<List<HashedSentence>> sentencesToReplace) {
         //get original sentences again
         String[] sentences = splitFullText(fullText);

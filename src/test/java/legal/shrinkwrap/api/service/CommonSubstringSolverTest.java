@@ -1,7 +1,8 @@
 package legal.shrinkwrap.api.service;
 
-import com.googlecode.concurrenttrees.radix.node.concrete.DefaultCharSequenceNodeFactory;
-import com.googlecode.concurrenttrees.solver.LCSubstringSolverForMinLength;
+
+import net.mezzdev.suffixtree.GeneralizedSuffixTree;
+import net.mezzdev.suffixtree.Pair;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -11,7 +12,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -22,11 +24,14 @@ public class CommonSubstringSolverTest {
         String strA = "usbikmerbgfsmknoöeftesttewabaiojvadawevbsfewafadkjldasdfasdffsajklöbfgnvmklöwavcmonköadslköjfasdjklfsfdn";
         String strB = "sfnklmöfaomnöbvaiomnöopkewasklmöasdfasdföladfskdjviuoreaofdsjldksfjkslvömioaewmtestteckasldfkjaieomlasdfasdf";
 
-        LCSubstringSolverForMinLength solver = new LCSubstringSolverForMinLength(new DefaultCharSequenceNodeFactory());
-        solver.add(strA);
-        solver.add(strB);
-        List<CharSequence> longestCommonSubstring = solver.getLongestCommonSubstringsForLength(4);
-        assertEquals(2, longestCommonSubstring.size());
+        List<String> longestCommonSubstring = new ArrayList<>();
+        GeneralizedSuffixTree<Integer> solver = new GeneralizedSuffixTree<>();
+        solver.put(strA, 1);
+        solver.put(strB, 2);
+        solver.findAllCommonSubstringsOfSizeInMinKeys(6,2,false, true, (c, i) -> {
+            longestCommonSubstring.add(c.toString());
+        });
+        assertEquals(4, longestCommonSubstring.size());
         assertEquals("asdfasdf",longestCommonSubstring.get(0).toString());
         assertEquals("testte",longestCommonSubstring.get(1).toString());
     }
@@ -41,29 +46,18 @@ public class CommonSubstringSolverTest {
         List<String> sentences = info.stream().map(s -> s.split(",",3)[2]).toList();
 
         HashMap<CharSequence, List<String>> commonSubstrings = new HashMap<>();
-        for (int i = 0; i < sentences.size(); i++) {
-            System.out.println("sentence " + i + " : " + sentences.get(i));
-            for (int j = i+1; j < sentences.size(); j++) {
-                if (sentences.get(i).length() < 40 || sentences.get(j).length() < 40) {
-                    continue;
-                }
-                LCSubstringSolverForMinLength solver = new LCSubstringSolverForMinLength(new DefaultCharSequenceNodeFactory());
-                solver.add(sentences.get(i));
-                solver.add(sentences.get(j));
-                List<CharSequence> longestCommonSubstring = solver.getLongestCommonSubstringsForLength(15);
-                if (longestCommonSubstring.size() > 1) {
-                    for (CharSequence substring : longestCommonSubstring) {
-                        if (!commonSubstrings.containsKey(substring)) {
-                            commonSubstrings.put(substring, new ArrayList<>());
-                        }
-                        commonSubstrings.get(substring).add(info.get(i).split(",",3)[1]);
-                        commonSubstrings.get(substring).add(info.get(j).split(",",3)[1]);
-                    }
-                }
-            }
-
+        GeneralizedSuffixTree<Integer> myGeneralizedSuffixTree = new GeneralizedSuffixTree<>();
+        for (int i = 0; i < 100; i++) {
+            myGeneralizedSuffixTree.put(sentences.get(i), i);
+            System.out.println(i);
         }
-        System.out.println(commonSubstrings);
+        AtomicInteger counter = new AtomicInteger(0);
+        List<Pair<CharSequence, Collection<Integer>>> longestCommonSubstring = new ArrayList<>();
+                myGeneralizedSuffixTree.findAllCommonSubstringsOfSizeInMinKeys(10, 3, true, true, (sequence, nodes) -> {
+                    longestCommonSubstring.add(new Pair<CharSequence, Collection<Integer>>(sequence,nodes));
+                    System.out.println(counter.incrementAndGet() + ": " + nodes + " > " + sequence);
+                });
+        System.out.println(longestCommonSubstring.size());
 
         /*solver.add(sentences.get(0));
         solver.add(sentences.get(1));

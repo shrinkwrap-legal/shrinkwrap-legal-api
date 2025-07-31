@@ -273,14 +273,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.concurrent-trees</groupId>
-            <artifactId>concurrent-trees</artifactId>
-            <version>2.6.1</version>
-        </dependency>
-        <dependency>
             <groupId>com.github.cproof</groupId>
             <artifactId>generalized-suffix-tree</artifactId>
-            <version>0.0.3</version>
+            <version>0.0.4</version>
         </dependency>
     </dependencies>
     <dependencyManagement>

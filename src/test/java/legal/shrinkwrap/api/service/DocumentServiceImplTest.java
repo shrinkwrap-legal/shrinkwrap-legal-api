@@ -49,6 +49,13 @@ class DocumentServiceImplTest extends SpringTest {
     }
 
     @Test
+    void testGetDatasetForEcliWithFullContent() {
+        String ecli = "ECLI:AT:VWGH:2025:RA2024110108.L00";
+        CaseLawRequestDto dto = new CaseLawRequestDto(ecli, null, null, false);
+        documentService.getCaselawDatasetForECLI(ecli);
+    }
+
+    @Test
     @Transactional
     void testImportIdenticalJudikaturResults() {
         RisSearchResult result1 = risSoapAdapter.findCaseLawDocuments(
