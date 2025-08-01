@@ -10,10 +10,12 @@ import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
 import legal.shrinkwrap.api.dto.CaselawSummaryCivilCase;
 import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
+import legal.shrinkwrap.api.utils.SentenceHashingTools;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;
@@ -28,12 +30,14 @@ import org.springframework.ai.tokenizer.TokenCountEstimator;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import com.github.jknack.handlebars.Handlebars;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Slf4j
+@Service
 public class CaselawAnalyzerService {
     private final Integer MAX_TOKEN = 100000;
     private final Integer TOKEN_SYSTEM_AND_PROMPT_ESTIMATION;
@@ -45,9 +49,12 @@ public class CaselawAnalyzerService {
 
     private final ChatClient chatClient;
 
+    private final CommonSentenceService commonSentenceService;
 
-    public CaselawAnalyzerService(ChatClient.Builder chatClientBuilder, ResourceLoader resourceLoader) {
+
+    public CaselawAnalyzerService(ChatClient.Builder chatClientBuilder, ResourceLoader resourceLoader, CommonSentenceService commonSentenceService) {
         chatClient = chatClientBuilder.build();
+        this.commonSentenceService = commonSentenceService;
 
         Handlebars handlebars = new Handlebars();
         handlebars.registerHelper("germanNumber", (Object numberStr, Options options) -> {
@@ -168,6 +175,38 @@ public class CaselawAnalyzerService {
             throw new RuntimeException(e);
         }
 
+    }
+
+    private Pair<String, List<String>> shortenTextBasedOnCommonSentences(String fullText, CaseLawEntity entity) {
+        List<SentenceHashingTools.HashedSentence> model = SentenceHashingTools.getSentenceModel(fullText);
+        String sentenceHash = SentenceHashingTools.getHashFromModel(model);
+
+        //Find common sentences
+        List<String> containedSentences = commonSentenceService.findContainedSentences(sentenceHash);
+
+        //sort by sentence length
+        containedSentences.sort(Comparator.comparingInt(String::length));
+
+
+        //remove all (@TODO: Check if it would be better to remove only until token count is reached.
+        //for now, the suspicion is that all this text is irrelevant, so it should be removed.
+        List<List<SentenceHashingTools.HashedSentence>> sentencesToReplace = new ArrayList<>();
+        List<String> replacedSentences = new ArrayList<>();
+        for (int i = 0; i < containedSentences.size(); i++) {
+            String commonHash = containedSentences.get(i);
+            String commonSentence = SentenceHashingTools.getCommonSentence(fullText, model, containedSentences.get(i));
+            replacedSentences.add(commonSentence);
+
+            int startPos = sentenceHash.indexOf(commonHash);
+            int endPos = startPos + commonHash.length();
+            SentenceHashingTools.HashedSentence sentence1 = model.get(startPos);
+            SentenceHashingTools.HashedSentence sentence2 = model.get(endPos-1);
+            sentencesToReplace.add(List.of(sentence1, sentence2));
+        }
+
+        //replace all
+        String textWithReplacements = SentenceHashingTools.replaceCommonSentence(fullText, sentencesToReplace);
+        return Pair.of(textWithReplacements, replacedSentences);
     }
 
     @Deprecated
