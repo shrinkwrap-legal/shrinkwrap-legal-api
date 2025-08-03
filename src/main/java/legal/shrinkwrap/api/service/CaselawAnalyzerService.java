@@ -184,23 +184,32 @@ public class CaselawAnalyzerService {
         //Find common sentences
         List<String> containedSentences = commonSentenceService.findContainedSentences(sentenceHash);
 
-        //sort by sentence length
-        containedSentences.sort(Comparator.comparingInt(String::length).reversed());
-
-        //remove all (@TODO: Check if it would be better to remove only until token count is reached.
-        //for now, the suspicion is that all this text is irrelevant, so it should be removed.
         List<List<SentenceHashingTools.HashedSentence>> sentencesToReplace = new ArrayList<>();
         List<String> replacedSentences = new ArrayList<>();
+        int replacedTokens = 0;
         for (int i = 0; i < containedSentences.size(); i++) {
             String commonHash = containedSentences.get(i);
-            String commonSentence = SentenceHashingTools.getCommonSentence(fullText, containedSentences.get(i), model);
-            replacedSentences.add(commonSentence);
-
             int startPos = sentenceHash.indexOf(commonHash);
             int endPos = startPos + commonHash.length();
+
             SentenceHashingTools.HashedSentence sentence1 = model.get(startPos);
             SentenceHashingTools.HashedSentence sentence2 = model.get(endPos-1);
             sentencesToReplace.add(List.of(sentence1, sentence2));
+        }
+
+        //combine overlapping segments (which may happen)
+        SentenceHashingTools.combineOverlapping(sentencesToReplace);
+
+        //sort by approx sentence length
+        sentencesToReplace.sort(Comparator.comparingInt(i -> ((i.getLast().getEndPos()) - i.getFirst().getEndPos())));
+        Collections.reverse(sentencesToReplace);
+
+        //remove all (@TODO: Check if it would be better to remove only until token count is reached.
+        //for now, the suspicion is that all this text is irrelevant, so it should be removed.
+        for (int i = 0; i < sentencesToReplace.size(); i++) {
+            String commonSentence = SentenceHashingTools.getCommonSentence(fullText, sentencesToReplace.get(i), model);
+            replacedSentences.add(commonSentence);
+            replacedTokens += tokenCountEstimator.estimate(commonSentence);
         }
 
         //replace all

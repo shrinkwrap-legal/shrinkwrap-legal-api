@@ -4,10 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.codec.digest.DigestUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class SentenceHashingTools {
 
@@ -78,6 +75,18 @@ public class SentenceHashingTools {
         return getCommonSentence(fullText, sentence, sentenceModel);
     }
 
+    public static String getCommonSentence(String fullText, List<HashedSentence> sentence, List<HashedSentence> sentenceModel) {
+        String[] sentences = splitFullText(fullText);
+
+        //find sequence that is given
+        String fullSentence = getHashFromModel(sentenceModel);
+
+
+        int beginPos = sentence.getFirst().getBeginPos();
+        int endPos = sentence.getLast().getEndPos();
+        return String.join("", Arrays.copyOfRange(sentences, beginPos, endPos+1));
+    }
+
     public static String getCommonSentence(String fullText, String sentence, List<HashedSentence> sentenceModel) {
         String[] sentences = splitFullText(fullText);
 
@@ -98,8 +107,7 @@ public class SentenceHashingTools {
         //get original sentences again
         String[] sentences = splitFullText(fullText);
 
-        //order sentencesToReplace by beginPos
-        sentencesToReplace.sort(Comparator.comparingInt(o -> o.get(0).getBeginPos()));
+        combineOverlapping(sentencesToReplace);
 
         StringBuilder resultingText = new StringBuilder();
 
@@ -119,6 +127,29 @@ public class SentenceHashingTools {
         resultingText.append(lastSentence);
 
         return resultingText.toString();
+    }
+
+    public static void combineOverlapping(List<List<HashedSentence>> sentencesToReplace) {
+        //order sentencesToReplace by beginPos
+        sentencesToReplace.sort(Comparator.comparingInt(o -> o.get(0).getBeginPos()));
+
+        //combine overlapping segments
+        ListIterator<List<HashedSentence>> iterator = sentencesToReplace.listIterator();
+        while (iterator.hasNext()) {
+            List<HashedSentence> current = iterator.next();
+            while (iterator.hasNext()) {
+                List<HashedSentence> next = iterator.next();
+                if (current.get(current.size()-1).getEndPos() >= next.get(0).getBeginPos()) {
+                    current.getLast().setEndPos(next.getLast().getEndPos());
+                    current.getLast().setSentence(next.getLast().getSentence());
+                    current.getLast().setCharacter(next.getLast().getCharacter());
+                    iterator.remove();
+                } else {
+                    iterator.previous();
+                    break;
+                }
+            }
+        }
     }
 
     public static String getHashFromModel(List<HashedSentence> sentenceModel) {
