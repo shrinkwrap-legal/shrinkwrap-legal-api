@@ -10,7 +10,10 @@ import java.nio.file.Paths;
 import java.util.*;
 
 import com.google.common.io.Resources;
+import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLaw;
+import legal.shrinkwrap.api.adapter.ris.RisSoapAdapter;
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
+import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
 import legal.shrinkwrap.api.dto.CaseLawRequestDto;
 import legal.shrinkwrap.api.dto.CaselawSummaryCivilCase;
 import legal.shrinkwrap.api.persistence.entity.CaseLawAnalysisEntity;
@@ -25,6 +28,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import legal.shrinkwrap.api.adapter.HtmlDownloadService;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 @SpringBootTest
@@ -45,6 +51,12 @@ class CaselawAnalyzerServiceTest {
 
     @Autowired
     private DocumentService documentService;
+
+    @Autowired
+    private CommonSentenceService commonSentenceService;
+
+    @Autowired
+    private RisSoapAdapter risSoapAdapter;
 
     @Test
     public void singleCaseLaw() {
@@ -183,6 +195,31 @@ class CaselawAnalyzerServiceTest {
             num++;
         }
         System.out.println(1);
+    }
+
+    @Test
+    public void testAnalyzeCaseLawWithCommonSentences() {
+        //import documents first
+        RisSearchResult result1 = risSoapAdapter.findCaseLawDocuments(
+                RisSearchParameterCaseLaw.builder()
+                        .ecli("ECLI:AT:BVWG:2024:W287.2293603.1.00")
+                        .court(RisCourt.BVwG)
+                        .judikaturTyp(new RisSearchParameterCaseLaw.JudikaturTyp(false, true))
+                        .build()
+        );
+
+        CaseLawEntity entity = documentService.importJudikaturResult(result1.getJudikaturResults().getFirst());
+
+        String importString = "ECLI:AT:BVWG:2024:W287.2293603.1.00;Ba'V3?!]6%56p=,t\n" +
+                "ECLI:AT:BVWG:2024:W287.2293603.1.00;qeY }~;0P$V@MX#a[8n_Q'7B b@eW)<&FO*gU]JqaD'\"#8z(,6Z#`W+V@~3DC~#?8\n" +
+                "ECLI:AT:BVWG:2024:W287.2293603.1.00;/9[$o\"aP+2NTg>Q4^%L?KW*lMJ>d-0(uv&Cf1.5Q";
+
+        commonSentenceService.importFromECLITextFile(importString);
+
+        CaseLawAnalysisEntity analysisEntity = DocumentServiceImpl.createTextConversion(entity);
+        CaselawSummaryCivilCase caselawSummaryCivilCase = caselawAnalyzerService.summarizeCaselaw(analysisEntity.getFullText(), entity).summary();
+
+        System.out.println(caselawSummaryCivilCase.toString());
     }
 
 }
