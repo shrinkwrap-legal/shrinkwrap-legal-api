@@ -65,6 +65,12 @@ public class CommonSentenceService {
             String ecli = sentence.split(";")[0].trim();
             String fragment = sentence.split(";",2)[1].trim();
 
+            //check first if sentence not already in DB
+            Optional<CommonSentences> firstBySentenceHash = commonSentencesRepository.findFirstBySentenceHash(fragment);
+            if (firstBySentenceHash.isPresent()) {
+                continue;
+            }
+
             Optional<CaseLawEntity> caseLawEntityByEcli = caseLawRepository.findCaseLawEntityByEcli(ecli);
             if (!caseLawEntityByEcli.isPresent()) {
                 log.warn("no caselaw found for " + ecli);
