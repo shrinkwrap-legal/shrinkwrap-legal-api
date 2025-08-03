@@ -74,8 +74,12 @@ public class SentenceHashingTools {
     }
 
     public static String getCommonSentence(String fullText, String sentence) {
-        String[] sentences = splitFullText(fullText);
         List<HashedSentence> sentenceModel = getSentenceModel(fullText);
+        return getCommonSentence(fullText, sentence, sentenceModel);
+    }
+
+    public static String getCommonSentence(String fullText, String sentence, List<HashedSentence> sentenceModel) {
+        String[] sentences = splitFullText(fullText);
 
         //find sequence that is given
         String fullSentence = getHashFromModel(sentenceModel);

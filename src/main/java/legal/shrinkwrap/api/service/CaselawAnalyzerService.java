@@ -185,8 +185,7 @@ public class CaselawAnalyzerService {
         List<String> containedSentences = commonSentenceService.findContainedSentences(sentenceHash);
 
         //sort by sentence length
-        containedSentences.sort(Comparator.comparingInt(String::length));
-
+        containedSentences.sort(Comparator.comparingInt(String::length).reversed());
 
         //remove all (@TODO: Check if it would be better to remove only until token count is reached.
         //for now, the suspicion is that all this text is irrelevant, so it should be removed.
@@ -194,7 +193,7 @@ public class CaselawAnalyzerService {
         List<String> replacedSentences = new ArrayList<>();
         for (int i = 0; i < containedSentences.size(); i++) {
             String commonHash = containedSentences.get(i);
-            String commonSentence = SentenceHashingTools.getCommonSentence(fullText, model, containedSentences.get(i));
+            String commonSentence = SentenceHashingTools.getCommonSentence(fullText, containedSentences.get(i), model);
             replacedSentences.add(commonSentence);
 
             int startPos = sentenceHash.indexOf(commonHash);

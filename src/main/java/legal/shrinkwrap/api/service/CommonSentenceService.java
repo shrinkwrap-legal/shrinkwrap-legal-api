@@ -12,10 +12,12 @@ import org.ahocorasick.trie.Emit;
 import org.ahocorasick.trie.Trie;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -53,7 +55,7 @@ public class CommonSentenceService {
         }
 
         Collection<Emit> emits = this.trie.parseText(sentenceHash);
-        List<String> matches = emits.stream().map(emit -> emit.getKeyword()).toList();
+        List<String> matches = emits.stream().map(emit -> emit.getKeyword()).collect(Collectors.toCollection(ArrayList::new));
         return matches;
     }
 
