@@ -11,7 +11,10 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "common_sentences")
+@Table(name = "common_sentences",
+        indexes = {
+                @Index(name = "sentence_hash_index", columnList = "sentence_hash")
+        })
 public class CommonSentences {
     @Id
     @GeneratedValue
