@@ -28,7 +28,7 @@ public class CommonSentences {
 
     private String applicationType; //Justiz, DSB, etc
 
-    @Column(name="sentence_hash", length = 10000, unique = true)
+    @Column(name="sentence_hash", length = 10000) //unique will not work with btree index in postgres
     private String sentenceHash;
 
     @Column(name="full_text", columnDefinition = "TEXT")
