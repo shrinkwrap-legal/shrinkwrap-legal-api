@@ -11,6 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Year;
 
 @Service
@@ -20,6 +24,8 @@ public class CaseLawImporter {
     private final DocumentService documentService;
     private final RisSoapAdapter risSoapAdapter;
 
+    private final CommonSentenceService commonSentenceService;
+
     //@PostConstruct
     public void initDB() {
         //change to actual last date
@@ -27,6 +33,18 @@ public class CaseLawImporter {
             doInitialImportFor(Year.of(2021));
         }
     }
+
+    //@PostConstruct
+    public void redoText() {
+        new Thread(() -> documentService.regenerateTextConversion()).start();
+    }
+
+    //@PostConstruct
+    public void importCommonSentences() throws IOException {
+        String s = Files.readString(Path.of("/tmp/initial-commmons.txt"), StandardCharsets.UTF_8);
+        new Thread(() -> commonSentenceService.importFromECLITextFile(s)).start();
+    }
+
 
     @Scheduled(cron = "0 30 3 * * *")
     public void updateLatestDocuments() {
