@@ -8,6 +8,9 @@ import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
 import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +28,7 @@ public class CaseLawImporter {
     private final RisSoapAdapter risSoapAdapter;
 
     private final CommonSentenceService commonSentenceService;
+    private final ResourceLoader resourceLoader;
 
     //@PostConstruct
     public void initDB() {
@@ -41,7 +45,8 @@ public class CaseLawImporter {
 
     //@PostConstruct
     public void importCommonSentences() throws IOException {
-        String s = Files.readString(Path.of("/tmp/initial-commmons.txt"), StandardCharsets.UTF_8);
+        Resource resource = resourceLoader.getResource("classpath:common-sentences.txt");
+        String s = IOUtils.toString(resource.getInputStream(), StandardCharsets.UTF_8);
         new Thread(() -> commonSentenceService.importFromECLITextFile(s)).start();
     }
 
