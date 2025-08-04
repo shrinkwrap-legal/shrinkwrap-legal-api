@@ -8,7 +8,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLaw;
 import legal.shrinkwrap.api.adapter.ris.RisSoapAdapter;
@@ -18,16 +20,20 @@ import legal.shrinkwrap.api.dto.CaseLawRequestDto;
 import legal.shrinkwrap.api.dto.CaselawSummaryCivilCase;
 import legal.shrinkwrap.api.persistence.entity.CaseLawAnalysisEntity;
 import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
+import legal.shrinkwrap.api.persistence.repo.CommonSentencesRepository;
 import legal.shrinkwrap.api.utils.SentenceHashingTools;
 import net.mezzdev.suffixtree.GeneralizedSuffixTree;
 import net.mezzdev.suffixtree.Pair;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import legal.shrinkwrap.api.adapter.HtmlDownloadService;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -57,6 +63,10 @@ class CaselawAnalyzerServiceTest {
 
     @Autowired
     private RisSoapAdapter risSoapAdapter;
+
+    @MockitoBean
+    private CommonSentencesRepository commonSentencesRepository; // <-- Add this line
+
 
     @Test
     public void singleCaseLaw() {

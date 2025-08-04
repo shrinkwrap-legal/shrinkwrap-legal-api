@@ -117,7 +117,7 @@ public class SentenceHashingTools {
         for (List<HashedSentence> sentenceList : sentencesToReplace) {
             int beginPos = sentenceList.get(0).getBeginPos();
             String sentenceBefore = String.join("", Arrays.copyOfRange(sentences, lastEndPos, beginPos));
-            resultingText.append(sentenceBefore).append(" (...) ");
+            resultingText.append(sentenceBefore).append(" (…) ");
 
             lastEndPos = sentenceList.get(sentenceList.size()-1).getEndPos();
         }

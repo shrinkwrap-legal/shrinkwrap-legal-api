@@ -6,6 +6,9 @@ Untenstehend folgt {{#if VfGH}}eine {{#if isPart}}auszugsweise abgedruckte{{/if}
 1. Um welche Art von Entscheidung handelt es sich? Beschluss, Erkenntnis
 1a. Um welches Verfahren handelt es sich? ordentliche Revision, außerordentliche Revision, Fristsetzungsantrag,
 Feststellungsantrag, Kompetenzkonflikt, Sonstige
+{{else if BVwG}}
+1. Um welche Art von Urteil handelt es sich? Beschluss, Urteil, Erkenntnis
+1a. Um welches Rechtsmittel handelt es sich? Bescheidbeschwerde, Säumnisbeschwerde, Maßnahmenbeschwerde
 {{else}}
 1. Um welche Art von Urteil handelt es sich? Beschluss, Urteil, Erkenntnis
 1a. Um welches Rechtsmittel handelt es sich? Ordentliche Revision, Außerordentliche Revision, Ordentlicher Revisionsrekurs,Außerordentlicher Revisionsrekurs, Ordentliche Berufung, Außerordentliche Berufung, Ordentlicher Rekurs, Außerordentlicher Rekurs, Erstinstanz, EuGH-Vorabentscheidungsvorlage
@@ -48,6 +51,16 @@ Verfahrensrecht
 
 {{else if VwGH}}
 
+{{ else if BVwG }}
+Fremdenwesen
+Asyl
+Bildung
+Persönlichkeitsrechte
+Sozialrecht
+Verkehrsrecht
+Umweltrecht
+Wirtschaftsrecht
+Kommunikationsrecht
 {{ else }}
 Verwaltungsrecht
 Besoldungsrecht
@@ -104,6 +117,9 @@ Liste die Informationen aus dem obigen Gerichtsurteil wie oben geführt als JSON
 {{#if VfGH}}
 "begehren_beschwerdefuehrer": "",
 "gegenargumente_staat": "",
+{{else if BVwG}}
+"begehren_beschwerdefuehrer": "",
+"gegenargumente_behoerde": "",
 {{else if VwGH}}
 "begehren_beschwerdefuehrer": "",
 "gegenargumente_staat_oder_behoerde": "",
