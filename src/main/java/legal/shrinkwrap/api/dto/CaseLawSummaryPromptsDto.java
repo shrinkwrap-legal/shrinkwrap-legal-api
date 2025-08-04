@@ -12,5 +12,9 @@ public class CaseLawSummaryPromptsDto {
 
     @JsonProperty("system_prompt")
     private String systemPrompt;
+
+    @JsonProperty("removed_from_prompt")
+    private String removedFromPrompt;
+
     private String model;
 }

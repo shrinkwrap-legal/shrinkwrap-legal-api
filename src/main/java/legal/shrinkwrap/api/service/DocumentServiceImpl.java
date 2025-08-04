@@ -129,6 +129,7 @@ public class DocumentServiceImpl implements DocumentService {
                 analysisEntity.setAnalysisVersion(1);
                 analysisEntity.setUserPrompt(o.userPrompt());
                 analysisEntity.setSystemPrompt(o.systemPrompt());
+                analysisEntity.setRemovedFromPrompt(o.removedFromPrompt());
                 analysisEntity.setAiModel(o.model());
                 if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString())) {
                     analysisEntity.setAnalysisSubType("vfghCase");
@@ -161,6 +162,7 @@ public class DocumentServiceImpl implements DocumentService {
                     CaseLawSummaryPromptsDto prompts = new CaseLawSummaryPromptsDto();
                     prompts.setUserPrompt(summary.get().getUserPrompt());
                     prompts.setSystemPrompt(summary.get().getSystemPrompt());
+                    prompts.setRemovedFromPrompt(summary.get().getRemovedFromPrompt());
                     prompts.setModel(summary.get().getAiModel());
                     ret.setPrompts(prompts);
                 }

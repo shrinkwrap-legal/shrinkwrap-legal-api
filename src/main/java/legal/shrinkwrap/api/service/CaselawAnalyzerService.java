@@ -108,6 +108,7 @@ public class CaselawAnalyzerService {
         int wordCount = text.split(" ").length;
         int numberOfSentences = getNumberOfSentencesSuitableByWordCount(wordCount);
         int tokenEstimation = TOKEN_SYSTEM_AND_PROMPT_ESTIMATION + tokenCountEstimator.estimate(text);
+        String removedText = null;
         if (tokenEstimation > (MAX_TOKEN *2)) {
             log.info("skipping summary " + (entity != null ? entity.getDocNumber() : "unknown ") + ", approx " + tokenEstimation + " token");
             return null;
@@ -124,6 +125,7 @@ public class CaselawAnalyzerService {
                 if (cutToken > overhead) {
                     text = text.substring(0, cuttingCenter - charsToCut / 2) + "...\n\n (...) \n\n..." + text.substring(cuttingCenter + charsToCut / 2);
                     log.info("cut " + cutToken + " token(s) at " + Math.round(charsPerToken * 10) / 10f + " char per token");
+                    removedText = textToCut;
                     break;
                 }
             }
@@ -160,7 +162,7 @@ public class CaselawAnalyzerService {
                 try {
                     jsonReturn = objectMapper.readValue(cleanedAi, CaselawSummaryCivilCase.class);
 
-                    SummaryAnalysis sa = new SummaryAnalysis(jsonReturn, system, user, AI_MODEL);
+                    SummaryAnalysis sa = new SummaryAnalysis(jsonReturn, system, user, removedText, AI_MODEL);
                     return sa;
                 } catch (JsonProcessingException e) {
                     if (j == 0) {
@@ -323,5 +325,5 @@ public class CaselawAnalyzerService {
         return 5;
     }
 
-    public static final record SummaryAnalysis(CaselawSummaryCivilCase summary, String systemPrompt, String userPrompt, String model) {};
+    public static final record SummaryAnalysis(CaselawSummaryCivilCase summary, String systemPrompt, String userPrompt, String removedFromPrompt, String model) {};
 }

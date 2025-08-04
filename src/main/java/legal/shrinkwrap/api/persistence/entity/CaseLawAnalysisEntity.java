@@ -66,6 +66,9 @@ public class CaseLawAnalysisEntity {
     @Column(name="user_prompt", columnDefinition = "TEXT")
     private String userPrompt;
 
+    @Column(name="removed_from_prompt", columnDefinition = "TEXT")
+    private String removedFromPrompt;
+
     @Column(name="ai_model")
     private String aiModel;
 }
