@@ -35,6 +35,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -104,14 +105,27 @@ public class CaselawAnalyzerService {
         boolean isCriminal = entity != null && StringUtils.defaultString(entity.getCaseNumber()).matches("^[\\d]+Os.*");
         boolean isVfGH = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString());
         boolean isVwGH = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.VwGH.toString());
+        boolean isBVwG = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.BVwG.toString());
         boolean isPart = false;
         int wordCount = text.split(" ").length;
-        int numberOfSentences = getNumberOfSentencesSuitableByWordCount(wordCount);
+
         int tokenEstimation = TOKEN_SYSTEM_AND_PROMPT_ESTIMATION + tokenCountEstimator.estimate(text);
         String removedText = null;
         if (tokenEstimation > (MAX_TOKEN *2)) {
-            log.info("skipping summary " + (entity != null ? entity.getDocNumber() : "unknown ") + ", approx " + tokenEstimation + " token");
-            return null;
+            //for BVwG, try removing common sentences
+            if (isBVwG) {
+                Pair<String, List<String>> result = shortenTextBasedOnCommonSentences(text, entity);
+                text = result.getLeft();
+                removedText = result.getRight().stream().collect(Collectors.joining("\n\n(…)\n\n"));
+                isPart = true;
+                tokenEstimation = TOKEN_SYSTEM_AND_PROMPT_ESTIMATION + tokenCountEstimator.estimate(text);
+            }
+
+            //check again after shortening
+            if (tokenEstimation > MAX_TOKEN) {
+                log.info("skipping summary " + (entity != null ? entity.getDocNumber() : "unknown ") + ", approx " + tokenEstimation + " token");
+                return null;
+            }
         }
         else if (tokenEstimation > MAX_TOKEN) {
             int overhead  = tokenEstimation - MAX_TOKEN;
@@ -133,6 +147,7 @@ public class CaselawAnalyzerService {
             tokenEstimation = TOKEN_SYSTEM_AND_PROMPT_ESTIMATION + tokenCountEstimator.estimate(text);
         }
 
+        int numberOfSentences = getNumberOfSentencesSuitableByWordCount(wordCount);
         TextModel model = new TextModel(text, isCriminal, isVfGH, numberOfSentences, isPart, isVwGH);
 
         try {
