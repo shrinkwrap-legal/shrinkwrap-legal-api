@@ -54,6 +54,8 @@ public class DocumentServiceImpl implements DocumentService {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
+    private final HashSet<Long> locksByCaselawId = new HashSet<>();
+
     @Value("${download-missing-judicature}")
     private Boolean downloadMissing;
 
@@ -111,74 +113,93 @@ public class DocumentServiceImpl implements DocumentService {
             summary = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("summary", identicalCaseLawEntity.getId());
         }
 
-        if (summary.isEmpty() && (
-                caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.Justiz.toString()) ||
-                        caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString()) ||
-                        caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VwGH.toString()) ||
-                        caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.BVwG.toString()))) {
-            CaselawAnalyzerService.SummaryAnalysis o = this.analyzeCivilCaseLaw(caseLawEntity, textEntity.get());
-            if (o != null) {
-                CaseLawAnalysisEntity analysisEntity = new CaseLawAnalysisEntity();
-                if (identicalCaseLawEntity != null) {
-                    analysisEntity.setCaseLaw(identicalCaseLawEntity);
-                }
-                else {
-                    analysisEntity.setCaseLaw(caseLawEntity);
+        long caseLawId = identicalCaseLawEntity != null ? identicalCaseLawEntity.getId() : caseLawEntity.getId();
+        if (locksByCaselawId.contains(caseLawId)) {
+            try {
+                //try for 120s, then do it anyway
+                for (int i = 0; i < 10 * 40; i++) {
+                    Thread.sleep(100);
+                    if (!locksByCaselawId.contains(caseLawId)) {
+                        break;
+                    }
+                    log.info("trying to acquire lock " + i + " for " + requestDto);
                 }
 
-                analysisEntity.setAnalysisType("summary");
-                analysisEntity.setAnalysisVersion(1);
-                analysisEntity.setUserPrompt(o.userPrompt());
-                analysisEntity.setSystemPrompt(o.systemPrompt());
-                analysisEntity.setRemovedFromPrompt(o.removedFromPrompt());
-                analysisEntity.setAiModel(o.model());
-                if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString())) {
-                    analysisEntity.setAnalysisSubType("vfghCase");
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            locksByCaselawId.add(caseLawId);
+        }
+
+        try {
+            if (summary.isEmpty() && (
+                    caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.Justiz.toString()) ||
+                            caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString()) ||
+                            caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VwGH.toString()) ||
+                            caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.BVwG.toString()))) {
+                CaselawAnalyzerService.SummaryAnalysis o = this.analyzeCivilCaseLaw(caseLawEntity, textEntity.get());
+                if (o != null) {
+                    CaseLawAnalysisEntity analysisEntity = new CaseLawAnalysisEntity();
+                    if (identicalCaseLawEntity != null) {
+                        analysisEntity.setCaseLaw(identicalCaseLawEntity);
+                    } else {
+                        analysisEntity.setCaseLaw(caseLawEntity);
+                    }
+
+                    analysisEntity.setAnalysisType("summary");
+                    analysisEntity.setAnalysisVersion(1);
+                    analysisEntity.setUserPrompt(o.userPrompt());
+                    analysisEntity.setSystemPrompt(o.systemPrompt());
+                    analysisEntity.setRemovedFromPrompt(o.removedFromPrompt());
+                    analysisEntity.setAiModel(o.model());
+                    if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString())) {
+                        analysisEntity.setAnalysisSubType("vfghCase");
+                    } else if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VwGH.toString())) {
+                        analysisEntity.setAnalysisSubType("vwghCase");
+                    } else if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.BVwG.toString())) {
+                        analysisEntity.setAnalysisSubType("bvwgCase");
+                    } else {
+                        analysisEntity.setAnalysisSubType("civilCase");
+                    }
+                    try {
+                        analysisEntity.setAnalysis(MAPPER.writeValueAsString(o.summary()));
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
+                    if (analysisEntity != null) {
+                        summary = Optional.of(caseLawAnalysisRepository.save(analysisEntity));
+                    }
                 }
-                else if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VwGH.toString())) {
-                    analysisEntity.setAnalysisSubType("vwghCase");
-                }
-                else if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.BVwG.toString())) {
-                    analysisEntity.setAnalysisSubType("bvwgCase");
-                }
-                else {
-                    analysisEntity.setAnalysisSubType("civilCase");
-                }
+            }
+
+            CaselawSummaryCivilCase summaryObj = null;
+            if (summary.isPresent()) {
                 try {
-                    analysisEntity.setAnalysis(MAPPER.writeValueAsString(o.summary()));
+                    summaryObj = MAPPER.readValue(summary.get().getAnalysis(), CaselawSummaryCivilCase.class);
+                    ret.setSummaryType("civilCase");
+                    ret.setSummary(summaryObj);
+
+                    if (requestDto.includePrompts() != null && requestDto.includePrompts() == true) {
+                        CaseLawSummaryPromptsDto prompts = new CaseLawSummaryPromptsDto();
+                        prompts.setUserPrompt(summary.get().getUserPrompt());
+                        prompts.setSystemPrompt(summary.get().getSystemPrompt());
+                        prompts.setRemovedFromPrompt(summary.get().getRemovedFromPrompt());
+                        prompts.setModel(summary.get().getAiModel());
+                        ret.setPrompts(prompts);
+                    }
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
-                if (analysisEntity != null) {
-                    summary = Optional.of(caseLawAnalysisRepository.save(analysisEntity));
-                }
             }
+
+
+            ret.setWordCount(textEntity.get().getWordCount());
+            return ret;
+
+        } finally {
+            locksByCaselawId.remove(caseLawId);
         }
-
-        CaselawSummaryCivilCase summaryObj = null;
-        if (summary.isPresent()) {
-            try {
-                summaryObj = MAPPER.readValue(summary.get().getAnalysis(), CaselawSummaryCivilCase.class);
-                ret.setSummaryType("civilCase");
-                ret.setSummary(summaryObj);
-
-                if (requestDto.includePrompts() != null && requestDto.includePrompts() == true) {
-                    CaseLawSummaryPromptsDto prompts = new CaseLawSummaryPromptsDto();
-                    prompts.setUserPrompt(summary.get().getUserPrompt());
-                    prompts.setSystemPrompt(summary.get().getSystemPrompt());
-                    prompts.setRemovedFromPrompt(summary.get().getRemovedFromPrompt());
-                    prompts.setModel(summary.get().getAiModel());
-                    ret.setPrompts(prompts);
-                }
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-
-
-        ret.setWordCount(textEntity.get().getWordCount());
-        return ret;
     }
 
     @Override

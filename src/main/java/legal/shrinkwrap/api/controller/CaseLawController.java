@@ -23,7 +23,6 @@ import java.util.HashSet;
 public class CaseLawController {
 
     private static final Logger LOG = LoggerFactory.getLogger(CaseLawController.class);
-    private final HashSet<CaseLawRequestDto> locks = new HashSet<>();
 
     private final DocumentService documentService;
 
@@ -33,31 +32,8 @@ public class CaseLawController {
 
     @GetMapping(value = "case-law/shrinkwrap", produces = MediaType.APPLICATION_JSON_VALUE)
     public CaseLawResponseDto getShrinkwrapDocument(@Valid @ParameterObject CaseLawRequestDto requestDto) {
-
-        if (locks.contains(requestDto)) {
-            try {
-                //try for 40s, then do it anyway
-                for (int i=0;i<10*40;i++) {
-                    Thread.sleep(100);
-                    if (!locks.contains(requestDto)) {
-                        break;
-                    }
-                    LOG.info("trying to acquire lock " + i + " for " + requestDto);
-                }
-
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            locks.add(requestDto);
-        }
-        try {
-            CaseLawResponseDto document = documentService.getDocument(requestDto);
-            return document;
-        } finally {
-            locks.remove(requestDto);
-        }
-
+        CaseLawResponseDto document = documentService.getDocument(requestDto);
+        return document;
     }
 
     @GetMapping("case-law/overview")
