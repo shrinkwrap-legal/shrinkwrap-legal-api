@@ -15,7 +15,7 @@ Feststellungsantrag, Kompetenzkonflikt, Sonstige
 {{/if}}
 1b. Handelt es sich um eine Vorlage vor dem EuGH? Das bedeutet, wird das Verfahren durch diesen Beschluss unterbrochen und auf eine Entscheidung des EuGH gewartet?
 2. Wie ist das Verfahren ausgegangen: Gab es eine Zurückweisung, eine Stattgabe, eine Bestätigung, eine Abweisung oder Gemischt?
-3. Fasse den Sachverhalt in höchstens {{ germanNumber numberOfSentences }} Sätzen zusammen. Der Sachverhalt beschreibt was vorgefallen ist. Was Gegenstand des Verfahrens ist. Die Tatsachen, die zum Verfahren geführt haben. {{#if criminal}} Was hat der Angeklagte oder die Angeklagte getan, um angeklagt zu werden? Welche Tat hat ihn vor Gericht gebracht? {{/if}} Was ist vorgefallen? Greife NICHT dem Urteil voraus. Rechtliche Aussagen Gerichts, das die Entscheidung erlässt sind KEIN Sachverhalt. Der Sachverhalt wird oft am Anfang in Präteritum wiedergegeben. Vermische dabei keine Sätze, die eine neue Bedeutung ergeben. KEINE BEGEHREN. Begehren sind die Argumentationen und Vorbringen der Parteien. Oftmals kommen Wörter wie "begehrte" und "bestritt" vor.
+3. Fasse den Sachverhalt in höchstens {{ germanNumber numberOfSentences }} Sätzen zusammen. Der Sachverhalt beschreibt was vorgefallen ist. Was Gegenstand des Verfahrens ist. Die Tatsachen, die zum Verfahren geführt haben. {{#if criminal}} Was hat der Angeklagte oder die Angeklagte getan, um angeklagt zu werden? Welche Tat hat ihn vor Gericht gebracht? {{/if}} Was ist vorgefallen? Greife NICHT dem Urteil voraus. Rechtliche Aussagen Gerichts, das die Entscheidung erlässt sind KEIN Sachverhalt. Der Sachverhalt wird oft am Anfang in Präteritum wiedergegeben. Vermische dabei keine Sätze, die eine neue Bedeutung ergeben. KEINE BEGEHREN. Begehren sind die Argumentationen und Vorbringen der Parteien. Oftmals kommen Wörter wie "begehrte" und "bestritt" vor. Diese werden später abgefragt. Konzentriere dich hier ausschließlich auf den Sachverhalt.
 Verwende die Form:
 ```
 Lorem ipsum dolor sit amet, sed diam nonumy eirmod tempor invidunt ut labore. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
@@ -25,6 +25,15 @@ Enthält das Gerichtsurteil keinen Sachverhalt, gib "KEIN SACHVERHALT aus.
 4. Fasse das Klagsbegehren in einem Satz zusammen. Warum kam es zum Gerichtsprozess, was möchte der Angeklagte erreichen, bzw was möchte die Staatsanwaltschaft erreichen? Fasse die vorgebrachten Argumente des Angeklagten in einem Satz zusammen, auf denen er eine geringere Strafe oder eine Aufhebung des Urteils argumentiert.
 4a. Falls sich die Staatsanwaltschaft äußert, fasse deren Gegenargumente in einem Satz zusammen. Falls keine Argumente der Staatsanwalt enthalten sind, will die Staatsanwaltschaft, dass das Urteil der Vorinstanzen vom Berufungsgericht bestätigt wird.
 4b. Wurde dieses Berufungsverfahren vom Angeklagten, der Staatsanwaltschaft oder sonstjemanden eingebracht?
+{{else if VfGH}}
+4. Fasse das Begehren des Beschwerdeführers in einem Satz zusammen. Warum kam es zum Verfahren, was möchte der Kläger bzw die Klägerin erreichen?
+4a. Fasse die vorgebrachten Gegenargument der belangten Behörde bzw. des Staats in einem Satz zusammen.
+{{else if BVwG}}
+4. Fasse das Begehren des Beschwerdeführers in einem Satz zusammen. Warum kam es zum Verfahren, was möchte der Kläger bzw die Klägerin erreichen?
+4a. Fasse die vorgebrachten Gegenargument der belangten Behörde in einem Satz zusammen. Wieso ist die Behörde der Meinung, dass die Entscheidung rechtskonform ist?
+{{else if VwGH}}
+4. Fasse das Begehren des Beschwerdeführers in einem Satz zusammen. Warum kam es zum Verfahren, was möchte der Kläger bzw die Klägerin erreichen?
+4a. Fasse die vorgebrachten Gegenargument der belangten Behörde in einem Satz zusammen. Wieso ist die Behörde der Meinung, dass die Entscheidung rechtskonform ist?
 {{ else  }}
 4. Fasse das Klagsbegehren in einem Satz zusammen. Warum kam es zum Gerichtsprozess, was möchte der Kläger bzw die Klägerin erreichen?
 4a. Fasse die vorgebrachten Gegenargument des Beklagten in einem Satz zusammen.
