@@ -1,4 +1,4 @@
-Untenstehend folgt {{#if VfGH}}eine {{#if isPart}}auszugsweise abgedruckte{{/if}} österreichische Entscheidung des österreichischen Verfassungsgerichtshofs (VfGH){{else if VwGH}}eine {{#if isPart}}auszugsweise abgedruckte{{/if}} österreichische Entscheidung des österreichischen Verwaltungsgerichtshofs (VwGH){{else}}ein {{#if isPart}}auszugsweise abgedrucktes{{/if}} österreichisches Gerichtsurteil{{/if}}. Du extrahierst mehrere Eigenschaften. Kosten sind irrelevant. Es ist nicht notwendig zu analysieren, wer Kosten trägt.
+Untenstehend folgt {{#if VfGH}}eine {{#if isPart}}auszugsweise abgedruckte{{/if}} österreichische Entscheidung des österreichischen Verfassungsgerichtshofs (VfGH){{else if VwGH}}eine {{#if isPart}}auszugsweise abgedruckte{{/if}} österreichische Entscheidung des österreichischen Verwaltungsgerichtshofs (VwGH){{else if DSB}}ein {{#if isPart}}auszugsweise abgedruckte{{/if}} Entscheidung der Datenschutzbehörde (DSB){{else}}ein {{#if isPart}}auszugsweise abgedrucktes{{/if}} österreichisches Gerichtsurteil{{/if}}. Du extrahierst mehrere Eigenschaften. Kosten sind irrelevant. Es ist nicht notwendig zu analysieren, wer Kosten trägt.
 {{#if VfGH}}
 1. Um welche Art von Entscheidung handelt es sich? Beschluss, Erkenntnis
 1a. Um welches Verfahren handelt es sich? Verordnungsprüfung, Gesetzesprüfung, Bescheidbeschwerde, Erkenntnisbeschwerde, Untersuchungsausschuss, Wahlüberprüfung, Kompetenzkonflikt, Vermögensansprüche, Staatsverträge, Sonstige
@@ -9,12 +9,18 @@ Feststellungsantrag, Kompetenzkonflikt, Sonstige
 {{else if BVwG}}
 1. Um welche Art von Urteil handelt es sich? Beschluss, Urteil, Erkenntnis
 1a. Um welches Rechtsmittel handelt es sich? Bescheidbeschwerde, Säumnisbeschwerde, Maßnahmenbeschwerde
+{{else if DSB}}
+1. Um welche Art von Verfahren handelt es sich? Amtswegiges Prüfverfahren, Beschwerdeverfahren, Verwaltungsstrafverfahren
 {{else}}
 1. Um welche Art von Urteil handelt es sich? Beschluss, Urteil, Erkenntnis
 1a. Um welches Rechtsmittel handelt es sich? Ordentliche Revision, Außerordentliche Revision, Ordentlicher Revisionsrekurs,Außerordentlicher Revisionsrekurs, Ordentliche Berufung, Außerordentliche Berufung, Ordentlicher Rekurs, Außerordentlicher Rekurs, Erstinstanz, EuGH-Vorabentscheidungsvorlage
 {{/if}}
+{{#if DSB}}
+2. Wie ist das Verfahren ausgegangen? Wurde eine Verletzung festgestellt?
+{{else}}
 1b. Handelt es sich um eine Vorlage vor dem EuGH? Das bedeutet, wird das Verfahren durch diesen Beschluss unterbrochen und auf eine Entscheidung des EuGH gewartet?
 2. Wie ist das Verfahren ausgegangen: Gab es eine Zurückweisung, eine Stattgabe, eine Bestätigung, eine Abweisung oder Gemischt?
+{{/if}}
 3. Fasse den Sachverhalt in höchstens {{ germanNumber numberOfSentences }} Sätzen zusammen. Der Sachverhalt beschreibt was vorgefallen ist. Was Gegenstand des Verfahrens ist. Die Tatsachen, die zum Verfahren geführt haben. {{#if criminal}} Was hat der Angeklagte oder die Angeklagte getan, um angeklagt zu werden? Welche Tat hat ihn vor Gericht gebracht? {{/if}} Was ist vorgefallen? Greife NICHT dem Urteil voraus. Rechtliche Aussagen Gerichts, das die Entscheidung erlässt sind KEIN Sachverhalt. Der Sachverhalt wird oft am Anfang in Präteritum wiedergegeben. Vermische dabei keine Sätze, die eine neue Bedeutung ergeben. KEINE BEGEHREN. Begehren sind die Argumentationen und Vorbringen der Parteien. Oftmals kommen Wörter wie "begehrte" und "bestritt" vor. Diese werden später abgefragt. Konzentriere dich hier ausschließlich auf den Sachverhalt.
 Verwende die Form:
 ```
@@ -33,7 +39,10 @@ Enthält das Gerichtsurteil keinen Sachverhalt, gib "KEIN SACHVERHALT aus.
 4a. Fasse die vorgebrachten Gegenargument der belangten Behörde in einem Satz zusammen. Wieso ist die Behörde der Meinung, dass die Entscheidung rechtskonform ist?
 {{else if VwGH}}
 4. Fasse das Begehren des Beschwerdeführers in einem Satz zusammen. Warum kam es zum Verfahren, was möchte der Kläger bzw die Klägerin erreichen?
-4a. Fasse die vorgebrachten Gegenargument der belangten Behörde in einem Satz zusammen. Wieso ist die Behörde der Meinung, dass die Entscheidung rechtskonform ist?
+4a. Fasse die vorgebrachten Gegenargumente der belangten Behörde in einem Satz zusammen. Wieso ist die Behörde der Meinung, dass die Entscheidung rechtskonform ist?
+{{else if DSB}}
+4. Fasse den vermuteten Datenschutzverstoß, vorgebracht durch einen Beschwerdeführer oder die Behörde in einem Satz zusammen. Warum kam es zum Verfahren, was ist vorgefallen? Wo wird mutmaßlich gegen Datenschutz verstoßen?
+4a. Fasse die vorgebrachten Gegenargumente des mutmaßlichen Verstoßenden in einem Satz zusammen. Wieso ist der Datenverarbeiter der Meinung, dass die Datenverarbeitung rechtskonform ist?
 {{ else  }}
 4. Fasse das Klagsbegehren in einem Satz zusammen. Warum kam es zum Gerichtsprozess, was möchte der Kläger bzw die Klägerin erreichen?
 4a. Fasse die vorgebrachten Gegenargument des Beklagten in einem Satz zusammen.
@@ -44,7 +53,7 @@ Enthält das Gerichtsurteil keinen Sachverhalt, gib "KEIN SACHVERHALT aus.
 8. Fasse das gesamte Urteil in {{ germanNumber numberOfSentences }} Absätzen zusammen. Verwende Zeilenumbrüche. Verwende pro Absatz drei Sätze. KEINE KOSTENENTSCHEIDUNGEN. KEINE BEGEHREN.
 9. Fasse das gesamte Urteil in {{ germanNumber numberOfSentences }} Sätzen zusammen. KEINE KOSTENENTSCHEIDUNGEN. KEINE BEGEHREN.
 10. Entwirf verschiedene schlagkräftige Zeitungsartikel für das Urteil.
-10a: Für eine Boulevardzeitung schlagkräftig und auf das wesentliche reduziert in der Form "BVwGH: At vero eos et accusam et justo duo dolores et ea rebum.".
+10a: Für eine Boulevardzeitung schlagkräftig und auf das wesentliche reduziert in der Form "BVwGH/Abkürzung des Gerichts: At vero eos et accusam et justo duo dolores et ea rebum.".
 10b: Für ein öffentlich-rechtliches Medium sachlich und ausgewogen in der Form "Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus".
 10c: Für eine juristische Zeitschrift mit Fokus auf rechtliche Aspekte in der Form "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua."
 11: Ordne die Entscheidung Rechtsthemen zu. Ordne Hauptrechtsgebiete und Untergebiete zu. Verwende folgende Liste für Hauptrechtsgebiete.
@@ -59,7 +68,7 @@ Verfahrensrecht
 {{#if VfGH}}
 
 {{else if VwGH}}
-
+{{else if DSB}}
 {{ else if BVwG }}
 Fremdenwesen
 Asyl
@@ -132,6 +141,9 @@ Liste die Informationen aus dem obigen Gerichtsurteil wie oben geführt als JSON
 {{else if VwGH}}
 "begehren_beschwerdefuehrer": "",
 "gegenargumente_staat_oder_behoerde": "",
+{{else if DSB}}
+"begehren_beschwerdefuehrer": "",
+"gegenargumente_gegenpartei": "",
 {{else}}
 "begehren": "",
 "gegenvorbringen": "",

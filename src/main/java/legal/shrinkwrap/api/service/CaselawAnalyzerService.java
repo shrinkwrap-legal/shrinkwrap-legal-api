@@ -86,7 +86,7 @@ public class CaselawAnalyzerService {
             templates.put("summary.system", template);
 
             //token estimation for system/user
-            TextModel dummyModel = new TextModel("",true, false, 3, true, false, false);
+            TextModel dummyModel = new TextModel("",true, false, 3, true, false, false, false);
             String system = templates.get("summary.system").apply(dummyModel);
             String user = templates.get("summary").apply(dummyModel);
             TOKEN_SYSTEM_AND_PROMPT_ESTIMATION = tokenCountEstimator.estimate(system + " " + user);
@@ -106,6 +106,7 @@ public class CaselawAnalyzerService {
         boolean isVfGH = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString());
         boolean isVwGH = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.VwGH.toString());
         boolean isBVwG = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.BVwG.toString());
+        boolean isDSB = entity != null && (entity.getApplicationType().equalsIgnoreCase(RisCourt.DSB.toString()) || entity.getApplicationType().equalsIgnoreCase("dsk"));
         boolean isPart = false;
 
         int tokenEstimation = TOKEN_SYSTEM_AND_PROMPT_ESTIMATION + tokenCountEstimator.estimate(text);
@@ -150,7 +151,7 @@ public class CaselawAnalyzerService {
         int wordCount = text.split(" ").length;
         int numberOfSentences = getNumberOfSentencesSuitableByWordCount(wordCount);
 
-        TextModel model = new TextModel(text, isCriminal, isVfGH, numberOfSentences, isPart, isVwGH, isBVwG);
+        TextModel model = new TextModel(text, isCriminal, isVfGH, numberOfSentences, isPart, isVwGH, isBVwG, isDSB);
 
         try {
             String system = templates.get("summary.system").apply(model);
@@ -324,7 +325,7 @@ public class CaselawAnalyzerService {
     private static final record SentenceModel(int id, String sentence) {
     }
 
-    private static final record TextModel(String text, Boolean criminal, Boolean VfGH, int numberOfSentences, boolean isPart, boolean VwGH, boolean BVwG) {}
+    private static final record TextModel(String text, Boolean criminal, Boolean VfGH, int numberOfSentences, boolean isPart, boolean VwGH, boolean BVwG, boolean DSB) {}
 
     private int getNumberOfSentencesSuitableByWordCount(int wordCount) {
         if (wordCount < 200) {
