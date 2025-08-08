@@ -119,7 +119,9 @@ Liste die Informationen aus dem obigen Gerichtsurteil wie oben geführt als JSON
 ```json
 {
 "art": "",
+{{#if DSB}}{{else}}
 "eugh_vorlage": null; // False/True or null if unknown,
+{{/if}}
 "ausgang": "",
 {{#if VfGH}}
 "verfahrensart": "",
