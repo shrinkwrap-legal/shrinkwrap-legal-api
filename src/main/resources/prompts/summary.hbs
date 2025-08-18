@@ -9,6 +9,9 @@ Feststellungsantrag, Kompetenzkonflikt, Sonstige
 {{else if BVwG}}
 1. Um welche Art von Urteil handelt es sich? Beschluss, Urteil, Erkenntnis
 1a. Um welches Rechtsmittel handelt es sich? Bescheidbeschwerde, Säumnisbeschwerde, Maßnahmenbeschwerde
+{{else if LVwG}}
+1. Um welche Art von Urteil handelt es sich? Beschluss, Bescheid, Erkenntnis
+1a. Um welches Rechtsmittel handelt es sich? Bescheidbeschwerde, Maßnahmenbeschwerde
 {{else if DSB}}
 1. Um welche Art von Verfahren handelt es sich? Amtswegiges Prüfverfahren, Beschwerdeverfahren, Verwaltungsstrafverfahren
 {{else}}
@@ -35,6 +38,9 @@ Enthält das Gerichtsurteil keinen Sachverhalt, gib "KEIN SACHVERHALT aus.
 4. Fasse das Begehren des Beschwerdeführers in einem Satz zusammen. Warum kam es zum Verfahren, was möchte der Kläger bzw die Klägerin erreichen?
 4a. Fasse die vorgebrachten Gegenargument der belangten Behörde bzw. des Staats in einem Satz zusammen.
 {{else if BVwG}}
+4. Fasse das Begehren des Beschwerdeführers in einem Satz zusammen. Warum kam es zum Verfahren, was möchte der Kläger bzw die Klägerin erreichen?
+4a. Fasse die vorgebrachten Gegenargument der belangten Behörde in einem Satz zusammen. Wieso ist die Behörde der Meinung, dass die Entscheidung rechtskonform ist?
+{{else if LVwG}}
 4. Fasse das Begehren des Beschwerdeführers in einem Satz zusammen. Warum kam es zum Verfahren, was möchte der Kläger bzw die Klägerin erreichen?
 4a. Fasse die vorgebrachten Gegenargument der belangten Behörde in einem Satz zusammen. Wieso ist die Behörde der Meinung, dass die Entscheidung rechtskonform ist?
 {{else if VwGH}}
@@ -69,6 +75,11 @@ Verfahrensrecht
 
 {{else if VwGH}}
 {{else if DSB}}
+{{ else if LVwG }}
+Baurecht
+Verkehrsrecht
+Gewerberecht
+Staatsbürgerschaftsrecht
 {{ else if BVwG }}
 Fremdenwesen
 Asyl
@@ -138,6 +149,9 @@ Liste die Informationen aus dem obigen Gerichtsurteil wie oben geführt als JSON
 "begehren_beschwerdefuehrer": "",
 "gegenargumente_staat": "",
 {{else if BVwG}}
+"begehren_beschwerdefuehrer": "",
+"gegenargumente_behoerde": "",
+{{else if LVwG}}
 "begehren_beschwerdefuehrer": "",
 "gegenargumente_behoerde": "",
 {{else if VwGH}}
