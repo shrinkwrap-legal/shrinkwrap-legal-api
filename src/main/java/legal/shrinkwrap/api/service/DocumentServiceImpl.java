@@ -156,6 +156,7 @@ public class DocumentServiceImpl implements DocumentService {
                     analysisEntity.setSystemPrompt(o.systemPrompt());
                     analysisEntity.setRemovedFromPrompt(o.removedFromPrompt());
                     analysisEntity.setAiModel(o.model());
+                    analysisEntity.setDurationMs(o.durationMs());
                     if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString())) {
                         analysisEntity.setAnalysisSubType("vfghCase");
                     } else if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VwGH.toString())) {

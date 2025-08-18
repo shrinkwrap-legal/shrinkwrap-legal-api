@@ -71,4 +71,7 @@ public class CaseLawAnalysisEntity {
 
     @Column(name="ai_model")
     private String aiModel;
+
+    @Column(name="duration_ms")
+    private Integer durationMs;
 }

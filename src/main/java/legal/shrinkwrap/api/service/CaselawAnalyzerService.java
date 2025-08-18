@@ -34,6 +34,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -170,7 +171,7 @@ public class CaselawAnalyzerService {
                     .model(AI_MODEL).build();
             Prompt p = new Prompt(List.of(systemMessage, userMessage), options);
             log.info("requesting summary " + (entity != null ? entity.getDocNumber() : "unknown ") + ", approx " + tokenEstimation + " token");
-
+            Instant start = Instant.now();
             for (int j = 0; j < 2; j++) {
                 ChatResponse chatResponse = chatClient.prompt(p).call().chatResponse();
                 String aireturn = chatResponse.getResult().getOutput().getText();
@@ -180,8 +181,9 @@ public class CaselawAnalyzerService {
                 CaselawSummaryCivilCase jsonReturn = null;
                 try {
                     jsonReturn = objectMapper.readValue(cleanedAi, CaselawSummaryCivilCase.class);
-
-                    SummaryAnalysis sa = new SummaryAnalysis(jsonReturn, system, user, removedText, AI_MODEL);
+                    Instant done = Instant.now();
+                    int duration = (int) (done.toEpochMilli() - start.toEpochMilli());
+                    SummaryAnalysis sa = new SummaryAnalysis(jsonReturn, system, user, removedText, AI_MODEL, duration);
                     return sa;
                 } catch (JsonProcessingException e) {
                     if (j == 0) {
@@ -344,5 +346,5 @@ public class CaselawAnalyzerService {
         return 5;
     }
 
-    public static final record SummaryAnalysis(CaselawSummaryCivilCase summary, String systemPrompt, String userPrompt, String removedFromPrompt, String model) {};
+    public static final record SummaryAnalysis(CaselawSummaryCivilCase summary, String systemPrompt, String userPrompt, String removedFromPrompt, String model, int durationMs) {};
 }
