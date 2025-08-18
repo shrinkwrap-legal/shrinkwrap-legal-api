@@ -139,7 +139,8 @@ public class DocumentServiceImpl implements DocumentService {
                             caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VwGH.toString()) ||
                             caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.DSB.toString()) ||
                             caseLawEntity.getApplicationType().equalsIgnoreCase("dsk") ||
-                            caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.BVwG.toString()))) {
+                            caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.BVwG.toString()) ||
+                            caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.LVwG.toString()))) {
                 CaselawAnalyzerService.SummaryAnalysis o = this.analyzeCivilCaseLaw(caseLawEntity, textEntity.get());
                 if (o != null) {
                     CaseLawAnalysisEntity analysisEntity = new CaseLawAnalysisEntity();
@@ -161,6 +162,8 @@ public class DocumentServiceImpl implements DocumentService {
                         analysisEntity.setAnalysisSubType("vwghCase");
                     } else if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.BVwG.toString())) {
                         analysisEntity.setAnalysisSubType("bvwgCase");
+                    } else if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.LVwG.toString())) {
+                        analysisEntity.setAnalysisSubType("lvwgCase");
                     } else if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.DSB.toString()) || caseLawEntity.getApplicationType().equalsIgnoreCase("dsk")) {
                         analysisEntity.setAnalysisSubType("bvwgCase");
                     }
