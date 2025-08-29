@@ -117,7 +117,7 @@ public class DocumentServiceImpl implements DocumentService {
         if (locksByCaselawId.contains(caseLawId)) {
             try {
                 //try for 120s, then do it anyway
-                for (int i = 0; i < 10 * 40; i++) {
+                for (int i = 0; i < 10 * 120; i++) {
                     Thread.sleep(100);
                     if (!locksByCaselawId.contains(caseLawId)) {
                         break;
@@ -127,6 +127,12 @@ public class DocumentServiceImpl implements DocumentService {
 
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
+            } finally {
+                //after breaking out of the semaphone - reload the (now existing) entity
+                summary = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("summary", caseLawEntity.getId());
+                if (summary.isEmpty() && identicalCaseLawEntity != null) {
+                    summary = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("summary", identicalCaseLawEntity.getId());
+                }
             }
         } else {
             locksByCaselawId.add(caseLawId);
