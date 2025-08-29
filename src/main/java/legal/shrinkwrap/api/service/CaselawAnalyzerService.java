@@ -168,6 +168,7 @@ public class CaselawAnalyzerService {
             Message systemMessage = new SystemMessage(system);
             Message userMessage = new UserMessage(user);
             OpenAiChatOptions options = OpenAiChatOptions.builder()
+                    .responseFormat(ResponseFormat.builder().type(ResponseFormat.Type.JSON_OBJECT).build())
                     .model(AI_MODEL).build();
             Prompt p = new Prompt(List.of(systemMessage, userMessage), options);
             log.info("requesting summary " + (entity != null ? entity.getDocNumber() : "unknown ") + ", approx " + tokenEstimation + " token");
