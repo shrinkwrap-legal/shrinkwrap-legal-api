@@ -390,11 +390,22 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
         //check if html exists, otherwise download
+        boolean textMayExist = true;
         if (Strings.isEmpty(entity.getFullCleanHtml())) {
             String htmlContent = htmlDownloadService.downloadHtml(entity.getHtmlUrl());
             String cleanHtml = caselawTextService.prepareRISCaseLawHtml(htmlContent);
             entity.setFullCleanHtml(cleanHtml);
+            textMayExist = false;
+        }
 
+        //check if text entity exists, otherwise create
+        if (textMayExist) {
+            Optional<CaseLawAnalysisEntity> textEntity = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("text", entity.getId());
+            if (textEntity.isEmpty()) {
+                textMayExist = false;
+            }
+        }
+        if (!textMayExist) {
             CaseLawAnalysisEntity analysisEntity = createTextConversion(entity);
 
             //try to find identical entries, if any
@@ -408,7 +419,6 @@ public class DocumentServiceImpl implements DocumentService {
             entity = caseLawRepository.save(entity);
             analysisEntity = caseLawAnalysisRepository.save(analysisEntity);
         }
-
         return entity;
     }
 
