@@ -59,6 +59,9 @@ public class DocumentServiceImpl implements DocumentService {
     @Value("${download-missing-judicature}")
     private Boolean downloadMissing;
 
+    @Value("${min-words-for-summary}")
+    private Integer minWordsForSummary;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public DocumentServiceImpl(RisSoapAdapter risSoapAdapter, HtmlDownloadService htmlDownloadService, CaselawTextService caselawTextService, FileHandlingService fileHandlingService, ShrinkwrapPythonRestService shrinkwrapPythonRestService, CaseLawRepository caseLawRepository, CaseLawAnalysisRepository caseLawAnalysisRepository, CaselawAnalyzerService caselawAnalyzerService) {
@@ -103,9 +106,10 @@ public class DocumentServiceImpl implements DocumentService {
             CaseLawAnalysisEntity textAnalysisEntity = createTextConversion(caseLawEntity);
             caseLawAnalysisRepository.save(textAnalysisEntity);
             textEntity = Optional.of(textAnalysisEntity);
-        } else {
-            ret.setWordCount(textEntity.get().getWordCount());
+
         }
+
+        ret.setWordCount(textEntity.get().getWordCount());
 
         Optional<CaseLawAnalysisEntity> summary = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("summary", caseLawEntity.getId());
         CaseLawEntity identicalCaseLawEntity = textEntity.get().getIdenticalTo();
@@ -139,7 +143,8 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
         try {
-            if (summary.isEmpty() && (
+            if (summary.isEmpty() && ret.getWordCount() > minWordsForSummary &&
+                    (
                     caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.Justiz.toString()) ||
                             caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString()) ||
                             caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VwGH.toString()) ||
@@ -209,7 +214,6 @@ public class DocumentServiceImpl implements DocumentService {
             }
 
 
-            ret.setWordCount(textEntity.get().getWordCount());
             return ret;
 
         } finally {
