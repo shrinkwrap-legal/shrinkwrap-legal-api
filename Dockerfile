@@ -17,7 +17,7 @@ WORKDIR /app
 
 # first, only resolve dependencies, so that we can cache them until a pom.xml change happens
 COPY --chown=spring:spring pom.xml .
-RUN mvn -B dependency:resolve
+RUN mvn -B dependency:go-offline
 
 
 # copy source code
