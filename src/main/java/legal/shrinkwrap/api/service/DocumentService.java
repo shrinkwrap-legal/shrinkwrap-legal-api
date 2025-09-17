@@ -21,5 +21,5 @@ public interface DocumentService {
     void createSentenceHashForExistingEntries();
 
     @Deprecated
-    void regenerateTextConversion();
+    void regenerateTextConversion(boolean missingOnly);
 }

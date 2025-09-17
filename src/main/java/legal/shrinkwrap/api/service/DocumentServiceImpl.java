@@ -464,11 +464,16 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Deprecated
     @Override
-    public void regenerateTextConversion() {
+    public void regenerateTextConversion(boolean missingOnly) {
         Pageable pageable = PageRequest.of(0, 100);
         Page<CaseLawEntity> page;
         do {
-            page = caseLawRepository.findAll(pageable);
+            if (missingOnly) {
+                page = caseLawRepository.findCaseLawWithoutAnalysis(pageable);
+            }
+            else {
+                page = caseLawRepository.findAll(pageable);
+            }
             for (CaseLawEntity entity : page.getContent()) {
                 Optional<CaseLawAnalysisEntity> textEntity = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("text", entity.getId());
                 if (!textEntity.isPresent()) {

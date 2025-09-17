@@ -40,7 +40,7 @@ public class CaseLawImporter {
 
     //@PostConstruct
     public void redoText() {
-        new Thread(() -> documentService.regenerateTextConversion()).start();
+        new Thread(() -> documentService.regenerateTextConversion(false)).start();
     }
 
     //@PostConstruct
