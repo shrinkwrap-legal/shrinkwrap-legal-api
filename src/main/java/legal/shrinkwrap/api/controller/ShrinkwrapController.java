@@ -24,7 +24,7 @@ public class ShrinkwrapController {
     //on extension install, redirect to RIS
     @GetMapping("/extension-install")
     public RedirectView extensionInstall() {
-        RedirectView redirect = new RedirectView("https://www.ris.bka.gv.at/Judikatur/");
+        RedirectView redirect = new RedirectView("https://www.ris.bka.gv.at/Judikatur/#shrinkwrap");
         redirect.setStatusCode(HttpStatusCode.valueOf(303)); //always GET
         return redirect;
     }
