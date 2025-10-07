@@ -10,10 +10,7 @@ import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturMetadaten;
 import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
 import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
-import legal.shrinkwrap.api.dto.CaseLawRequestDto;
-import legal.shrinkwrap.api.dto.CaseLawResponseDto;
-import legal.shrinkwrap.api.dto.CaseLawSummaryPromptsDto;
-import legal.shrinkwrap.api.dto.CaselawSummaryCivilCase;
+import legal.shrinkwrap.api.dto.*;
 import legal.shrinkwrap.api.persistence.entity.CaseLawAnalysisEntity;
 import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
 import legal.shrinkwrap.api.persistence.repo.CaseLawAnalysisRepository;
@@ -30,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.ZoneId;
 import java.util.*;
 
 @Service
@@ -100,6 +98,19 @@ public class DocumentServiceImpl implements DocumentService {
         } else {
             caseLawEntity = dbEntity.get();
         }
+
+        CaseLawMetadataDto metadata = new CaseLawMetadataDto();
+        metadata.setUrl(caseLawEntity.getUrl());
+        metadata.setEcli(caseLawEntity.getEcli());
+        metadata.setCaseNumber(caseLawEntity.getCaseNumber());
+        metadata.setCourt(caseLawEntity.getCourt());
+        metadata.setOrgan(caseLawEntity.getOrgan());
+        if (caseLawEntity.getDecisionDate() != null) {
+            Date date = Date.from(caseLawEntity.getDecisionDate().atStartOfDay(ZoneId.of("UTC")).toInstant());
+            metadata.setDecisionDate(date);
+        }
+        metadata.setDecisionType(caseLawEntity.getDecisionType());
+        ret.setMetadata(metadata);
 
         Optional<CaseLawAnalysisEntity> textEntity = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("text", caseLawEntity.getId());
         if (!textEntity.isPresent()) {

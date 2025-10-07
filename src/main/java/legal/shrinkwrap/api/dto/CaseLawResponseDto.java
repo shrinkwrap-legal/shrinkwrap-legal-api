@@ -15,5 +15,6 @@ public class CaseLawResponseDto {
     Integer analysisVersion = 1;
     CaselawSummaryCivilCase summary;
     CaseLawSummaryPromptsDto prompts;
+    CaseLawMetadataDto metadata;
 }
 
