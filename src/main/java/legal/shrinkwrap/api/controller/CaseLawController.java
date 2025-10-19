@@ -1,6 +1,7 @@
 package legal.shrinkwrap.api.controller;
 
 import jakarta.validation.Valid;
+import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.dto.CaseLawRequestDto;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
 import legal.shrinkwrap.api.service.DocumentService;
@@ -13,6 +14,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.text.MessageFormat;
 import java.util.HashSet;
@@ -34,6 +36,21 @@ public class CaseLawController {
     public CaseLawResponseDto getShrinkwrapDocument(@Valid @ParameterObject CaseLawRequestDto requestDto) {
         CaseLawResponseDto document = documentService.getDocument(requestDto);
         return document;
+    }
+
+    @GetMapping(value = "case-law/shrinkwrap/{court}/{docNumber}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public CaseLawResponseDto getShrinkwrapDocumentByCourtAndDocNumber(
+            @PathVariable("court") RisCourt court,
+            @PathVariable("docNumber") String docNumber,
+            @RequestParam(value = "includePrompts", required = false) Boolean includePrompts) {
+        //alternative method, having court and docNumber as path variables
+        CaseLawRequestDto requestDto = new CaseLawRequestDto(
+                null,
+                docNumber,
+                court,
+                includePrompts
+        );
+        return documentService.getDocument(requestDto);
     }
 
     @GetMapping("case-law/overview")
