@@ -1,4 +1,4 @@
-FROM maven:3.9.9-amazoncorretto-21-debian
+FROM maven:3.9.14-amazoncorretto-21-debian
 
 # add debian packages
 WORKDIR /tmp
