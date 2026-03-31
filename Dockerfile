@@ -33,5 +33,5 @@ ENV SPRING_PROFILES_ACTIVE=prod
 EXPOSE 8080
 
 # Run the app
-ENTRYPOINT ["java","-jar","target/API-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java","-jar","target/API-0.0.2-SNAPSHOT.jar"]
 #ENTRYPOINT ["/bin/bash"]
