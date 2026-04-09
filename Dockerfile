@@ -12,19 +12,19 @@ RUN keytool -import -trustcacerts -file HARICA-TLS-Root-2021-RSA.pem -alias HARI
 
 RUN addgroup --system spring && adduser --system spring --home /user/spring && adduser spring spring
 USER spring:spring
+RUN id spring
 
 WORKDIR /app
-
 # first, only resolve dependencies, so that we can cache them until a pom.xml change happens
 COPY --chown=spring:spring pom.xml .
-RUN --mount=type=cache,target=/root/.m2 mvn -B dependency:go-offline
+RUN --mount=type=cache,target=/user/spring/.m2,uid=100,gid=102 mvn -B dependency:go-offline
 
 
 # copy source code
 COPY --chown=spring:spring src ./src
 COPY --chown=spring:spring config ./config
 
-RUN --mount=type=cache,target=/root/.m2 mvn -B clean package -DskipTests
+RUN --mount=type=cache,target=/user/spring/.m2,uid=100,gid=102 mvn -B clean package -DskipTests
 
 # Set the default active profile
 ENV SPRING_PROFILES_ACTIVE=prod
