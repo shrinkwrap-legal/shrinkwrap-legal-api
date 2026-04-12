@@ -24,8 +24,6 @@ public class CaseLawEmbeddingService {
     private final CaseLawEmbeddingRepository caseLawEmbeddingRepository;
     private final TokenCountEstimator tokenCountEstimator = new JTokkitTokenCountEstimator();
 
-    private final VectorStore vectorStore;
-
     public CaseLawEmbeddingEntity getAndStoreVectorForCaseLawSummary(CaseLawEntity entity, CaselawSummaryCivilCase caselawSummaryCivilCase) {
         CaseLawEmbeddingEntity embedding = getVectorForCaseLawSummary(caselawSummaryCivilCase);
         embedding.setCaseLaw(entity);
