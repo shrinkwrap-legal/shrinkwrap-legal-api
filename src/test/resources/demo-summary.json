@@ -1,0 +1,39 @@
+{
+  "art": "Beschluss",
+  "eugh": false,
+  "ausgang": "Abweisung",
+  "rechtsmittel": "Ordentlicher Revisionsrekurs",
+  "verfahrensart": null,
+  "sachverhalt": "Die Antragstellerin war Mieterin einer Wohnung, in der ein Pauschalzins vereinbart wurde. Sie beantragte die Feststellung des gesetzlich zulässigen Mietzinses und die Überprüfung der Betriebskosten. Ein Verfahren vor der Schlichtungsstelle war anhängig und führte zur Rückweisung des Antrags.",
+  "begehren": "Die Antragstellerin wollte die Höhe des zulässigen Mietzinses feststellen und die Rückerstattung von Betriebskosten erreichen.",
+  "gegenvorbringen": "Die Antragsgegnerin berief sich auf das Prozesshindernis der Streitanhängigkeit.",
+  "berufende_partei": null,
+  "entscheidung_gericht": "Das Gericht wies den Revisionsrekurs der Antragsgegnerin zurück. Es stellte fest, dass das Prozesshindernis der Streitanhängigkeit vorliegt. Die parallele Verfahrensführung über identische Ansprüche wurde als unzulässig erachtet.",
+  "zusammenfassung_3_absaetze": [
+    "Der Oberste Gerichtshof hat in einer Mietrechtssache über einen Revisionsrekurs entschieden. Die Antragstellerin wollte die Höhe des zulässigen Mietzinses und die Rückerstattung von Betriebskosten klären. Das Verfahren war jedoch durch ein anhängiges Verfahren bei der Schlichtungsstelle behindert.",
+    "Das Erstgericht wies den Antrag der Antragstellerin ab, da die Frist für die Mietzinsüberprüfung abgelaufen war, ließ aber die Überprüfung der Betriebskosten zu. Der Oberste Gerichtshof stellte fest, dass das Prozesshindernis der Streitanhängigkeit auch für außerstreitige Verfahren gilt.",
+    "Die Entscheidung des Rekursgerichts wurde als korrekt erachtet. Der Revisionsrekurs hatte keinen Erfolg, da die rechtlichen Voraussetzungen für die parallele Verfahrensführung nicht erfüllt waren. Das Gericht wies den Revisionsrekurs daher zurück."
+  ],
+  "zusammenfassung_3_saetze": "Der Oberste Gerichtshof hat einen Revisionsrekurs in einer Mietrechtssache abgewiesen. Das Prozesshindernis der Streitanhängigkeit wurde festgestellt und als rechtlich bindend erachtet. Die parallele Verfahrensführung über identische Ansprüche wurde für unzulässig erklärt.",
+  "zeitungstitel_boulevard": "OGH: Mietstreit endet ohne Erfolg für Mieterin",
+  "zeitungstitel_oeffentlich": "Oberster Gerichtshof entscheidet über Mietrechtliche Streitigkeiten und Streitanhängigkeit",
+  "zeitungstitel_rechtszeitschrift": "OGH zur Bedeutung der Streitanhängigkeit im außerstreitigen Mietrecht",
+  "schlussfolgerungen": [
+    "Die Richtigstellung eines Antrags wirkt auf den Antragszeitpunkt zurück (5 Ob 296/99m).",
+    "Die Regelung des § 233 Abs 1 ZPO ist auch im außerstreitigen Verfahren analog anwendbar.",
+    "Das Prozesshindernis der Streitanhängigkeit bezieht sich auch auf außerstreitige Verfahren."
+  ],
+  "wichtige_normen": [
+    "MRG § 16 Abs 8",
+    "MRG § 37 Abs 1",
+    "ZPO § 233 Abs 1"
+  ],
+  "hauptrechtsgebiete": [
+    "Zivilrecht (Sonstiges)",
+    "Verwaltungsrecht",
+    "Verfassungsrecht"
+  ],
+  "unterrechtsgebiete": [
+    "Mietrecht"
+  ]
+}
