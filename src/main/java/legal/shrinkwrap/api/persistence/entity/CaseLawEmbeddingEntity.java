@@ -31,6 +31,7 @@ public class CaseLawEmbeddingEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private CaseLawEntity caseLaw;
 
+    @Column(name="content", columnDefinition = "TEXT")
     private String content;
 
     @Column(name="embedding", columnDefinition = "vector(1536)")

@@ -1,0 +1,37 @@
+{
+  "art": "Erkenntnis",
+  "eugh": null,
+  "ausgang": "Zurückweisung",
+  "rechtsmittel": "Außerordentlicher Revisionsrekurs",
+  "verfahrensart": null,
+  "sachverhalt": "Die Antragstellerin hatte die Antragsgegnerin verpflichtet, jede Bauführung auf der von ihr gemieteten Flachdachfläche zu unterlassen. Die Antragsgegnerin wollte die Antragstellerin zur Duldung der im Einreichplan beschriebenen Bauführung verpflichten. Das Erstgericht gab dem Antrag der Antragstellerin statt und wies den Antrag der Antragsgegnerin ab.",
+  "begehren": "Die Antragstellerin möchte erreichen, dass die Antragsgegnerin jede Bauführung auf der gemieteten Flachdachfläche unterlässt.",
+  "gegenvorbringen": "Die Antragsgegnerin argumentierte, dass die Antragstellerin die Duldungspflicht verletzt habe und die erstgerichtliche Feststellung zur Beeinträchtigung nicht zutreffend sei.",
+  "berufende_partei": null,
+  "entscheidung_gericht": "Der außerordentliche Revisionsrekurs wurde wegen mangelnder Voraussetzungen zurückgewiesen. Das Gericht stellte fest, dass die erstgerichtliche Entscheidung im Rahmen der geltend gemachten Rechtsgrundlage beachtlich war. Die Interessenabwägung zwischen den Parteien wurde als angemessen erachtet.",
+  "zusammenfassung_3_absaetze": [
+    "Der Oberste Gerichtshof entschied, dass der außerordentliche Revisionsrekurs der Antragsgegnerin zurückgewiesen wird. Das Erstgericht hatte der Antragstellerin in ihrem Antrag stattgegeben und die Antragsgegnerin verpflichtet, Bauführungen zu unterlassen. Die Antragsgegnerin hatte einen Duldungsantrag gestellt, der abgewiesen wurde.",
+    "Das Rekursgericht bestätigte die Entscheidung des Erstgerichts und stellte fest, dass für die Beurteilung einer Beeinträchtigung die Umstände des Einzelfalls maßgeblich waren. Die Antragsgegnerin machte im Revisionsrekurs keine erhebliche Rechtsfrage geltend und konnte die vorgebrachten Argumente nicht substantiell untermauern.",
+    "Das Gericht kam zu dem Schluss, dass die Interessenabwägung zwischen der Antragstellerin und der Antragsgegnerin angemessen war. Die erstgerichtlichen Feststellungen wurden als rechtlich beachtlich erachtet. Daher war die Zurückweisung des Revisionsrekurses gerechtfertigt."
+  ],
+  "zusammenfassung_3_saetze": "Der Oberste Gerichtshof wies den außerordentlichen Revisionsrekurs der Antragsgegnerin zurück. Die erstgerichtliche Entscheidung, die der Antragstellerin die Nutzung ihrer Terrasse sicherte, wurde bestätigt. Es wurden keine erheblichen Rechtsfragen vorgebracht, die eine andere Entscheidung rechtfertigten.",
+  "zeitungstitel_boulevard": "OGH: Antragstellerin gewinnt Streit um Dachterrasse!",
+  "zeitungstitel_oeffentlich": "Der Oberste Gerichtshof bestätigt die Entscheidung zur Bauführung auf der Dachterrasse.",
+  "zeitungstitel_rechtszeitschrift": "OGH zur Duldungspflicht im Mietrecht: Interessenabwägung maßgeblich.",
+  "schlussfolgerungen": [
+    "Die erstgerichtliche Feststellung zur Beeinträchtigung der Antragstellerin hält sich im Rahmen des geltend gemachten Rechtsgrundes (§ 8 Abs 2 Z 2 MRG).",
+    "Die Verwertung eigener Fachkenntnisse des Gerichts bedarf im Außerstreitverfahren nicht der Zustimmung der Parteien (§ 31 Abs 3 Satz 2 AußStrG).",
+    "Die Antragsgegnerin konnte nicht nachweisen, dass ein Rechtsmissbrauch der Antragstellerin vorlag.",
+    "Die Entscheidung zur Duldungspflicht der Antragstellerin wurde als angemessen und nicht unvertretbar beurteilt."
+  ],
+  "wichtige_normen": [
+    "MRG § 8 Abs 2",
+    "AußStrG § 31 Abs 3",
+    "AußStrG § 62 Abs 1"
+  ],
+  "hauptrechtsgebiete": [
+    "Verwaltungsrecht",
+    "Mietrecht"
+  ],
+  "unterrechtsgebiete": []
+}

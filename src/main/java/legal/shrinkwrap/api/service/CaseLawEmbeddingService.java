@@ -28,6 +28,7 @@ public class CaseLawEmbeddingService {
 
     public CaseLawEmbeddingEntity getAndStoreVectorForCaseLawSummary(CaseLawEntity entity, CaselawSummaryCivilCase caselawSummaryCivilCase) {
         CaseLawEmbeddingEntity embedding = getVectorForCaseLawSummary(caselawSummaryCivilCase);
+        embedding.setCaseLaw(entity);
         embedding = caseLawEmbeddingRepository.save(embedding);
         return embedding;
     }
