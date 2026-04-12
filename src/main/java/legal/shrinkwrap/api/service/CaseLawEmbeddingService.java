@@ -1,27 +1,38 @@
 package legal.shrinkwrap.api.service;
 
 import legal.shrinkwrap.api.dto.CaselawSummaryCivilCase;
+import legal.shrinkwrap.api.persistence.entity.CaseLawEmbeddingEntity;
+import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
+import legal.shrinkwrap.api.persistence.repo.CaseLawEmbeddingRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.ai.tokenizer.JTokkitTokenCountEstimator;
 import org.springframework.ai.tokenizer.TokenCountEstimator;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
 @AllArgsConstructor
-public class CaselawVectorService {
+public class CaseLawEmbeddingService {
 
     private final EmbeddingModel embeddingModel;
+    private final CaseLawEmbeddingRepository caseLawEmbeddingRepository;
     private final TokenCountEstimator tokenCountEstimator = new JTokkitTokenCountEstimator();
 
+    private final VectorStore vectorStore;
 
-    public Map<String, EmbeddingResponse> getVectorForCase(CaselawSummaryCivilCase caselawSummaryCivilCase) {
+    public CaseLawEmbeddingEntity getAndStoreVectorForCaseLawSummary(CaseLawEntity entity, CaselawSummaryCivilCase caselawSummaryCivilCase) {
+        CaseLawEmbeddingEntity embedding = getVectorForCaseLawSummary(caselawSummaryCivilCase);
+        embedding = caseLawEmbeddingRepository.save(embedding);
+        return embedding;
+    }
+
+    public CaseLawEmbeddingEntity getVectorForCaseLawSummary(CaselawSummaryCivilCase caselawSummaryCivilCase) {
         //transform the json to some YAML, in order to save token
         StringBuilder summary = new StringBuilder();
         summary.append("Titelvariante: " + caselawSummaryCivilCase.getZeitungstitel_rechtszeitschrift());
@@ -42,8 +53,11 @@ public class CaselawVectorService {
             fullSummary += absaetze;
         }
 
-
         EmbeddingResponse embeddingResponse = this.embeddingModel.embedForResponse(List.of(fullSummary));
-        return Map.of("embedding", embeddingResponse);
+
+        CaseLawEmbeddingEntity ret = new CaseLawEmbeddingEntity();
+        ret.setEmbedding(embeddingResponse.getResult().getOutput());
+        ret.setContent(fullSummary);
+        return ret;
     }
 }
