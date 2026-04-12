@@ -32,7 +32,7 @@ public class CaseLawEmbeddingService {
     }
 
     public boolean hasEmbeddings(CaseLawEntity entity) {
-        return caseLawEmbeddingRepository.findFirstByCaseLaw_Id(entity.getId()).isPresent();
+        return caseLawEmbeddingRepository.existsByCaseLaw_Id(entity.getId());
     }
 
     public CaseLawEmbeddingEntity getVectorForCaseLawSummary(CaselawSummaryCivilCase caselawSummaryCivilCase) {

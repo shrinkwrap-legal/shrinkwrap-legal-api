@@ -8,4 +8,6 @@ import java.util.Optional;
 public interface CaseLawEmbeddingRepository extends JpaRepository<CaseLawEmbeddingEntity, Long> {
 
     Optional<CaseLawEmbeddingEntity> findFirstByCaseLaw_Id(Long caseLawId);
+
+    Boolean existsByCaseLaw_Id(Long caseLawId);
 }
