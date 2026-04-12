@@ -31,6 +31,10 @@ public class CaseLawEmbeddingService {
         return embedding;
     }
 
+    public boolean hasEmbeddings(CaseLawEntity entity) {
+        return caseLawEmbeddingRepository.findFirstByCaseLaw_Id(entity.getId()).isPresent();
+    }
+
     public CaseLawEmbeddingEntity getVectorForCaseLawSummary(CaselawSummaryCivilCase caselawSummaryCivilCase) {
         //transform the json to some YAML, in order to save token
         StringBuilder summary = new StringBuilder();

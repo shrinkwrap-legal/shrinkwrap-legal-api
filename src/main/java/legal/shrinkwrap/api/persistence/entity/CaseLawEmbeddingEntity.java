@@ -13,7 +13,9 @@ import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "caselaw_embedding")
+@Table(name = "caselaw_embedding", indexes = {
+        @Index(name="case_law_id_embedding", columnList = "case_law_id")
+})
 @Getter
 @Setter
 @ToString
