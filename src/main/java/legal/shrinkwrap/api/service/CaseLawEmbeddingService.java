@@ -45,12 +45,12 @@ public class CaseLawEmbeddingService {
         summary.append("\nBegehren: " + caselawSummaryCivilCase.getBegehren());
         summary.append("\nGegner: " + caselawSummaryCivilCase.getGegenvorbringen());
         summary.append("\nGericht: " + caselawSummaryCivilCase.getEntscheidung_gericht());
-        summary.append("\nSchlussfolgerungen: " + caselawSummaryCivilCase.getSchlussfolgerungen().stream().collect(StringBuilder::new, StringBuilder::append, StringBuilder::append));
-        summary.append("\nZusammenfassung: " + caselawSummaryCivilCase.getZusammenfassung_3_saetze() + "");
+        summary.append("\nSchlussfolgerungen: " + String.join(" ", caselawSummaryCivilCase.getSchlussfolgerungen()));
+        summary.append("\nZusammenfassung: " + caselawSummaryCivilCase.getZusammenfassung_3_saetze());
         String fullSummary = summary.toString();
 
         //check if absaetze still fits
-        String absaetze = "\nZusammenfassung: " + caselawSummaryCivilCase.getZusammenfassung_3_absaetze().stream().collect(StringBuilder::new, StringBuilder::append, StringBuilder::append);
+        String absaetze = "\nZusammenfassung: " + String.join(" ", caselawSummaryCivilCase.getZusammenfassung_3_absaetze());
         int estimate = tokenCountEstimator.estimate(fullSummary + absaetze);
         if (estimate < 8192) {
             fullSummary += absaetze;
