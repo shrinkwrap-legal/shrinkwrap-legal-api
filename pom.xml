@@ -17,8 +17,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <spring-ai.version>1.1.2</spring-ai.version>
-
+        <spring-ai.version>1.1.4</spring-ai.version>
+        <!--
+        <spring-ai.version>1.0.0-M4</spring-ai.version>
+        -->
         <spring-modulith.version>1.4.6</spring-modulith.version>
         <openapi-generator-version>7.16.0</openapi-generator-version>
 
@@ -34,6 +36,10 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-openai</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-vector-store-pgvector</artifactId>
         </dependency>
 
         <dependency>
@@ -183,6 +189,12 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-vector</artifactId>
+            <version>${hibernate.version}</version>
+            <scope>compile</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.liquibase</groupId>
@@ -284,7 +296,6 @@
             <version>3.4.0</version>
         </dependency>
     </dependencies>
-
     <dependencyManagement>
         <dependencies>
             <dependency>

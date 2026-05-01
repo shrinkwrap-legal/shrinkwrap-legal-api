@@ -12,6 +12,7 @@ import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
 import legal.shrinkwrap.api.dataset.CaseLawDataset;
 import legal.shrinkwrap.api.dto.*;
 import legal.shrinkwrap.api.persistence.entity.CaseLawAnalysisEntity;
+import legal.shrinkwrap.api.persistence.entity.CaseLawEmbeddingEntity;
 import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
 import legal.shrinkwrap.api.persistence.repo.CaseLawAnalysisRepository;
 import legal.shrinkwrap.api.persistence.repo.CaseLawRepository;
@@ -50,6 +51,8 @@ public class DocumentServiceImpl implements DocumentService {
 
     private final CaselawAnalyzerService caselawAnalyzerService;
 
+    private final CaseLawEmbeddingService caseLawEmbeddingService;
+
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final HashSet<Long> locksByCaselawId = new HashSet<>();
@@ -60,9 +63,12 @@ public class DocumentServiceImpl implements DocumentService {
     @Value("${min-words-for-summary}")
     private Integer minWordsForSummary;
 
+    @Value("${generate-embeddings}")
+    private Boolean generateEmbeddings;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public DocumentServiceImpl(RisSoapAdapter risSoapAdapter, HtmlDownloadService htmlDownloadService, CaselawTextService caselawTextService, FileHandlingService fileHandlingService, ShrinkwrapPythonRestService shrinkwrapPythonRestService, CaseLawRepository caseLawRepository, CaseLawAnalysisRepository caseLawAnalysisRepository, CaselawAnalyzerService caselawAnalyzerService) {
+    public DocumentServiceImpl(RisSoapAdapter risSoapAdapter, HtmlDownloadService htmlDownloadService, CaselawTextService caselawTextService, FileHandlingService fileHandlingService, ShrinkwrapPythonRestService shrinkwrapPythonRestService, CaseLawRepository caseLawRepository, CaseLawAnalysisRepository caseLawAnalysisRepository, CaselawAnalyzerService caselawAnalyzerService, CaseLawEmbeddingService caseLawEmbeddingService) {
         this.risSoapAdapter = risSoapAdapter;
         this.htmlDownloadService = htmlDownloadService;
         this.caselawTextService = caselawTextService;
@@ -71,6 +77,7 @@ public class DocumentServiceImpl implements DocumentService {
         this.caseLawRepository = caseLawRepository;
         this.caseLawAnalysisRepository = caseLawAnalysisRepository;
         this.caselawAnalyzerService = caselawAnalyzerService;
+        this.caseLawEmbeddingService = caseLawEmbeddingService;
     }
 
     @Override
@@ -222,8 +229,13 @@ public class DocumentServiceImpl implements DocumentService {
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
-            }
 
+                //not yet any action here
+                if (generateEmbeddings && !caseLawEmbeddingService.hasEmbeddings(caseLawEntity)) {
+                    CaseLawEmbeddingEntity embedding = caseLawEmbeddingService.getAndStoreVectorForCaseLawSummary(caseLawEntity, summaryObj);
+                }
+
+            }
 
             return ret;
 

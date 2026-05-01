@@ -1,0 +1,37 @@
+{
+  "art": "Beschluss",
+  "eugh": null,
+  "ausgang": "Abweisung",
+  "rechtsmittel": "Ordentlicher Revisionsrekurs",
+  "verfahrensart": null,
+  "sachverhalt": "Die Antragstellerin war von 28.9.1994 bis 28.9.1997 Mieterin einer Wohnung. Am 20.1.1998 stellte sie einen Antrag bei der Schlichtungsstelle zur Feststellung des zulässigen Mietzinses. Ein zweiter Antrag wurde am 27.4.1999 bei der Schlichtungsstelle eingereicht und zu Gericht abgezogen.",
+  "begehren": "Die Antragstellerin wollte die Feststellung des gesetzlich zulässigen Mietzinses und Rückersatz von Überschreitungsbeträgen.",
+  "gegenvorbringen": "Der Beklagte argumentierte, dass der Antrag aufgrund Präklusion abgewiesen werden müsse.",
+  "berufende_partei": null,
+  "entscheidung_gericht": "Das Gericht wies den Revisionsrekurs der Antragsgegnerin ab. Es stellte fest, dass das Prozesshindernis der Streitanhängigkeit vorlag. Der Beschluss des Rekursgerichts war daher zutreffend und der Antrag zurückzuweisen.",
+  "zusammenfassung_3_absaetze": [
+    "Der Oberste Gerichtshof entschied in einer Mietrechtssache über einen Revisionsrekurs. Die Antragstellerin hatte mehrere Anträge zur Überprüfung des Mietzinses bei der Schlichtungsstelle eingereicht. Das Rekursgericht wies den Antrag aufgrund des Prozesshindernisses der Streitanhängigkeit zurück.",
+    "Das Gericht stellte fest, dass die Richtigstellung eines Antrags auf den Antragszeitpunkt zurückwirkt und dass eine parallele Verfahrensführung über identische Ansprüche nicht zulässig ist. Die Nichtigkeitsgründe der ZPO sind auch im außerstreitlichen Verfahren relevant.",
+    "Die Entscheidung des Rekursgerichts wurde als zutreffend erachtet, weshalb dem Revisionsrekurs der Antragsgegnerin nicht gefolgt wurde. Der Antrag der Antragstellerin wurde zurückgewiesen."
+  ],
+  "zusammenfassung_3_saetze": "Der Oberste Gerichtshof wies den Revisionsrekurs der Antragsgegnerin ab. Das Gericht stellte fest, dass das Prozesshindernis der Streitanhängigkeit vorlag. Die Entscheidung des Rekursgerichts wurde als zutreffend erachtet.",
+  "zeitungstitel_boulevard": "OGH: Klarheit im Mietrecht - Antrag abgewiesen!",
+  "zeitungstitel_oeffentlich": "OGH bestätigt Rückweisung von Mietzinsantrag aufgrund von Streitanhängigkeit.",
+  "zeitungstitel_rechtszeitschrift": "OGH-Entscheidung zum Prozesshindernis der Streitanhängigkeit im Mietrecht.",
+  "schlussfolgerungen": [
+    "Die Richtigstellung eines Antrags wirkt auf den Antragszeitpunkt zurück (§ 16 Abs 8 MRG).",
+    "Das Prozesshindernis der Streitanhängigkeit ist auch im außerstreitlichen Verfahren zu beachten.",
+    "Anträge können nicht gleichzeitig bei Gericht und einer Schlichtungsstelle anhängig sein (§ 40 MRG).",
+    "Nichtigkeitsgründe der ZPO gelten auch für das außerstreitliche Verfahren."
+  ],
+  "wichtige_normen": [
+    "MRG § 16 Abs 8",
+    "MRG § 37 Abs 3",
+    "ZPO § 233 Abs 1"
+  ],
+  "hauptrechtsgebiete": [
+    "Zivilrecht (Sonstiges)",
+    "Mietrecht"
+  ],
+  "unterrechtsgebiete": []
+}
