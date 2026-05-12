@@ -47,7 +47,7 @@ public class CaselawAnalyzerService {
     private final Integer TOKEN_SYSTEM_AND_PROMPT_ESTIMATION;
     private final String AI_MODEL_HIGH = "gpt-5.4-mini";
     private final String AI_MODEL_LOW = "gpt-5.4-nano";
-    private final Integer AI_MODEL_TOKEN_FAILOVER = 80000;
+    private final Integer AI_MODEL_TOKEN_FAILOVER = 8000000;
     private final Map<String, Template> templates = new HashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final TokenCountEstimator tokenCountEstimator = new JTokkitTokenCountEstimator();
