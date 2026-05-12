@@ -45,7 +45,9 @@ import java.util.stream.Collectors;
 public class CaselawAnalyzerService {
     private final Integer MAX_TOKEN = 100000;
     private final Integer TOKEN_SYSTEM_AND_PROMPT_ESTIMATION;
-    private final String AI_MODEL = "gpt-4o-mini";
+    private final String AI_MODEL_HIGH = "gpt-5.4-mini";
+    private final String AI_MODEL_LOW = "gpt-5.4-nano";
+    private final Integer AI_MODEL_TOKEN_FAILOVER = 80000;
     private final Map<String, Template> templates = new HashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final TokenCountEstimator tokenCountEstimator = new JTokkitTokenCountEstimator();
@@ -172,9 +174,11 @@ public class CaselawAnalyzerService {
             ResponseFormat format = new ResponseFormat(ResponseFormat.Type.JSON_SCHEMA, schema);
             Message systemMessage = new SystemMessage(system);
             Message userMessage = new UserMessage(user);
+
+            final String usedModel = (getSpentTokensToday() > AI_MODEL_TOKEN_FAILOVER) ? AI_MODEL_LOW : AI_MODEL_HIGH;
             OpenAiChatOptions options = OpenAiChatOptions.builder()
                     .responseFormat(ResponseFormat.builder().type(ResponseFormat.Type.JSON_OBJECT).build())
-                    .model(AI_MODEL).build();
+                    .model(usedModel).build();
             Prompt p = new Prompt(List.of(systemMessage, userMessage), options);
             log.info("requesting summary " + (entity != null ? entity.getDocNumber() : "unknown ") + ", approx " + tokenEstimation + " token");
             Instant start = Instant.now();
@@ -190,7 +194,7 @@ public class CaselawAnalyzerService {
                     jsonReturn = objectMapper.readValue(cleanedAi, CaselawSummaryCivilCase.class);
                     Instant done = Instant.now();
                     int duration = (int) (done.toEpochMilli() - start.toEpochMilli());
-                    SummaryAnalysis sa = new SummaryAnalysis(jsonReturn, system, user, removedText, AI_MODEL, duration);
+                    SummaryAnalysis sa = new SummaryAnalysis(jsonReturn, system, user, removedText, usedModel, duration);
                     return sa;
                 } catch (JsonProcessingException e) {
                     if (j == 0) {
