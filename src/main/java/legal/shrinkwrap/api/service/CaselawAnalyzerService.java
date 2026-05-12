@@ -110,7 +110,7 @@ public class CaselawAnalyzerService {
     }
 
     public SummaryAnalysis summarizeCaselaw(String text, CaseLawEntity entity) {
-        boolean isCriminal = entity != null && StringUtils.defaultString(entity.getCaseNumber()).matches("^[\\d]+Os.*");
+        boolean isCriminal = entity != null && StringUtils.defaultString(entity.getCaseNumber()).matches("^[\\d]+(Os|Bs).*");
         boolean isVfGH = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString());
         boolean isVwGH = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.VwGH.toString());
         boolean isBVwG = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.BVwG.toString());
