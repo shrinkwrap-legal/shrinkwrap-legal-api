@@ -35,7 +35,9 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -48,6 +50,9 @@ public class CaselawAnalyzerService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final TokenCountEstimator tokenCountEstimator = new JTokkitTokenCountEstimator();
     JsonSchemaGenerator schemaGen = new JsonSchemaGenerator(objectMapper);
+
+    private final AtomicInteger spentTokensToday = new AtomicInteger();
+    private volatile LocalDate spentTokensDate = LocalDate.now();
 
     private final ChatClient chatClient;
 
@@ -175,6 +180,7 @@ public class CaselawAnalyzerService {
             Instant start = Instant.now();
             for (int j = 0; j < 2; j++) {
                 ChatResponse chatResponse = chatClient.prompt(p).call().chatResponse();
+                trackSpentTokens(chatResponse);
                 String aireturn = chatResponse.getResult().getOutput().getText();
 
                 //sometimes, openai will start with "```"
@@ -348,4 +354,45 @@ public class CaselawAnalyzerService {
     }
 
     public static final record SummaryAnalysis(CaselawSummaryCivilCase summary, String systemPrompt, String userPrompt, String removedFromPrompt, String model, int durationMs) {};
+
+    private void trackSpentTokens(ChatResponse chatResponse) {
+        if (chatResponse == null
+                || chatResponse.getMetadata() == null
+                || chatResponse.getMetadata().getUsage() == null) {
+            return;
+        }
+
+        LocalDate today = LocalDate.now();
+        if (!today.equals(spentTokensDate)) {
+            synchronized (this) {
+                if (!today.equals(spentTokensDate)) {
+                    log.info("AI token usage yesterday: {} token(s), spent today: {} token(s)", spentTokensDate, spentTokensToday);
+                    spentTokensDate = today;
+                    spentTokensToday.set(0);
+                }
+            }
+        }
+
+        Integer totalTokens = chatResponse.getMetadata().getUsage().getTotalTokens();
+        if (totalTokens == null) {
+            return;
+        }
+
+        int totalSpentToday = spentTokensToday.addAndGet(totalTokens);
+        log.info("AI token usage: {} token(s), spent today: {} token(s)", totalTokens, totalSpentToday);
+    }
+
+    public int getSpentTokensToday() {
+        LocalDate today = LocalDate.now();
+        if (!today.equals(spentTokensDate)) {
+            synchronized (this) {
+                if (!today.equals(spentTokensDate)) {
+                    spentTokensDate = today;
+                    spentTokensToday.set(0);
+                }
+            }
+        }
+
+        return spentTokensToday.get();
+    }
 }
