@@ -37,6 +37,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -45,9 +46,11 @@ import java.util.stream.Collectors;
 public class CaselawAnalyzerService {
     private final Integer MAX_TOKEN = 100000;
     private final Integer TOKEN_SYSTEM_AND_PROMPT_ESTIMATION;
+    private final String AI_MODEL_XHIGH = "gpt-5.5";
     private final String AI_MODEL_HIGH = "gpt-5.4-mini";
     private final String AI_MODEL_LOW = "gpt-5.4-nano";
     private final Integer AI_MODEL_TOKEN_FAILOVER = 8000000;
+    private final Integer AI_MODEL_XHIGH_FAILOVER = 800000;
     private final Map<String, Template> templates = new HashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final TokenCountEstimator tokenCountEstimator = new JTokkitTokenCountEstimator();
@@ -55,6 +58,7 @@ public class CaselawAnalyzerService {
 
     private final AtomicInteger spentTokensToday = new AtomicInteger();
     private volatile LocalDate spentTokensDate = LocalDate.now();
+    private final AtomicBoolean runningMoreThanOneDay = new AtomicBoolean(false);
 
     private final ChatClient chatClient;
 
@@ -175,7 +179,20 @@ public class CaselawAnalyzerService {
             Message systemMessage = new SystemMessage(system);
             Message userMessage = new UserMessage(user);
 
-            final String usedModel = (getSpentTokensToday() > AI_MODEL_TOKEN_FAILOVER) ? AI_MODEL_LOW : AI_MODEL_HIGH;
+            final String usedModel;
+            if ((isRunningMoreThanOneDay()) && (getSpentTokensToday() + tokenEstimation) < AI_MODEL_XHIGH_FAILOVER) {
+                usedModel = AI_MODEL_XHIGH;
+            }
+            else if ((getSpentTokensToday() + tokenEstimation) < AI_MODEL_TOKEN_FAILOVER) {
+                usedModel = AI_MODEL_HIGH;
+            }
+            else {
+                usedModel = AI_MODEL_LOW;
+            }
+
+            //track the estimated token first, then account with the real amount
+            trackSpentTokens(tokenEstimation);
+
             OpenAiChatOptions options = OpenAiChatOptions.builder()
                     .responseFormat(ResponseFormat.builder().type(ResponseFormat.Type.JSON_OBJECT).build())
                     .model(usedModel).build();
@@ -184,7 +201,13 @@ public class CaselawAnalyzerService {
             Instant start = Instant.now();
             for (int j = 0; j < 2; j++) {
                 ChatResponse chatResponse = chatClient.prompt(p).call().chatResponse();
-                trackSpentTokens(chatResponse);
+
+                //account for token estimation
+                if (j==0) {
+                    trackSpentTokens(-tokenEstimation);
+                }
+
+                trackSpentTokens(chatResponse.getMetadata().getUsage().getTotalTokens());
                 String aireturn = chatResponse.getResult().getOutput().getText();
 
                 //sometimes, openai will start with "```"
@@ -359,44 +382,34 @@ public class CaselawAnalyzerService {
 
     public static final record SummaryAnalysis(CaselawSummaryCivilCase summary, String systemPrompt, String userPrompt, String removedFromPrompt, String model, int durationMs) {};
 
-    private void trackSpentTokens(ChatResponse chatResponse) {
-        if (chatResponse == null
-                || chatResponse.getMetadata() == null
-                || chatResponse.getMetadata().getUsage() == null) {
-            return;
-        }
+    private void trackSpentTokens(int token) {
+        checkCurrentDay();
 
-        LocalDate today = LocalDate.now();
-        if (!today.equals(spentTokensDate)) {
-            synchronized (this) {
-                if (!today.equals(spentTokensDate)) {
-                    log.info("AI token usage yesterday: {} token(s), spent today: {} token(s)", spentTokensDate, spentTokensToday);
-                    spentTokensDate = today;
-                    spentTokensToday.set(0);
-                }
-            }
-        }
-
-        Integer totalTokens = chatResponse.getMetadata().getUsage().getTotalTokens();
-        if (totalTokens == null) {
-            return;
-        }
-
-        int totalSpentToday = spentTokensToday.addAndGet(totalTokens);
-        log.info("AI token usage: {} token(s), spent today: {} token(s)", totalTokens, totalSpentToday);
+        int totalSpentToday = spentTokensToday.addAndGet(token);
+        log.info("AI token usage: {} token(s), spent today: {} token(s)", token, totalSpentToday);
     }
 
     public int getSpentTokensToday() {
+        checkCurrentDay();
+        return spentTokensToday.get();
+    }
+
+    public boolean isRunningMoreThanOneDay() {
+        checkCurrentDay();
+        return runningMoreThanOneDay.get();
+    }
+
+    private void checkCurrentDay() {
         LocalDate today = LocalDate.now();
         if (!today.equals(spentTokensDate)) {
             synchronized (this) {
                 if (!today.equals(spentTokensDate)) {
+                    log.info("AI token usage yesterday {}: {} token(s)", spentTokensDate, spentTokensToday);
                     spentTokensDate = today;
                     spentTokensToday.set(0);
+                    runningMoreThanOneDay.set(true);
                 }
             }
         }
-
-        return spentTokensToday.get();
     }
 }
