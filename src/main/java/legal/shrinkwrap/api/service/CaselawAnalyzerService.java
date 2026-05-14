@@ -193,9 +193,16 @@ public class CaselawAnalyzerService {
             //track the estimated token first, then account with the real amount
             trackSpentTokens(tokenEstimation);
 
-            OpenAiChatOptions options = OpenAiChatOptions.builder()
+            OpenAiChatOptions.Builder optionsBuilder = OpenAiChatOptions.builder()
+                    .temperature(1D)
                     .responseFormat(ResponseFormat.builder().type(ResponseFormat.Type.JSON_OBJECT).build())
-                    .model(usedModel).build();
+                    .model(usedModel);
+
+            if (usedModel.equals(AI_MODEL_XHIGH)) {
+                optionsBuilder.reasoningEffort("none");
+            }
+
+            OpenAiChatOptions options = optionsBuilder.build();
             Prompt p = new Prompt(List.of(systemMessage, userMessage), options);
             log.info("requesting summary " + (entity != null ? entity.getDocNumber() : "unknown ") + ", approx " + tokenEstimation + " token");
             Instant start = Instant.now();
