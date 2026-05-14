@@ -11,6 +11,8 @@ public interface DocumentService {
 
     CaseLawResponseDto getDocument(CaseLawRequestDto caseLawRequestDto);
 
+    CaseLawResponseDto getDocumentForEntity(CaseLawEntity caseLawEntity, boolean includePrompts);
+
     CaseLawEntity downloadCaseLaw(CaseLawRequestDto requestDto);
 
     CaseLawDataset getCaselawDatasetForECLI(String ecli);

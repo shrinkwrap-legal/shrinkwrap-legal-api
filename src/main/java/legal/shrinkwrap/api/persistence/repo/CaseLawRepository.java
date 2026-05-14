@@ -16,4 +16,7 @@ public interface CaseLawRepository  extends JpaRepository<CaseLawEntity, Long> {
 
     @Query("SELECT c FROM CaseLawEntity c WHERE NOT EXISTS (SELECT a FROM CaseLawAnalysisEntity a WHERE a.caseLaw = c)")
     Page<CaseLawEntity> findCaseLawWithoutAnalysis(Pageable pageable);
+
+    @Query("SELECT c FROM CaseLawEntity c WHERE NOT EXISTS (SELECT a FROM CaseLawAnalysisEntity a WHERE a.caseLaw = c AND a.analysisType = 'summary') and c.court = :court")
+    Page<CaseLawEntity> findCaseLawWithoutSummary(Pageable pageable, String court);
 }

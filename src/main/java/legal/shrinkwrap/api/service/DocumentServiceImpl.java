@@ -82,8 +82,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public CaseLawResponseDto getDocument(CaseLawRequestDto requestDto) {
-        CaseLawResponseDto ret = new CaseLawResponseDto();
-        CaseLawEntity caseLawEntity = null;
+        CaseLawEntity caseLawEntity;
         Optional<CaseLawEntity> dbEntity = Optional.empty();
 
         //try loading from repository
@@ -106,6 +105,12 @@ public class DocumentServiceImpl implements DocumentService {
             caseLawEntity = dbEntity.get();
         }
 
+        return getDocumentForEntity(caseLawEntity, requestDto.includePrompts() != null ? requestDto.includePrompts() : false);
+    }
+
+    @Override
+    public CaseLawResponseDto getDocumentForEntity(CaseLawEntity caseLawEntity, boolean includePrompts) {
+        CaseLawResponseDto ret = new CaseLawResponseDto();
         CaseLawMetadataDto metadata = new CaseLawMetadataDto();
         metadata.setUrl(caseLawEntity.getUrl());
         metadata.setEcli(caseLawEntity.getEcli());
@@ -144,7 +149,7 @@ public class DocumentServiceImpl implements DocumentService {
                     if (!locksByCaselawId.contains(caseLawId)) {
                         break;
                     }
-                    log.info("trying to acquire lock " + i + " for " + requestDto);
+                    log.info("trying to acquire lock " + i + " for " + caseLawEntity.getCaseNumber());
                 }
 
             } catch (InterruptedException e) {
@@ -218,7 +223,7 @@ public class DocumentServiceImpl implements DocumentService {
                     ret.setSummaryType("civilCase");
                     ret.setSummary(summaryObj);
 
-                    if (requestDto.includePrompts() != null && requestDto.includePrompts() == true) {
+                    if (includePrompts == true) {
                         CaseLawSummaryPromptsDto prompts = new CaseLawSummaryPromptsDto();
                         prompts.setUserPrompt(summary.get().getUserPrompt());
                         prompts.setSystemPrompt(summary.get().getSystemPrompt());
