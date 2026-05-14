@@ -106,9 +106,10 @@ public class CaseLawImporter {
     public void doSummariesForCases() {
         final String court = "OGH";
         final int maxParallel = 2;
+        final int pageSize = 100;
         AtomicInteger completedTasks = new AtomicInteger(0);
 
-        Page<CaseLawEntity> caseLawsWithoutSummary = caseLawRepository.findCaseLawWithoutSummary(PageRequest.of(0, 100), court);
+        Page<CaseLawEntity> caseLawsWithoutSummary = caseLawRepository.findCaseLawWithoutSummary(PageRequest.of(0, pageSize), court);
 
         log.info("Starting summary generation for {} cases without summary", caseLawsWithoutSummary.getTotalElements());
 
@@ -134,47 +135,57 @@ public class CaseLawImporter {
             }
         };
 
-        //execute at most 10 at once
-        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            var completionService = new ExecutorCompletionService<Boolean>(executor);
-            Iterator<CaseLawEntity> iterator = caseLawsWithoutSummary.iterator();
+        boolean shouldStop = false;
+        long totalCasesWithoutSummary = caseLawsWithoutSummary.getTotalElements();
 
-            int runningTasks = 0;
-            boolean shouldStop = false;
+        while (!shouldStop && caseLawsWithoutSummary.hasContent()) {
+            //execute at most 10 at once
+            try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+                var completionService = new ExecutorCompletionService<Boolean>(executor);
+                Iterator<CaseLawEntity> iterator = caseLawsWithoutSummary.iterator();
 
-            while (runningTasks < maxParallel && iterator.hasNext()) {
-                CaseLawEntity caseLaw = iterator.next();
-                completionService.submit(() -> fct.apply(caseLaw));
-                runningTasks++;
-            }
+                int runningTasks = 0;
 
-            while (runningTasks > 0 && !shouldStop) {
-                try {
-                    Boolean result = completionService.take().get();
-                    runningTasks--;
+                while (runningTasks < maxParallel && iterator.hasNext()) {
+                    CaseLawEntity caseLaw = iterator.next();
+                    completionService.submit(() -> fct.apply(caseLaw));
+                    runningTasks++;
+                }
 
-                    if (Boolean.FALSE.equals(result)) {
-                        shouldStop = true;
+                while (runningTasks > 0 && !shouldStop) {
+                    try {
+                        Boolean result = completionService.take().get();
+                        runningTasks--;
+
+                        if (Boolean.FALSE.equals(result)) {
+                            shouldStop = true;
+                            executor.shutdown();
+                            break;
+                        }
+
+                        if (iterator.hasNext()) {
+                            CaseLawEntity caseLaw = iterator.next();
+                            completionService.submit(() -> fct.apply(caseLaw));
+                            runningTasks++;
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
                         executor.shutdown();
+                        shouldStop = true;
                         break;
+                    } catch (ExecutionException e) {
+                        log.error("Failed to create case law summary", e);
+                        runningTasks--;
                     }
-
-                    if (iterator.hasNext()) {
-                        CaseLawEntity caseLaw = iterator.next();
-                        completionService.submit(() -> fct.apply(caseLaw));
-                        runningTasks++;
-                    }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    executor.shutdown();
-                    break;
-                } catch (ExecutionException e) {
-                    log.error("Failed to create case law summary", e);
-                    runningTasks--;
                 }
             }
 
-            log.info("Completed {} tasks out of {}", completedTasks.get(), caseLawsWithoutSummary.getTotalElements());
+            if (!shouldStop) {
+                caseLawsWithoutSummary = caseLawRepository.findCaseLawWithoutSummary(PageRequest.of(0, pageSize), court);
+                totalCasesWithoutSummary = Math.max(totalCasesWithoutSummary, completedTasks.get() + caseLawsWithoutSummary.getTotalElements());
+            }
         }
+
+        log.info("Completed {} tasks out of {}", completedTasks.get(), totalCasesWithoutSummary);
     }
 }
