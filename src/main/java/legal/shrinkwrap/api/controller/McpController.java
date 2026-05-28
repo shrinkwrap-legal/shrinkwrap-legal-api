@@ -1,7 +1,7 @@
 package legal.shrinkwrap.api.controller;
 
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
-import legal.shrinkwrap.api.dto.CaseLawRequestDto;
+import legal.shrinkwrap.api.dto.CaseLawFullTextDto;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
 import legal.shrinkwrap.api.service.DocumentService;
 import org.slf4j.Logger;
@@ -9,11 +9,10 @@ import org.slf4j.LoggerFactory;
 import org.springaicommunity.mcp.annotation.McpMeta;
 import org.springaicommunity.mcp.annotation.McpTool;
 import org.springaicommunity.mcp.annotation.McpToolParam;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @Controller
 public class McpController {
@@ -25,31 +24,50 @@ public class McpController {
         this.documentService = documentService;
     }
 
-    @McpTool(description = "Make a full-text search thorugh austrian judicature. This function will return some metadata on found cases, as well as an AI generated summary of the case. The full text of the case will be returned if requested - as it can be quite long, the word" +
-            " count of the full text will also be returned.")
-    public CaseLawResponseDto get(
-            @McpToolParam(description = "The court which should be searched. For civil cases, use 'Justiz' which includes the OGH, OLG, LG and Bezirksgerichte. Other courts are the high constitutional court (VfGH), the high administrative court (VwGH), and lower " +
-                    "administrativ courts (BVwG for cases which fall into Austrias federal competences i.e. asylum, and LVwG for cases which fall into the competences of the states), and the data protection authority ") RisCourt court,
-            @McpToolParam (description = "The full text search query. It is using Postgresql ts_vector for the search, and will pass the query to the websearch_to_tsquery postgres function") String searchQuery,
+    @McpTool(name = "search_austrian_case_law",
+            description = """
+                          Search Austrian case law using full-text search.
+              
+                          Returns matching cases with metadata, an AI-generated summary, and the full-text word count.
+                          Does not return the full text itself. To retrieve the full text, call getCaseLawFullTextByEcli
+                          with the ECLI from a search result.
+              
+                          Recommended agent workflow:
+                          1. Start with specific German legal terms where possible.
+                          2. Search recent decisions first, for example the last 10 years.
+                          3. If no relevant results are found, broaden the search query or expand the date range.
+                          4. Retrieve full text only for cases that appear relevant from their metadata and summary.
+                          """)
+    public List<CaseLawResponseDto> searchAustrianCaseLaw(
+            @McpToolParam(description = "The 'RIS' application which should be searched. For civil cases, use 'Justiz' which includes the OGH, OLG, LG and Bezirksgerichte. Other courts are the high constitutional court (VfGH), the high administrative court (VwGH), and lower " +
+                    "administrativ courts (BVwG for cases which fall into Austria's federal competences i.e. asylum, and LVwG for cases which fall into the competences of the states), and the data protection authority ") RisCourt court,
+            @McpToolParam (description = """
+                    Full-text search query.
+                    
+                    The query is passed to PostgreSQL websearch_to_tsquery, so you may combine search terms
+                    Prefer concise German legal terms, party-neutral descriptions, statutes, legal concepts,
+                    or distinctive phrases. Avoid overly long natural-language questions.
+                    """
+            ) String searchQuery,
+            @McpToolParam (description = "The earliest decision date that should be included. It is recommended to start looking with later decisions and only expand the search if no results are found. A good initial timespan may be 10 years from the current date. Can be omitted. Use ISO-8601 format: YYYY-MM-DD") LocalDate earliestDecisionDate,
+            @McpToolParam (description = "The latest decision date that should be included. It is recommended to start looking with later decisions and only expand the search if no results are found. A good initial timespan may be 10 years from the current date. Can be omitted. Use ISO-8601 format: YYYY-MM-DD") LocalDate latestDecisionDate,
             McpMeta meta) {
         //alternative method, having court and docNumber as path variables
-        //CaseLawRequestDto requestDto = new CaseLawRequestDto(
-       return null;
+
+        List<CaseLawResponseDto> caseLaw = documentService.findCaseLaw(searchQuery, court, earliestDecisionDate, latestDecisionDate);
+        return caseLaw;
     }
 
-    /*@McpTool
-    public CaseLawResponseDto get(
-            @McpToolParam(description = "The case number of the case. For example, 6Ob237/21b, 14Ns18/26x, 4R34/26w, W268 2309713-1, 89/01/0061, LVwG-2025/19/1696-5. For VwGH ") String docNumber,
-            @RequestParam(value = "includePrompts", required = false) Boolean includePrompts) {
-        //alternative method, having court and docNumber as path variables
-        CaseLawRequestDto requestDto = new CaseLawRequestDto(
-                null,
-                docNumber,
-                null,
-                null,
-                true,
-                includePrompts
-        );
-        return documentService.getDocument(requestDto);
-    }*/
+    @McpTool(name = "retrieve_case_law_full_text_by_ecli",
+            description = """
+            Retrieve the full text of a single Austrian case-law decision by ECLI.
+
+            Use this after searchAustrianCaseLaw has returned a relevant case.
+            The returned text may be long as indicated in the wordCount property of the caseLaw Metadata.
+            """)
+    public CaseLawFullTextDto getCaseLawFullTextByEcli(@McpToolParam(description = "The European Case-Law Identifier of the relevant case") String ecli) {
+
+        return documentService.getFullTextForEcli(ecli);
+    }
+
 }

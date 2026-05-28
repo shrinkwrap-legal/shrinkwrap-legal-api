@@ -16,6 +16,17 @@ public class SecurityConfiguration {
                         new CorsConfiguration().applyPermitDefaultValues()
                 )
         );
+
+        http.csrf(csrf -> csrf.ignoringRequestMatchers(
+                "/sse",
+                "/mcp",
+                "/mcp/message"
+        ));
+
+        http.authorizeHttpRequests(authorize -> authorize
+                .requestMatchers("/sse", "/mcp", "/mcp/message").permitAll()
+                .anyRequest().permitAll()
+        );
         return http.build();
     }
 }

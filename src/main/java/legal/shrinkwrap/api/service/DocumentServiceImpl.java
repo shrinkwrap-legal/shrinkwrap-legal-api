@@ -26,8 +26,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
 
@@ -273,6 +275,78 @@ public class DocumentServiceImpl implements DocumentService {
         String cleanHtml = caselawTextService.prepareRISCaseLawHtml(htmlContent);
         entity.setFullCleanHtml(cleanHtml);
         return entity;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CaseLawResponseDto> findCaseLaw(String search, RisCourt court, LocalDate dateFrom, LocalDate dateTo) {
+        String application;
+        switch (court) {
+            case BVwG -> application = "BVwg";
+            case LVwG -> application = "LVwg";
+            case Justiz -> application = "Justiz";
+            case VfGH -> application = "Vfgh";
+            case VwGH -> application = "Vwgh";
+            case DSB -> application = "Dsk";
+            case GBK -> application = "Gbk";
+            default -> application = "Invalid";
+        }
+
+
+        Page<CaseLawAnalysisEntity> matches = caseLawAnalysisRepository.searchPostgresFullText(search, application, dateFrom, dateTo, PageRequest.of(0,50));
+        log.info("Found {} matches for search '{}'", matches.getTotalElements(), search);
+
+
+        //for all found entries, either get analysis entity (if already selected), or sort out
+        // - at this point, we won't create new summaries for AI queries
+        List<CaseLawAnalysisEntity> summaries = matches.get().map(e -> {
+            if (e.getAnalysisType().equals("summary")) {
+                return e;
+            }
+            if (e.getAnalysisType().equals("text")) {
+                Optional<CaseLawAnalysisEntity> summary = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("summary", e.getCaseLaw().getId());
+                if (summary.isPresent()) {
+                    return summary.get();
+                } else {
+                    return null;
+                }
+            }
+            return null;
+        }).filter(e -> e != null).toList();
+        log.info("Found {} summaries for search '{}'", summaries.size(), search);
+
+        //return analysis from here
+        return summaries.stream().map(s -> this.getDocumentForEntity(s.getCaseLaw(), false)).toList();
+    }
+
+    @Override
+    public CaseLawFullTextDto getFullTextForEcli(String ecli) {
+        Optional<CaseLawEntity> dbEntity = caseLawRepository.findCaseLawEntityByEcli(ecli);
+        if (dbEntity.isEmpty()) {
+            return null;
+        }
+
+        CaseLawEntity caseLawEntity = dbEntity.get();
+        CaseLawFullTextDto ret = new CaseLawFullTextDto();
+        CaseLawMetadataDto metadata = new CaseLawMetadataDto();
+        metadata.setUrl(caseLawEntity.getUrl());
+        metadata.setEcli(caseLawEntity.getEcli());
+        metadata.setCaseNumber(caseLawEntity.getCaseNumber());
+        metadata.setCourt(caseLawEntity.getCourt());
+        metadata.setOrgan(caseLawEntity.getOrgan());
+        if (caseLawEntity.getDecisionDate() != null) {
+            Date date = Date.from(caseLawEntity.getDecisionDate().atStartOfDay(ZoneId.of("UTC")).toInstant());
+            metadata.setDecisionDate(date);
+        }
+        metadata.setDecisionType(caseLawEntity.getDecisionType());
+        ret.setMetadata(metadata);
+
+        Optional<CaseLawAnalysisEntity> textEntity = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("text", caseLawEntity.getId());
+        if (textEntity.isPresent()) {
+            ret.setFullText(textEntity.get().getFullText());
+        }
+
+        return ret;
     }
 
     private CaselawAnalyzerService.SummaryAnalysis analyzeCivilCaseLaw(CaseLawEntity caseLawEntity, CaseLawAnalysisEntity textEntity) {
