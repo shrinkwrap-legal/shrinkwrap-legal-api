@@ -282,8 +282,8 @@ public class DocumentServiceImpl implements DocumentService {
     public List<CaseLawResponseDto> findCaseLaw(String search, RisCourt court, LocalDate dateFrom, LocalDate dateTo) {
         String application;
         switch (court) {
-            case BVwG -> application = "BVwg";
-            case LVwG -> application = "LVwg";
+            case BVwG -> application = "Bvwg";
+            case LVwG -> application = "Lvwg";
             case Justiz -> application = "Justiz";
             case VfGH -> application = "Vfgh";
             case VwGH -> application = "Vwgh";
@@ -294,7 +294,7 @@ public class DocumentServiceImpl implements DocumentService {
 
 
         Page<CaseLawAnalysisEntity> matches = caseLawAnalysisRepository.searchPostgresFullText(search, application, dateFrom, dateTo, PageRequest.of(0,50));
-        log.info("Found {} matches for search '{}'", matches.getTotalElements(), search);
+        log.info("Found {} matches for {} search '{}'", matches.getTotalElements(), application, search);
 
 
         //for all found entries, either get analysis entity (if already selected), or sort out
@@ -325,6 +325,8 @@ public class DocumentServiceImpl implements DocumentService {
         if (dbEntity.isEmpty()) {
             return null;
         }
+
+        log.info("Retrieving full text for ECLI: {}", ecli);
 
         CaseLawEntity caseLawEntity = dbEntity.get();
         CaseLawFullTextDto ret = new CaseLawFullTextDto();
