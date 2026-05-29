@@ -31,13 +31,21 @@ public class McpController {
                           Returns matching cases with metadata, an AI-generated summary, and the full-text word count.
                           Does not return the full text itself. To retrieve the full text, call getCaseLawFullTextByEcli
                           with the ECLI from a search result.
+                          The AI summary may misrepresent the judgment, so it should be verified against the full text. But
+                          it can serve as a first indication on the relevance of the case.
               
                           Recommended agent workflow:
                           1. Start with specific German legal terms where possible.
                           2. Search recent decisions first, for example the last 10 years.
                           3. If no relevant results are found, broaden the search query or expand the date range.
                           4. Retrieve full text only for cases that appear relevant from their metadata and summary.
-                          """)
+                          """,
+            annotations = @McpTool.McpAnnotations(
+                    title = "Search for relevant Austrian Judicature",
+                    readOnlyHint = true,
+                    destructiveHint = false,
+                    idempotentHint = true
+            ))
     public List<CaseLawResponseDto> searchAustrianCaseLaw(
             @McpToolParam(description = "The 'RIS' application which should be searched. For civil cases, use 'Justiz' which includes the OGH, OLG, LG and Bezirksgerichte. Other courts are the high constitutional court (VfGH), the high administrative court (VwGH), and lower " +
                     "administrativ courts (BVwG for cases which fall into Austria's federal competences i.e. asylum, and LVwG for cases which fall into the competences of the states), and the data protection authority ") RisCourt court,
@@ -49,8 +57,18 @@ public class McpController {
                     or distinctive phrases. Avoid overly long natural-language questions.
                     """
             ) String searchQuery,
-            @McpToolParam (description = "The earliest decision date that should be included. It is recommended to start looking with later decisions and only expand the search if no results are found. A good initial timespan may be 10 years from the current date. Can be omitted. Use ISO-8601 format: YYYY-MM-DD") LocalDate earliestDecisionDate,
-            @McpToolParam (description = "The latest decision date that should be included. It is recommended to start looking with later decisions and only expand the search if no results are found. A good initial timespan may be 10 years from the current date. Can be omitted. Use ISO-8601 format: YYYY-MM-DD") LocalDate latestDecisionDate,
+            @McpToolParam(description = """
+                    The earliest decision date that should be included.
+                    It is recommended to start looking with later decisions and only expand the search if no results are found. 
+                    A good initial timespan may be 10 years from the current date. 
+                    Use ISO-8601 format: YYYY-MM-DD
+                    """) LocalDate earliestDecisionDate,
+            @McpToolParam(description = """
+                    The latest decision date that should be included. 
+                    It is recommended to start looking with later decisions and only expand the search if no results are found. 
+                    A good initial timespan may be 10 years from the current date. 
+                    Use ISO-8601 format: YYYY-MM-DD
+                    """) LocalDate latestDecisionDate,
             McpMeta meta) {
         //alternative method, having court and docNumber as path variables
 
@@ -64,7 +82,13 @@ public class McpController {
 
             Use this after searchAustrianCaseLaw has returned a relevant case.
             The returned text may be long as indicated in the wordCount property of the caseLaw Metadata.
-            """)
+            """,
+            annotations = @McpTool.McpAnnotations(
+                    title = "Get the text representation fo a single judgement",
+                    readOnlyHint = true,
+                    destructiveHint = false,
+                    idempotentHint = true
+            ))
     public CaseLawFullTextDto getCaseLawFullTextByEcli(@McpToolParam(description = "The European Case-Law Identifier of the relevant case") String ecli) {
 
         return documentService.getFullTextForEcli(ecli);
