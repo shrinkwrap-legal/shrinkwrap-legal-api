@@ -86,6 +86,7 @@ public class McpController {
         //schema validation needs every "null" to be an empty string.
         ret.getSearchResults().forEach((e) -> {
             if (e.getSummary() != null) {
+                e.getSummary().setEugh(e.getSummary().getEugh() != null && e.getSummary().getEugh());
                 e.getSummary().setArt(Strings.nullToEmpty(e.getSummary().getArt()));
                 e.getSummary().setAusgang(Strings.nullToEmpty(e.getSummary().getAusgang()));
                 e.getSummary().setRechtsmittel(Strings.nullToEmpty(e.getSummary().getRechtsmittel()));
