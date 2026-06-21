@@ -49,6 +49,7 @@ public class CaselawAnalyzerService {
     private final String AI_MODEL_XHIGH = "gpt-5.5";
     private final String AI_MODEL_HIGH = "gpt-5.4-mini";
     private final String AI_MODEL_LOW = "gpt-5.4-nano";
+    public static final Integer AI_MODEL_MAX_DAILY          = 20000000;
     public static final Integer AI_MODEL_FILL_DAILY_TOKENS  =  9500000;
     private final Integer AI_MODEL_TOKEN_FAILOVER           =  9500000;
     private final Integer AI_MODEL_XHIGH_FAILOVER           =   950000;
@@ -189,6 +190,11 @@ public class CaselawAnalyzerService {
             }
             else {
                 usedModel = AI_MODEL_LOW;
+            }
+
+            if ((getSpentTokensToday() + tokenEstimation) > AI_MODEL_MAX_DAILY) {
+                log.error("max daily token limit reached");
+                return null;
             }
 
             //track the estimated token first, then account with the real amount
