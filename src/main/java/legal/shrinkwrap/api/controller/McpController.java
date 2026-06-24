@@ -95,6 +95,7 @@ public class McpController {
                 e.getSummary().setSachverhalt(Strings.nullToEmpty(e.getSummary().getSachverhalt()));
                 e.getSummary().setBegehren(Strings.nullToEmpty(e.getSummary().getBegehren()));
                 e.getSummary().setGegenvorbringen(Strings.nullToEmpty(e.getSummary().getGegenvorbringen()));
+                e.getSummary().setEntscheidung_gericht(Strings.nullToEmpty(e.getSummary().getEntscheidung_gericht()));
                 e.getSummary().setBerufende_partei(Strings.nullToEmpty(e.getSummary().getBerufende_partei()));
                 e.getSummary().setZusammenfassung_3_saetze(Strings.nullToEmpty(e.getSummary().getZusammenfassung_3_saetze()));
                 e.getSummary().setZeitungstitel_boulevard(Strings.nullToEmpty(e.getSummary().getZeitungstitel_boulevard()));
@@ -102,11 +103,14 @@ public class McpController {
                 e.getSummary().setZeitungstitel_oeffentlich(Strings.nullToEmpty(e.getSummary().getZeitungstitel_oeffentlich()));
                 e.getSummary().setHauptrechtsgebiete(ListUtils.emptyIfNull(e.getSummary().getHauptrechtsgebiete()));
                 e.getSummary().setUnterrechtsgebiete(ListUtils.emptyIfNull(e.getSummary().getUnterrechtsgebiete()));
+                e.getSummary().setSchlussfolgerungen(ListUtils.emptyIfNull(e.getSummary().getSchlussfolgerungen()));
+                e.getSummary().setWichtige_normen(ListUtils.emptyIfNull(e.getSummary().getWichtige_normen()));
+                e.getSummary().setZusammenfassung_3_absaetze(ListUtils.emptyIfNull(e.getSummary().getZusammenfassung_3_absaetze()));
             }
             if (e.getMetadata() != null) {
                 e.getMetadata().setOrgan(Strings.nullToEmpty(e.getMetadata().getOrgan()));
                 e.getMetadata().setCourt(Strings.nullToEmpty(e.getMetadata().getCourt()));
-                e.getMetadata().setCaseNumber(Strings.nullToEmpty(e.getMetadata().getCaseNumber()));
+                e.getMetadata().setCaseNumber(Strings.nullToEmpty(e.getMetadata().getCaseNumber()).trim());
                 e.getMetadata().setDecisionType(Strings.nullToEmpty(e.getMetadata().getDecisionType()));
                 e.getMetadata().setEcli(Strings.nullToEmpty(e.getMetadata().getEcli()));
 
