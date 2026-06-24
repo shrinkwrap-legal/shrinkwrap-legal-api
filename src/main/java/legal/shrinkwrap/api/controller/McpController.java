@@ -7,6 +7,7 @@ import legal.shrinkwrap.api.dto.CaseLawMetadataDto;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
 import legal.shrinkwrap.api.dto.CaseLawSearchResponseDto;
 import legal.shrinkwrap.api.service.DocumentService;
+import org.apache.commons.collections4.ListUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springaicommunity.mcp.annotation.McpMeta;
@@ -99,6 +100,8 @@ public class McpController {
                 e.getSummary().setZeitungstitel_boulevard(Strings.nullToEmpty(e.getSummary().getZeitungstitel_boulevard()));
                 e.getSummary().setZeitungstitel_rechtszeitschrift(Strings.nullToEmpty(e.getSummary().getZeitungstitel_rechtszeitschrift()));
                 e.getSummary().setZeitungstitel_oeffentlich(Strings.nullToEmpty(e.getSummary().getZeitungstitel_oeffentlich()));
+                e.getSummary().setHauptrechtsgebiete(ListUtils.emptyIfNull(e.getSummary().getHauptrechtsgebiete()));
+                e.getSummary().setUnterrechtsgebiete(ListUtils.emptyIfNull(e.getSummary().getUnterrechtsgebiete()));
             }
             if (e.getMetadata() != null) {
                 e.getMetadata().setOrgan(Strings.nullToEmpty(e.getMetadata().getOrgan()));
@@ -129,7 +132,16 @@ public class McpController {
     generateOutputSchema = true)
     public CaseLawFullTextDto getCaseLawFullTextByEcli(@McpToolParam(description = "The European Case-Law Identifier of the relevant case") String ecli) {
 
-        return documentService.getFullTextForEcli(ecli);
+        CaseLawFullTextDto e = documentService.getFullTextForEcli(ecli);
+        if (e.getMetadata() != null) {
+            e.getMetadata().setOrgan(Strings.nullToEmpty(e.getMetadata().getOrgan()));
+            e.getMetadata().setCourt(Strings.nullToEmpty(e.getMetadata().getCourt()));
+            e.getMetadata().setCaseNumber(Strings.nullToEmpty(e.getMetadata().getCaseNumber()));
+            e.getMetadata().setDecisionType(Strings.nullToEmpty(e.getMetadata().getDecisionType()));
+            e.getMetadata().setEcli(Strings.nullToEmpty(e.getMetadata().getEcli()));
+
+        }
+        return e;
     }
 
 }
