@@ -142,6 +142,7 @@ public class McpController {
             e.getMetadata().setCourt(Strings.nullToEmpty(e.getMetadata().getCourt()));
             e.getMetadata().setCaseNumber(Strings.nullToEmpty(e.getMetadata().getCaseNumber()));
             e.getMetadata().setDecisionType(Strings.nullToEmpty(e.getMetadata().getDecisionType()));
+            e.getMetadata().setCaseNumber(Strings.nullToEmpty(e.getMetadata().getCaseNumber()).trim());
             e.getMetadata().setEcli(Strings.nullToEmpty(e.getMetadata().getEcli()));
 
         }
