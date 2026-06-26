@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Slf4j
@@ -57,7 +58,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private final HashSet<Long> locksByCaselawId = new HashSet<>();
+    private final Set<Long> locksByCaselawId = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     @Value("${download-missing-judicature}")
     private Boolean downloadMissing;
@@ -143,12 +144,13 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
         long caseLawId = identicalCaseLawEntity != null ? identicalCaseLawEntity.getId() : caseLawEntity.getId();
-        if (locksByCaselawId.contains(caseLawId)) {
+        boolean isBeingProcessed = !locksByCaselawId.add(caseLawId);
+        if (isBeingProcessed) {
             try {
                 //try for 120s, then do it anyway
                 for (int i = 0; i < 10 * 120; i++) {
                     Thread.sleep(100);
-                    if (!locksByCaselawId.contains(caseLawId)) {
+                    if (locksByCaselawId.add(caseLawId)) {
                         break;
                     }
                     log.info("trying to acquire lock " + i + " for " + caseLawEntity.getCaseNumber());
@@ -163,8 +165,6 @@ public class DocumentServiceImpl implements DocumentService {
                     summary = caseLawAnalysisRepository.findFirstByAnalysisTypeAndCaseLaw_IdOrderByAnalysisVersionDesc("summary", identicalCaseLawEntity.getId());
                 }
             }
-        } else {
-            locksByCaselawId.add(caseLawId);
         }
 
         try {
