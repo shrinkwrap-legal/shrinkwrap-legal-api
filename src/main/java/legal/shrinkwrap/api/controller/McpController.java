@@ -137,6 +137,9 @@ public class McpController {
     public CaseLawFullTextDto getCaseLawFullTextByEcli(@McpToolParam(description = "The European Case-Law Identifier of the relevant case") String ecli) {
 
         CaseLawFullTextDto e = documentService.getFullTextForEcli(ecli);
+        if (e == null) {
+            return null;
+        }
         if (e.getMetadata() != null) {
             e.getMetadata().setOrgan(Strings.nullToEmpty(e.getMetadata().getOrgan()));
             e.getMetadata().setCourt(Strings.nullToEmpty(e.getMetadata().getCourt()));
