@@ -27,8 +27,8 @@ public interface CaseLawAnalysisRepository extends JpaRepository<CaseLawAnalysis
         INNER JOIN caselaw c ON ca.case_law_id = c.id 
         WHERE ca.search_vector @@ plainto_tsquery('german', :query) 
                 AND (CAST(:applicationType AS text) IS NULL OR c.application_type = :applicationType) 
-                AND (CAST(:dateFrom AS date) IS NULL OR c.decision_date > :dateFrom) 
-                AND (CAST(:dateTo AS date) IS NULL OR c.decision_date < :dateTo) 
+                AND (CAST(:dateFrom AS date) IS NULL OR c.decision_date >= :dateFrom)
+                AND (CAST(:dateTo AS date) IS NULL OR c.decision_date <= :dateTo)
         ORDER BY ts_rank(ca.search_vector, plainto_tsquery('german', :query)) DESC 
         """, nativeQuery = true)
     Page<CaseLawAnalysisEntity> searchPostgresFullText(@Param("query") String query, @Param("applicationType") String applicationType, @Param("dateFrom") LocalDate dateFrom, @Param("dateTo") LocalDate dateTo, Pageable pageable);
