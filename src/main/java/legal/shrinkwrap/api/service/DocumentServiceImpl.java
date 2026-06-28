@@ -315,8 +315,19 @@ public class DocumentServiceImpl implements DocumentService {
         }).filter(e -> e != null).toList();
         log.info("Found {} summaries for search '{}'", summaries.size(), search);
 
+        //deduplicate by case law: a single case has multiple analysis rows (e.g. its full text and
+        // its summary, possibly several versions). When more than one matches the query, the steps
+        // above resolve them all to the same summary, which would otherwise yield duplicate results.
+        Set<Long> seenCaseLawIds = new LinkedHashSet<>();
+        List<CaseLawAnalysisEntity> uniqueSummaries = summaries.stream()
+                .filter(s -> seenCaseLawIds.add(s.getCaseLaw().getId()))
+                .toList();
+        if (uniqueSummaries.size() != summaries.size()) {
+            log.info("Deduplicated {} summaries to {} unique cases for search '{}'", summaries.size(), uniqueSummaries.size(), search);
+        }
+
         //return analysis from here
-        return summaries.stream().map(s -> this.getDocumentForEntity(s.getCaseLaw(), false)).toList();
+        return uniqueSummaries.stream().map(s -> this.getDocumentForEntity(s.getCaseLaw(), false)).toList();
     }
 
     @Override
