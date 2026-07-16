@@ -3,6 +3,7 @@ package legal.shrinkwrap.api.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
+import legal.shrinkwrap.api.config.TestcontainersConfiguration;
 import legal.shrinkwrap.api.dto.CaseLawRequestDto;
 import legal.shrinkwrap.api.dto.CaselawSummaryCivilCase;
 import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
@@ -11,6 +12,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.io.IOException;
 import java.net.URL;
@@ -18,6 +21,8 @@ import java.nio.charset.StandardCharsets;
 
 @SpringBootTest
 @Tag("integration")
+@ActiveProfiles("test")
+@Import(TestcontainersConfiguration.class)
 class CaseLawEmbeddingServiceTest {
     @Autowired
     private CaselawAnalyzerService caselawAnalyzerService;

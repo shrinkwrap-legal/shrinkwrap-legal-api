@@ -6,6 +6,7 @@ import legal.shrinkwrap.api.adapter.ris.RisSearchParameterCaseLaw;
 import legal.shrinkwrap.api.adapter.ris.RisSoapAdapter;
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
+import legal.shrinkwrap.api.config.TestcontainersConfiguration;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
 import legal.shrinkwrap.api.dto.CaseLawRequestDto;
 import legal.shrinkwrap.api.persistence.entity.CaseLawAnalysisEntity;
@@ -14,13 +15,16 @@ import legal.shrinkwrap.api.persistence.repo.CaseLawAnalysisRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@ActiveProfiles("test")
 @SpringBootTest
+@Import(TestcontainersConfiguration.class)
 class DocumentServiceImplTest extends SpringTest {
 
     @Autowired
