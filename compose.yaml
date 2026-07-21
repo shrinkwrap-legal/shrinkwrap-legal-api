@@ -10,6 +10,11 @@ services:
     restart: unless-stopped
     volumes:
       - /mnt/volume-shrinkwrap/postgresql/data:/var/lib/postgresql/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "14"
   api:
     build:
       context: ./
@@ -21,3 +26,10 @@ services:
     restart: unless-stopped
     depends_on:
       - database
+    volumes:
+      - ./logs:/app/logs
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "14"
