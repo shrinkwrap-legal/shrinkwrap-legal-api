@@ -15,6 +15,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +27,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Year;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
@@ -104,45 +109,76 @@ public class CaseLawImporter {
 
     @Scheduled(cron = "0 30 22 * * *")
     public void doSummariesForCases() {
-        final String court = "OGH";
+        doSummariesForCases(List.of("OGH"));
+    }
+
+    public void doSummariesForCases(Collection<String> courts) {
+        if (courts == null || courts.isEmpty()) {
+            log.warn("Skipping summary generation, no courts given");
+            return;
+        }
+
         final int maxParallel = 2;
         final int pageSize = 100;
-        AtomicInteger completedTasks = new AtomicInteger(0);
+        //end of the daily time window, taken once so that a run reaching into the next day also stops
+        final LocalDateTime deadline = LocalDateTime.of(LocalDate.now(), LocalTime.of(23, 50));
+        //cases already tried in this run - a failing case stays in the query result and would be retried endlessly
+        final Set<Long> attemptedCaseIds = new HashSet<>();
+        AtomicInteger createdSummaries = new AtomicInteger(0);
+        AtomicInteger failedSummaries = new AtomicInteger(0);
 
-        Page<CaseLawEntity> caseLawsWithoutSummary = caseLawRepository.findCaseLawWithoutSummary(PageRequest.of(0, pageSize), court);
-
-        log.info("Starting summary generation for {} cases without summary", caseLawsWithoutSummary.getTotalElements());
-
-        Function<CaseLawEntity, Boolean> fct= new Function<CaseLawEntity, Boolean>() {
-
-            @Override
-            public Boolean apply(CaseLawEntity entity) {
-                //check if token limit still not reached
-                if (CaselawAnalyzerService.AI_MODEL_FILL_DAILY_TOKENS < caselawAnalyzerService.getSpentTokensToday()) {
-                    return false;
-                }
-
-                //check if still before 23:50 UTC
-                if (LocalDateTime.now().isAfter(LocalDateTime.of(LocalDate.now(), LocalTime.of(23, 50)))) {
-                    return false;
-                }
-
-                //if both conditions are met, then do summary
-                documentService.getDocumentForEntity(entity, false);
-                completedTasks.incrementAndGet();
-
-                return true;
+        Function<CaseLawEntity, Boolean> fct = entity -> {
+            //check if token limit still not reached
+            if (CaselawAnalyzerService.AI_MODEL_FILL_DAILY_TOKENS < caselawAnalyzerService.getSpentTokensToday()) {
+                log.info("Stopping summary generation, daily token limit reached");
+                return false;
             }
+
+            //check if still before the deadline
+            if (LocalDateTime.now().isAfter(deadline)) {
+                log.info("Stopping summary generation, deadline {} reached", deadline);
+                return false;
+            }
+
+            //if both conditions are met, then do summary
+            try {
+                documentService.getDocumentForEntity(entity, false);
+                createdSummaries.incrementAndGet();
+            } catch (Exception e) {
+                //a single broken case must not stop the whole run
+                log.error("Failed to create case law summary for id {} / ecli {}", entity.getId(), entity.getEcli(), e);
+                failedSummaries.incrementAndGet();
+            }
+
+            return true;
         };
 
         boolean shouldStop = false;
-        long totalCasesWithoutSummary = caseLawsWithoutSummary.getTotalElements();
+        int pageNumber = 0;
+        int processedPages = 0;
+        Page<CaseLawEntity> page = findCaseLawWithoutSummary(courts, pageNumber, pageSize);
 
-        while (!shouldStop && caseLawsWithoutSummary.hasContent()) {
-            //execute at most 10 at once
+        log.info("Starting summary generation for courts {}, {} cases without summary, {} results per page",
+                courts, page.getTotalElements(), pageSize);
+
+        while (!shouldStop && page.hasContent()) {
+            List<CaseLawEntity> caseLaws = page.getContent().stream()
+                    .filter(caseLaw -> attemptedCaseIds.add(caseLaw.getId()))
+                    .toList();
+
+            if (caseLaws.isEmpty()) {
+                //this page only holds cases that already failed in this run, so continue with the next one
+                log.warn("All {} results of page {} already failed in this run, continuing with page {}",
+                        page.getNumberOfElements(), pageNumber, pageNumber + 1);
+                pageNumber++;
+                page = findCaseLawWithoutSummary(courts, pageNumber, pageSize);
+                continue;
+            }
+
+            //execute at most maxParallel at once
             try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
                 var completionService = new ExecutorCompletionService<Boolean>(executor);
-                Iterator<CaseLawEntity> iterator = caseLawsWithoutSummary.iterator();
+                Iterator<CaseLawEntity> iterator = caseLaws.iterator();
 
                 int runningTasks = 0;
 
@@ -162,12 +198,6 @@ public class CaseLawImporter {
                             executor.shutdown();
                             break;
                         }
-
-                        if (iterator.hasNext()) {
-                            CaseLawEntity caseLaw = iterator.next();
-                            completionService.submit(() -> fct.apply(caseLaw));
-                            runningTasks++;
-                        }
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         executor.shutdown();
@@ -175,17 +205,33 @@ public class CaseLawImporter {
                         break;
                     } catch (ExecutionException e) {
                         log.error("Failed to create case law summary", e);
+                        failedSummaries.incrementAndGet();
                         runningTasks--;
+                    }
+
+                    if (!shouldStop && iterator.hasNext()) {
+                        CaseLawEntity caseLaw = iterator.next();
+                        completionService.submit(() -> fct.apply(caseLaw));
+                        runningTasks++;
                     }
                 }
             }
 
+            processedPages++;
+            log.info("Page {} finished, {} of its {} results processed, {} summaries created and {} failed in this run",
+                    pageNumber, caseLaws.size(), page.getNumberOfElements(), createdSummaries.get(), failedSummaries.get());
+
             if (!shouldStop) {
-                caseLawsWithoutSummary = caseLawRepository.findCaseLawWithoutSummary(PageRequest.of(0, pageSize), court);
-                totalCasesWithoutSummary = Math.max(totalCasesWithoutSummary, completedTasks.get() + caseLawsWithoutSummary.getTotalElements());
+                page = findCaseLawWithoutSummary(courts, pageNumber, pageSize);
             }
         }
 
-        log.info("Completed {} tasks out of {}", completedTasks.get(), totalCasesWithoutSummary);
+        log.info("Summary generation finished, {} summaries created, {} failed, {} pages processed, {} cases without summary left",
+                createdSummaries.get(), failedSummaries.get(), processedPages, caseLawRepository.countCaseLawWithoutSummary(courts));
+    }
+
+    private Page<CaseLawEntity> findCaseLawWithoutSummary(Collection<String> courts, int pageNumber, int pageSize) {
+        return caseLawRepository.findCaseLawWithoutSummary(
+                PageRequest.of(pageNumber, pageSize, Sort.by(Sort.Direction.ASC, "id")), courts);
     }
 }

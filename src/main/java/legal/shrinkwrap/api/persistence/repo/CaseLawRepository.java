@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Collection;
 import java.util.Optional;
 
 
@@ -17,6 +18,9 @@ public interface CaseLawRepository  extends JpaRepository<CaseLawEntity, Long> {
     @Query("SELECT c FROM CaseLawEntity c WHERE NOT EXISTS (SELECT a FROM CaseLawAnalysisEntity a WHERE a.caseLaw = c)")
     Page<CaseLawEntity> findCaseLawWithoutAnalysis(Pageable pageable);
 
-    @Query("SELECT c FROM CaseLawEntity c WHERE NOT EXISTS (SELECT a FROM CaseLawAnalysisEntity a WHERE a.caseLaw = c AND a.analysisType = 'summary') and c.court = :court")
-    Page<CaseLawEntity> findCaseLawWithoutSummary(Pageable pageable, String court);
+    @Query("SELECT c FROM CaseLawEntity c WHERE NOT EXISTS (SELECT a FROM CaseLawAnalysisEntity a WHERE a.caseLaw = c AND a.analysisType = 'summary') and c.court in :courts")
+    Page<CaseLawEntity> findCaseLawWithoutSummary(Pageable pageable, Collection<String> courts);
+
+    @Query("SELECT count(c) FROM CaseLawEntity c WHERE NOT EXISTS (SELECT a FROM CaseLawAnalysisEntity a WHERE a.caseLaw = c AND a.analysisType = 'summary') and c.court in :courts")
+    long countCaseLawWithoutSummary(Collection<String> courts);
 }
