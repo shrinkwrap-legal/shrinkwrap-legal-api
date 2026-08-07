@@ -202,7 +202,7 @@ public class DocumentServiceImpl implements DocumentService {
                     } else if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.LVwG.toString())) {
                         analysisEntity.setAnalysisSubType("lvwgCase");
                     } else if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.DSB.toString()) || caseLawEntity.getApplicationType().equalsIgnoreCase("dsk")) {
-                        analysisEntity.setAnalysisSubType("bvwgCase");
+                        analysisEntity.setAnalysisSubType("dsbCase");
                     }
                     else {
                         analysisEntity.setAnalysisSubType("civilCase");

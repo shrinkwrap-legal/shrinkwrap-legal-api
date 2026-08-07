@@ -1,34 +1,46 @@
 Untenstehend folgt {{#if VfGH}}eine {{#if isPart}}auszugsweise abgedruckte{{/if}} österreichische Entscheidung des österreichischen Verfassungsgerichtshofs (VfGH){{else if VwGH}}eine {{#if isPart}}auszugsweise abgedruckte{{/if}} österreichische Entscheidung des österreichischen Verwaltungsgerichtshofs (VwGH){{else if DSB}}ein {{#if isPart}}auszugsweise abgedruckte{{/if}} Entscheidung der Datenschutzbehörde (DSB){{else}}ein {{#if isPart}}auszugsweise abgedrucktes{{/if}} österreichisches Gerichtsurteil{{/if}}. Du extrahierst mehrere Eigenschaften. Kosten sind irrelevant. Es ist nicht notwendig zu analysieren, wer Kosten trägt.
-{{#if VfGH}}
-1. Um welche Art von Entscheidung handelt es sich? Beschluss, Erkenntnis
+{{#if court}}Diese Entscheidung stammt von: {{court}}. Verwende ausschließlich dieses Gericht bzw. diese Behörde, wenn du das entscheidende Organ benennst.{{/if}}
+{{#if decisionArt}}Laut amtlichen Metadaten ist diese Entscheidung ein {{decisionArt}}. Gib in "art" genau diesen Wert aus.{{/if}}
+{{#if criminal}}
+1. Um welche Art von Entscheidung handelt es sich? Beschluss, Urteil, Urteil und Beschluss. Wird über eine Berufung und zugleich über eine Beschwerde entschieden, ist "Urteil und Beschluss" zulässig.
+1a. Um welches Rechtsmittel handelt es sich? Nichtigkeitsbeschwerde, Berufung, Nichtigkeitsbeschwerde und Berufung, Beschwerde, Erstinstanz
+{{else if VfGH}}
+1. Um welche Art von Entscheidung handelt es sich? Beschluss, Erkenntnis. Gib in "art" genau einen dieser Werte aus, niemals zwei.
 1a. Um welches Verfahren handelt es sich? Verordnungsprüfung, Gesetzesprüfung, Bescheidbeschwerde, Erkenntnisbeschwerde, Untersuchungsausschuss, Wahlüberprüfung, Kompetenzkonflikt, Vermögensansprüche, Staatsverträge, Sonstige
 {{else if VwGH}}
-1. Um welche Art von Entscheidung handelt es sich? Beschluss, Erkenntnis
+1. Um welche Art von Entscheidung handelt es sich? Beschluss, Erkenntnis. Gib in "art" genau einen dieser Werte aus, niemals zwei.
 1a. Um welches Verfahren handelt es sich? ordentliche Revision, außerordentliche Revision, Fristsetzungsantrag,
 Feststellungsantrag, Kompetenzkonflikt, Sonstige
 {{else if BVwG}}
 1. Um welche Art von Urteil handelt es sich? Beschluss, Urteil, Erkenntnis
 1a. Um welches Rechtsmittel handelt es sich? Bescheidbeschwerde, Säumnisbeschwerde, Maßnahmenbeschwerde
 {{else if LVwG}}
-1. Um welche Art von Urteil handelt es sich? Beschluss, Bescheid, Erkenntnis
+1. Um welche Art von Urteil handelt es sich? Beschluss, Bescheid, Erkenntnis. Gib in "art" genau einen dieser Werte aus, niemals zwei.
 1a. Um welches Rechtsmittel handelt es sich? Bescheidbeschwerde, Maßnahmenbeschwerde
 {{else if DSB}}
-1. Um welche Art von Verfahren handelt es sich? Amtswegiges Prüfverfahren, Beschwerdeverfahren, Verwaltungsstrafverfahren
+1. Um welche Art von Verfahren handelt es sich? Amtswegiges Prüfverfahren, Beschwerdeverfahren, Verwaltungsstrafverfahren. Gib in "art" genau einen dieser Werte aus, niemals zwei.
 {{else}}
-1. Um welche Art von Urteil handelt es sich? Beschluss, Urteil, Erkenntnis
+1. Um welche Art von Urteil handelt es sich? Beschluss, Urteil, Erkenntnis. Steht im Spruch die Wendung "zu Recht erkannt", ist es ein Urteil. Steht dort "den Beschluss gefasst", ist es ein Beschluss. Gib in "art" genau einen dieser Werte aus, niemals zwei.
 1a. Um welches Rechtsmittel handelt es sich? Ordentliche Revision, Außerordentliche Revision, Ordentlicher Revisionsrekurs,Außerordentlicher Revisionsrekurs, Ordentliche Berufung, Außerordentliche Berufung, Ordentlicher Rekurs, Außerordentlicher Rekurs, Erstinstanz, EuGH-Vorabentscheidungsvorlage
 {{/if}}
 {{#if DSB}}
-2. Wie ist das Verfahren ausgegangen? Wurde eine Verletzung festgestellt?
+2. Wie ist das Verfahren ausgegangen? Gib in "ausgang" genau eines dieser Wörter aus: Stattgabe, Teilweise Stattgabe, Abweisung, Zurückweisung, Einstellung, Sonstiges. Stattgabe bedeutet, dass eine Verletzung festgestellt wurde.
 {{else}}
-1b. Handelt es sich um eine Vorlage vor dem EuGH? Das bedeutet, wird das Verfahren durch diesen Beschluss unterbrochen und auf eine Entscheidung des EuGH gewartet?
-2. Wie ist das Verfahren ausgegangen: Gab es eine Zurückweisung, eine Stattgabe, eine Bestätigung, eine Abweisung oder Gemischt?
+1b. Wird dieses Verfahren wegen des EuGH unterbrochen oder ausgesetzt? Das Feld zeigt an, dass noch keine endgültige Entscheidung vorliegt, weil das Gericht auf den EuGH wartet. Setze "eugh_vorlage" nur dann auf true, wenn der Spruch dieser Entscheidung das Verfahren unterbricht oder aussetzt und dabei auf den EuGH verweist. Setze false, wenn eine Entscheidung des EuGH nur zitiert oder angewendet wird. Setze false, wenn eine Vorabentscheidung bereits vorliegt und das Verfahren deshalb fortgesetzt oder entschieden wird. Setze false, wenn das Verfahren aus einem anderen Grund als dem EuGH ruht.
+{{#if VfGH}}
+2. Wie ist das Verfahren ausgegangen? Gib in "ausgang" genau eines dieser Wörter aus: Aufhebung, Abweisung, Zurückweisung, Ablehnung, Abtretung, Stattgabe, Gemischt, Sonstiges. Ablehnung bedeutet, dass der Verfassungsgerichtshof die Behandlung der Beschwerde abgelehnt hat.
+{{else if VwGH}}
+2. Wie ist das Verfahren ausgegangen? Gib in "ausgang" genau eines dieser Wörter aus: Zurückweisung, Abweisung, Aufhebung, Einstellung, Aussetzung, Gemischt, Sonstiges.
+{{else if BVwG}}
+2. Wie ist das Verfahren ausgegangen? Gib in "ausgang" genau eines dieser Wörter aus: Stattgabe, Teilweise Stattgabe, Abweisung, Zurückweisung, Zurückverweisung, Einstellung, Aussetzung, Sonstiges. Haben mehrere Spruchpunkte ein unterschiedliches Ergebnis, verwende Teilweise Stattgabe.
+{{else if LVwG}}
+2. Wie ist das Verfahren ausgegangen? Gib in "ausgang" genau eines dieser Wörter aus: Stattgabe, Teilweise Stattgabe, Abweisung, Zurückweisung, Zurückverweisung, Einstellung, Aussetzung, Sonstiges. Haben mehrere Spruchpunkte ein unterschiedliches Ergebnis, verwende Teilweise Stattgabe.
+{{else}}
+2. Wie ist das Verfahren ausgegangen? Gib in "ausgang" genau eines dieser Wörter aus: Abweisung, Stattgabe, Zurückweisung, Aufhebung, Gemischt, Sonstiges. Beurteile den Ausgang aus der Sicht dessen, der das Rechtsmittel erhoben hat. Ein inhaltlich erfolgloses Rechtsmittel ist eine Abweisung, auch wenn dadurch die Vorentscheidung bestätigt wird. Ein mangels Zulässigkeit gescheitertes Rechtsmittel ist eine Zurückweisung.
 {{/if}}
-3. Fasse den Sachverhalt in höchstens {{ germanNumber numberOfSentences }} Sätzen zusammen. Der Sachverhalt beschreibt was vorgefallen ist. Was Gegenstand des Verfahrens ist. Die Tatsachen, die zum Verfahren geführt haben. {{#if criminal}} Was hat der Angeklagte oder die Angeklagte getan, um angeklagt zu werden? Welche Tat hat ihn vor Gericht gebracht? {{/if}} Was ist vorgefallen? Greife NICHT dem Urteil voraus. Rechtliche Aussagen des Gerichts, das die Entscheidung erlässt sind KEIN Sachverhalt. Der Sachverhalt wird oft am Anfang in Präteritum wiedergegeben. Vermische dabei keine Sätze, die eine neue Bedeutung ergeben. KEINE BEGEHREN. Begehren sind die Argumentationen und Vorbringen der Parteien. Oftmals kommen Wörter wie "begehrte" und "bestritt" vor. Diese werden später abgefragt. Konzentriere dich hier ausschließlich auf den Sachverhalt.
-Verwende die Form:
-```
-Lorem ipsum dolor sit amet, sed diam nonumy eirmod tempor invidunt ut labore. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
-```
+{{/if}}
+3. Fasse den Sachverhalt in höchstens {{ germanNumber numberOfSentences }} Sätzen zusammen: was vorgefallen ist und worum die Beteiligten streiten. Beginne mit den Beteiligten und ihrer Rolle und führe sie mit unbestimmtem Artikel ein ("ein …", "eine …"), nicht mit bestimmtem. Nenne Beträge, Zeiträume und Mengen, wenn sie den Fall greifbar machen. Wird jemandem ein Verhalten vorgeworfen, nenne den Vorwurf und wozu es gedient haben soll. Nenne den bisherigen Verfahrensgang nur, wenn er für das Verständnis wesentlich ist, etwa wenn eine höhere Instanz die Entscheidung bereits aufgehoben hat. {{#if criminal}}Was hat der Angeklagte oder die Angeklagte getan, das ihn oder sie vor Gericht gebracht hat? {{/if}}Greife dem Ergebnis nicht vor; rechtliche Aussagen des entscheidenden Gerichts gehören nicht in den Sachverhalt. Keine Anträge und kein Parteivorbringen, das wird später abgefragt.
+Schreibe zusammenhängenden Fließtext ohne Aufzählung und ohne Überschrift.
 Enthält das Gerichtsurteil keinen Sachverhalt, gib "KEIN SACHVERHALT aus.
 {{#if criminal}}
 4. Ermittle zuerst, wer das Rechtsmittel eingebracht hat. Das kann insbesondere der Angeklagte, der Betroffene, die Staatsanwaltschaft oder eine andere Partei sein. Gib diese Partei im Feld "berufende_partei" aus.
@@ -54,32 +66,82 @@ Enthält das Gerichtsurteil keinen Sachverhalt, gib "KEIN SACHVERHALT aus.
 4a. Fasse die vorgebrachten Gegenargument des Beklagten in einem Satz zusammen.
 {{/if}}
 5. Basierend auf dem Sachverhalt und den vorgebrachten Argumenten, fasse in zwei Sätzen zusammen, wie das Gericht entschieden hat und warum es so entschieden hat.
-6. Liste die etwa {{ numberOfSentences }} zentralen juristischen rechtlichen Schlussfolgerungen des Gerichts klar und präzise zusammen. Pro Schlussfolgerung 1-2 Sätze. Wie wurden Rechtsvorschriften ausgelegt, welche Rechtsvorschriften waren besonders relevant? Welche speziellen rechtlichen Aspekte und Subsumptionen wurden in dem Urteil getroffen? Welche Auslegungen von Gesetzestexten wurden getroffen? Alle Schlussfolgerungen müssen in sich geschlossen sein. Weitere Aspekte aus dem Urteil dürfen nicht erforderlich sein. Jede Schlussfolgerung muss ein vollständiger, einfacher deutscher Aussagesatz sein. Jede Schlussfolgerung muss ohne den übrigen Urteilstext verständlich sein. Jeder Satz darf höchstens 24 Wörter enthalten. Nenne keine Kostenentscheidungen. Nenne keine bloßen Aussagen zur Unzulässigkeit einer Revision. Nenne eine konkrete Norm, wenn sie eindeutig zentral für die Aussage ist.
-7. Liste die wichtigsten Normen, über die im Urteil juristisch entschieden wird. Liste nur die Normen und Gesetze, die Hauptgegenstand des Urteils sind. Verwende die Form "NORM § 1 Abs 3".
+6. Gehe die Spruchpunkte der Entscheidung der Reihe nach durch. Nenne zu jedem Spruchpunkt, über den inhaltlich entschieden wurde, mindestens eine tragende rechtliche Schlussfolgerung. Tragend ist eine Aussage nur dann, wenn die Entscheidung ohne sie anders ausgefallen wäre. Bevorzuge Stellen, an denen das Gericht abgrenzt oder klarstellt, gegenüber der Wiedergabe des Gesetzeswortlauts. Jede Schlussfolgerung nennt die Regel UND die Voraussetzung, unter der sie gilt, verbunden mit "wenn", "soweit" oder "solange"; der Nebensatz darf den Hauptsatz nicht in anderen Worten wiederholen. Pro Schlussfolgerung 1-2 Sätze mit höchstens 35 Wörtern, ohne den übrigen Urteilstext verständlich und auf einen ähnlichen Fall übertragbar. Nenne höchstens {{ numberOfSentences }} und so wenige wie möglich. Nenne keine Kostenentscheidungen und keine Beweiswürdigung. Wiederhole nicht den Spruch und nenne keine bloßen Aussagen zur Zulässigkeit oder Unzulässigkeit eines Rechtsmittels. Nimm nichts aus Nebenabschnitten wie "ergänzend ist anzumerken". Nenne eine konkrete Norm, wenn sie eindeutig zentral für die Aussage ist. Enthält die Entscheidung keine eigene rechtliche Aussage, gib eine leere Liste aus.
+7. Liste die wichtigsten Normen, über die im Urteil juristisch entschieden wird. Liste nur die Normen und Gesetze, die Hauptgegenstand des Urteils sind. Verwende die Form "<Abkürzung des Gesetzes> § 1 Abs 3" oder "<Abkürzung des Gesetzes> Art 1 Abs 3". Schreibe "Abs", "Art" und "Z" immer ohne Punkt.
 8. Fasse das gesamte Urteil in {{ germanNumber numberOfSentences }} Absätzen zusammen. Gib die Absätze im JSON-Feld als Array von Strings aus. Jeder Absatz muss genau drei kurze Sätze enthalten.Jeder Satz darf höchstens 22 Wörter enthalten. KEINE KOSTENENTSCHEIDUNGEN. KEINE BEGEHREN.
 9. Fasse das gesamte Urteil in {{ germanNumber numberOfSentences }} Sätzen zusammen. Jeder Satz darf höchstens 22 Wörter enthalten. KEINE KOSTENENTSCHEIDUNGEN. KEINE BEGEHREN.
 10. Entwirf verschiedene schlagkräftige Zeitungstitel für das Urteil.
-10a: Für eine Boulevardzeitung schlagkräftig und auf das wesentliche reduziert. Wenn das entscheidende Gericht im Urteil eindeutig erkennbar ist, beginne mit dessen üblicher Kurzbezeichnung und einem Doppelpunkt. Beispiele für Kurzbezeichnungen sind „VwGH“, „BVwG“, „LVwG NÖ“, „OLG Wien“ oder „OGH“. Der Titel darf höchstens 12 Wörter enthalten. Verwende keinen Blindtext und keine Platzhalter.
-10b: Für ein öffentlich-rechtliches Medium sachlich und ausgewogen in der Form "Lorem ipsum dolor sit amet, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus".
-10c: Für eine juristische Zeitschrift mit Fokus auf rechtliche Aspekte in der Form "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua."
-11: Ordne die Entscheidung Rechtsthemen zu. Ordne Hauptrechtsgebiete und Untergebiete zu. Verwende folgende Liste für Hauptrechtsgebiete.
+10a: Für eine Boulevardzeitung schlagkräftig und auf das wesentliche reduziert. Beginne etwa mit der üblichen Kurzbezeichnung des oben genannten Gerichts und einem Doppelpunkt. Beispiele für Kurzbezeichnungen sind „VwGH“, „BVwG“, „LVwG NÖ“, „OLG Wien“ oder „OGH“. Verwende keine andere Gerichtsbezeichnung. Der Titel darf höchstens 12 Wörter enthalten. Der Titel muss das Ergebnis der Entscheidung richtig wiedergeben; erfinde keine Beträge, Zahlen oder Vorwürfe. Verwende keinen Blindtext und keine Platzhalter.
+10b: Für ein öffentlich-rechtliches Medium sachlich und ausgewogen. 10 bis 16 Wörter, nennt das entscheidende Organ und das Ergebnis. Verwende keinen Blindtext und keine Platzhalter.
+10c: Für eine juristische Zeitschrift mit Fokus auf die entschiedene Rechtsfrage. 10 bis 18 Wörter, nennt den Rechtsbegriff und die zentrale Norm. Verwende keinen Blindtext und keine Platzhalter.
+11: Ordne die Entscheidung Rechtsthemen zu. Ordne Hauptrechtsgebiete und Untergebiete zu. Ordne nach dem Sachgebiet, um das gestritten wird, nicht nach der Verfahrensart. Wähle Verfahrensrecht nur, wenn die Entscheidung inhaltlich eine Verfahrensfrage klärt. Eine Verfahrensart wie Gesetzesprüfung, Bescheidbeschwerde oder Nichtigkeitsbeschwerde ist kein Rechtsgebiet. Leite das Hauptrechtsgebiet aus den unter Punkt 7 genannten Normen ab. Übernimm die Bezeichnung wortgleich aus der Liste und füge nichts hinzu. Gib keine leeren Einträge aus. Verwende folgende Liste für Hauptrechtsgebiete.
 ```
 {{#if criminal }}
-Medienrecht
+Gewaltdelikte
 Sexualstrafrecht
-Unternehmensstrafrecht
+Vermögens- und Betrugsdelikte
+Suchtmitteldelikte
+Finanz- und Steuerstrafrecht
+Korruption und Amtsdelikte
+Staatsschutz und Verbotsgesetz
+Verkehrsstrafrecht
 Waffenrecht
-Verfahrensrecht
+Medienrecht
+Unternehmensstrafrecht
+Haft- und Strafvollzugsrecht
+Strafverfahrensrecht
+Sonstiges
 {{ else }}
 {{#if VfGH}}
-
+Grundrechte
+Verfassungs- und Staatsorganisationsrecht
+Gleichheitsrecht
+Asyl- und Fremdenrecht
+Verwaltungsrecht
+Sozialrecht
+Abgabenrecht
+Bau- und Raumordnungsrecht
+Gesundheitsrecht
+Dienst- und Beamtenrecht
+Wahl- und Gemeinderecht
+Verfahrensrecht
+Sonstiges
 {{else if VwGH}}
-{{else if DSB}}
-{{ else if LVwG }}
-Baurecht
+Fremden- und Asylrecht
+Verwaltungsstrafrecht
+Abgabenrecht
+Sozial- und Sozialversicherungsrecht
+Arbeitsrecht
+Dienst- und Besoldungsrecht
+Baurecht und Raumordnung
+Gewerbe- und Glücksspielrecht
+Umwelt-, Natur- und Wasserrecht
 Verkehrsrecht
-Gewerberecht
-Staatsbürgerschaftsrecht
+Gesundheitsrecht
+Agrarrecht
+Disziplinarrecht
+Verfahrensrecht
+Sonstiges
+{{else if DSB}}
+Datenschutzrecht
+Verwaltungsstrafrecht
+Medienrecht
+Verfahrensrecht
+Sonstiges
+{{ else if LVwG }}
+Baurecht und Raumordnung
+Verkehrsrecht
+Gewerbe- und Betriebsanlagenrecht
+Staatsbürgerschafts- und Aufenthaltsrecht
+Umwelt-, Natur- und Wasserrecht
+Abfallrecht
+Glücksspielrecht
+Waffenrecht
+Sozialrecht
+Abgabenrecht
+Grundverkehrsrecht
+Verwaltungsstrafrecht
+Sonstiges
 {{ else if BVwG }}
 Fremdenwesen
 Asyl
@@ -90,6 +152,10 @@ Verkehrsrecht
 Umweltrecht
 Wirtschaftsrecht
 Kommunikationsrecht
+Behindertenrecht
+Vergaberecht
+Dienst- und Besoldungsrecht
+Sonstiges
 {{ else }}
 Verwaltungsrecht
 Besoldungsrecht
@@ -114,7 +180,10 @@ Arbeitsrecht
 Medienrecht
 Konsumentenschutzrecht
 Schadenersatzrecht
+Versicherungsrecht
+Vertragsrecht
 Zivilrecht (Sonstiges)
+Sonstiges
 {{/if}}
 {{/if}}
 ```
@@ -137,7 +206,7 @@ Liste die Informationen aus dem obigen Gerichtsurteil wie oben angeführt als JS
 {
 "art": "",
 {{#if DSB}}{{else}}
-"eugh_vorlage": null; // False/True or null if unknown,
+"eugh_vorlage": false, //true nur, wenn das Verfahren wegen des EuGH unterbrochen wird
 {{/if}}
 "ausgang": "",
 {{#if VfGH}}
@@ -173,7 +242,7 @@ Liste die Informationen aus dem obigen Gerichtsurteil wie oben angeführt als JS
 {{/if}}
 "entscheidung_gericht_{{ numberOfSentences }}_saetze": "",
 "schlussfolgerungen_gericht": [
-"", "", "", ...
+"" //so wenige Einträge wie möglich, nur die wichtigsten
 ],
 "zusammenfassung_{{ numberOfSentences }}_absaetze": ["... ... ...", "... ... ...", "... ... ..."],
 "zusammenfassung_{{ numberOfSentences }}_saetze": "",

@@ -46,9 +46,9 @@ import java.util.stream.Collectors;
 public class CaselawAnalyzerService {
     private final Integer MAX_TOKEN = 100000;
     private final Integer TOKEN_SYSTEM_AND_PROMPT_ESTIMATION;
-    private final String AI_MODEL_XHIGH = "gpt-5.5";
-    private final String AI_MODEL_HIGH = "gpt-5.4-mini";
-    private final String AI_MODEL_LOW = "gpt-5.4-nano";
+    private final String AI_MODEL_XHIGH = "gpt-5.6-sol";
+    private final String AI_MODEL_HIGH = "gpt-5.6-terra";
+    private final String AI_MODEL_LOW = "gpt-5.6-luna";
     public static final Integer AI_MODEL_MAX_DAILY          = 20000000;
     public static final Integer AI_MODEL_FILL_DAILY_TOKENS  =  9500000;
     private final Integer AI_MODEL_TOKEN_FAILOVER           =  9500000;
@@ -100,7 +100,7 @@ public class CaselawAnalyzerService {
             templates.put("summary.system", template);
 
             //token estimation for system/user
-            TextModel dummyModel = new TextModel("",true, false, 3, true, false, false, false, false);
+            TextModel dummyModel = new TextModel("",true, false, 3, true, false, false, false, false, "", "");
             String system = templates.get("summary.system").apply(dummyModel);
             String user = templates.get("summary").apply(dummyModel);
             TOKEN_SYSTEM_AND_PROMPT_ESTIMATION = tokenCountEstimator.estimate(system + " " + user);
@@ -166,7 +166,13 @@ public class CaselawAnalyzerService {
         int wordCount = text.split(" ").length;
         int numberOfSentences = getNumberOfSentencesSuitableByWordCount(wordCount);
 
-        TextModel model = new TextModel(text, isCriminal, isVfGH, numberOfSentences, isPart, isVwGH, isBVwG, isDSB, isLVwG);
+        //court and decision type are known from RIS metadata, so the model must not guess them
+        String court = entity != null ? StringUtils.defaultString(entity.getCourt()).trim() : "";
+        String decisionType = entity != null ? StringUtils.defaultString(entity.getDecisionType()).trim() : "";
+        String decisionArt = decisionType.equalsIgnoreCase("Beschluss") ? "Beschluss"
+                : decisionType.equalsIgnoreCase("Erkenntnis") ? "Erkenntnis" : "";
+
+        TextModel model = new TextModel(text, isCriminal, isVfGH, numberOfSentences, isPart, isVwGH, isBVwG, isDSB, isLVwG, court, decisionArt);
 
         try {
             String system = templates.get("summary.system").apply(model);
@@ -376,7 +382,7 @@ public class CaselawAnalyzerService {
     private static final record SentenceModel(int id, String sentence) {
     }
 
-    private static final record TextModel(String text, Boolean criminal, Boolean VfGH, int numberOfSentences, boolean isPart, boolean VwGH, boolean BVwG, boolean DSB, boolean LVwG) {}
+    private static final record TextModel(String text, Boolean criminal, Boolean VfGH, int numberOfSentences, boolean isPart, boolean VwGH, boolean BVwG, boolean DSB, boolean LVwG, String court, String decisionArt) {}
 
     private int getNumberOfSentencesSuitableByWordCount(int wordCount) {
         if (wordCount < 200) {
