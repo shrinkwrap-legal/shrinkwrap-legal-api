@@ -18,15 +18,19 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Year;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -37,11 +41,18 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 @Service
 @AllArgsConstructor
 @Slf4j
 public class CaseLawImporter {
+    //the daily import retries failing RIS calls until this time, the rest is left to the next run
+    private static final ZoneId RIS_ZONE = ZoneId.of("Europe/Vienna");
+    private static final LocalTime IMPORT_DEADLINE = LocalTime.of(16, 0);
+    private static final Duration FIRST_BACKOFF = Duration.ofMinutes(1);
+    private static final Duration MAX_BACKOFF = Duration.ofMinutes(30);
+
     private final DocumentService documentService;
     private final RisSoapAdapter risSoapAdapter;
     private final CaseLawRepository caseLawRepository;
@@ -74,19 +85,71 @@ public class CaseLawImporter {
 
     @Scheduled(cron = "0 30 3 * * *")
     public void updateLatestDocuments() {
+        ZonedDateTime deadline = ZonedDateTime.now(RIS_ZONE).with(IMPORT_DEADLINE);
+
         for (RisCourt court : RisCourt.values()) {
-            RisSearchResult results = risSoapAdapter.findCaseLawDocuments(
-                    RisSearchParameterCaseLaw.builder()
-                            .court(court)
-                            .changedInLastXDays(5)
-                            .judikaturTyp(new RisSearchParameterCaseLaw.JudikaturTyp(false, true))
-                            .build()
-            );
+            RisSearchResult results = retryOnRisError("search for " + court.name(), deadline,
+                    () -> risSoapAdapter.findCaseLawDocuments(
+                            RisSearchParameterCaseLaw.builder()
+                                    .court(court)
+                                    .changedInLastXDays(5)
+                                    .judikaturTyp(new RisSearchParameterCaseLaw.JudikaturTyp(false, true))
+                                    .build()
+                    ));
+            if (results == null) {
+                continue;
+            }
 
             for (RisJudikaturResult result : results.getJudikaturResults()) {
-                documentService.importJudikaturResult(result);
+                retryOnRisError("import of " + result.getMetadaten().getId(), deadline,
+                        () -> documentService.importJudikaturResult(result));
             }
             log.info("import done for " + court.name() + " with " + results.getJudikaturResults().size() + " documents");
+        }
+    }
+
+    /**
+     * Retries a failing RIS call with a wait doubling from one minute up to {@link #MAX_BACKOFF}, so that the
+     * server can recover and a soft-ban of our address expires. Gives up when the next wait would end after the
+     * deadline, the missing documents are then picked up by the next daily run. 4xx answers (e.g. 404 for a
+     * document that is gone) are not retried.
+     *
+     * @return the result of the call, or null if it kept failing
+     */
+    private <T> T retryOnRisError(String description, ZonedDateTime deadline, Supplier<T> call) {
+        Duration wait = FIRST_BACKOFF;
+
+        //try again and again until the call succeeds, the deadline is reached or retrying is pointless
+        while (true) {
+            try {
+                return call.get();
+            } catch (HttpClientErrorException e) {
+                //4xx, e.g. 404 for a document that is gone - that will not get better by waiting
+                log.error("Skipping {}, RIS answered {}", description, e.getStatusCode(), e);
+                if (e.getStatusCode().value() != 429) {
+                    // retry like transient RIS error
+                    return null;
+                }
+            } catch (RuntimeException e) {
+                if (ZonedDateTime.now(RIS_ZONE).plus(wait).isAfter(deadline)) {
+                    log.error("Skipping {}, still failing at the deadline {}", description, deadline, e);
+                    return null;
+                }
+
+                log.warn("Retrying {} in {} minutes: {}", description, wait.toMinutes(), e.toString());
+                try {
+                    Thread.sleep(wait);
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    return null;
+                }
+
+                //wait twice as long before the next try, but never longer than MAX_BACKOFF
+                wait = wait.multipliedBy(2);
+                if (wait.compareTo(MAX_BACKOFF) > 0) {
+                    wait = MAX_BACKOFF;
+                }
+            }
         }
     }
 
