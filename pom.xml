@@ -308,7 +308,7 @@
         <dependency>
             <groupId>org.piwik.java.tracking</groupId>
             <artifactId>matomo-java-tracker-spring-boot-starter</artifactId>
-            <version>3.4.0</version>
+            <version>4.0.0</version>
         </dependency>
     </dependencies>
     <dependencyManagement>
