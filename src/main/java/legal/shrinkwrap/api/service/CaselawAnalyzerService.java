@@ -23,8 +23,8 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.openai.api.ResponseFormat;
 import org.springframework.ai.tokenizer.JTokkitTokenCountEstimator;
 import org.springframework.ai.tokenizer.TokenCountEstimator;
 import org.springframework.core.io.Resource;
@@ -183,7 +183,11 @@ public class CaselawAnalyzerService {
             ObjectSchema jsonSchema = schemaGen.generateSchema(CaselawSummaryCivilCase.class).asObjectSchema();
             jsonSchema.setAdditionalProperties(ObjectSchema.NoAdditionalProperties.instance);
             String schema = objectMapper.writeValueAsString(jsonSchema);
-            ResponseFormat format = new ResponseFormat(ResponseFormat.Type.JSON_SCHEMA, schema);
+            OpenAiChatModel.ResponseFormat format =  OpenAiChatModel.ResponseFormat
+                    .builder()
+                    .type(OpenAiChatModel.ResponseFormat.Type.JSON_SCHEMA)
+                    .jsonSchema(schema)
+                    .build();
             Message systemMessage = new SystemMessage(system);
             Message userMessage = new UserMessage(user);
 
@@ -208,7 +212,10 @@ public class CaselawAnalyzerService {
 
             OpenAiChatOptions.Builder optionsBuilder = OpenAiChatOptions.builder()
                     .temperature(1D)
-                    .responseFormat(ResponseFormat.builder().type(ResponseFormat.Type.JSON_OBJECT).build())
+                    .responseFormat(OpenAiChatModel.ResponseFormat
+                            .builder()
+                            .type(OpenAiChatModel.ResponseFormat.Type.JSON_OBJECT)
+                            .build())
                     .model(usedModel);
 
             if (usedModel.equals(AI_MODEL_XHIGH)) {
