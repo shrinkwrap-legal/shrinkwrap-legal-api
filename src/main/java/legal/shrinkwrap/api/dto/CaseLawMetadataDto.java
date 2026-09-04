@@ -11,17 +11,21 @@ import java.util.Date;
 @Getter
 @Setter
 public class CaseLawMetadataDto {
-    @JsonProperty(value = "decision_date")
+    @JsonProperty(value = "decision_date", required = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private Date decisionDate;
+    @JsonProperty(required = false)
     private String court;
+    @JsonProperty(required = false)
     private String organ;
 
-    @JsonProperty("decision_type")
+    @JsonProperty(value = "decision_type", required = false)
     private String decisionType;
+    @JsonProperty(required = false)
     private String url;
+    @JsonProperty(required = false)
     private String ecli;
 
-    @JsonProperty("case_number")
+    @JsonProperty(value = "case_number", required = false)
     private String caseNumber;
 }

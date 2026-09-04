@@ -25,7 +25,7 @@ public class CaseLawSearchResponseDto {
             private @JsonProperty(value="wordCount", required = true) Long wordCount;
 
             @JsonPropertyDescription("AI generated summary of the case law. May be null if it was not yet generated")
-            private CaselawSummaryCivilCase summary;
+            private @JsonProperty(required = false) CaselawSummaryCivilCase summary;
             private CaseLawMetadataDto metadata;
         }
 }

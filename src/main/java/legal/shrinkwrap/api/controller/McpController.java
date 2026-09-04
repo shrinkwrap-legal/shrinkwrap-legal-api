@@ -1,13 +1,11 @@
 package legal.shrinkwrap.api.controller;
 
-import com.google.common.base.Strings;
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.dto.CaseLawFullTextDto;
 import legal.shrinkwrap.api.dto.CaseLawMetadataDto;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
 import legal.shrinkwrap.api.dto.CaseLawSearchResponseDto;
 import legal.shrinkwrap.api.service.DocumentService;
-import org.apache.commons.collections4.ListUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.mcp.annotation.McpMeta;
@@ -84,36 +82,14 @@ public class McpController {
             return new CaseLawSearchResponseDto.CaseLawSearchResultDto(e.getWordCount(), e.getSummary(), e.getMetadata());
         }).collect(Collectors.toList()));
 
-        //schema validation needs every "null" to be an empty string.
-        ret.getSearchResults().forEach((e) -> {
-            if (e.getSummary() != null) {
-                e.getSummary().setEugh(e.getSummary().getEugh() != null && e.getSummary().getEugh());
-                e.getSummary().setArt(Strings.nullToEmpty(e.getSummary().getArt()));
-                e.getSummary().setAusgang(Strings.nullToEmpty(e.getSummary().getAusgang()));
-                e.getSummary().setRechtsmittel(Strings.nullToEmpty(e.getSummary().getRechtsmittel()));
-                e.getSummary().setVerfahrensart(Strings.nullToEmpty(e.getSummary().getVerfahrensart()));
-                e.getSummary().setSachverhalt(Strings.nullToEmpty(e.getSummary().getSachverhalt()));
-                e.getSummary().setBegehren(Strings.nullToEmpty(e.getSummary().getBegehren()));
-                e.getSummary().setGegenvorbringen(Strings.nullToEmpty(e.getSummary().getGegenvorbringen()));
-                e.getSummary().setEntscheidung_gericht(Strings.nullToEmpty(e.getSummary().getEntscheidung_gericht()));
-                e.getSummary().setBerufende_partei(Strings.nullToEmpty(e.getSummary().getBerufende_partei()));
-                e.getSummary().setZusammenfassung_3_saetze(Strings.nullToEmpty(e.getSummary().getZusammenfassung_3_saetze()));
-                e.getSummary().setZeitungstitel_boulevard(Strings.nullToEmpty(e.getSummary().getZeitungstitel_boulevard()));
-                e.getSummary().setZeitungstitel_rechtszeitschrift(Strings.nullToEmpty(e.getSummary().getZeitungstitel_rechtszeitschrift()));
-                e.getSummary().setZeitungstitel_oeffentlich(Strings.nullToEmpty(e.getSummary().getZeitungstitel_oeffentlich()));
-                e.getSummary().setHauptrechtsgebiete(ListUtils.emptyIfNull(e.getSummary().getHauptrechtsgebiete()));
-                e.getSummary().setUnterrechtsgebiete(ListUtils.emptyIfNull(e.getSummary().getUnterrechtsgebiete()));
-                e.getSummary().setSchlussfolgerungen(ListUtils.emptyIfNull(e.getSummary().getSchlussfolgerungen()));
-                e.getSummary().setWichtige_normen(ListUtils.emptyIfNull(e.getSummary().getWichtige_normen()));
-                e.getSummary().setZusammenfassung_3_absaetze(ListUtils.emptyIfNull(e.getSummary().getZusammenfassung_3_absaetze()));
+        //"art" is the only property the output schema still requires, but the AI summary does not
+        //always deliver it. Every other null is left out of the response by the MCP json mapper.
+        ret.getSearchResults().forEach(e -> {
+            if (e.getSummary() != null && e.getSummary().getArt() == null) {
+                e.getSummary().setArt("");
             }
-            if (e.getMetadata() != null) {
-                e.getMetadata().setOrgan(Strings.nullToEmpty(e.getMetadata().getOrgan()));
-                e.getMetadata().setCourt(Strings.nullToEmpty(e.getMetadata().getCourt()));
-                e.getMetadata().setCaseNumber(Strings.nullToEmpty(e.getMetadata().getCaseNumber()).trim());
-                e.getMetadata().setDecisionType(Strings.nullToEmpty(e.getMetadata().getDecisionType()));
-                e.getMetadata().setEcli(Strings.nullToEmpty(e.getMetadata().getEcli()));
-
+            if (e.getMetadata() != null && e.getMetadata().getCaseNumber() != null) {
+                e.getMetadata().setCaseNumber(e.getMetadata().getCaseNumber().trim());
             }
         });
 
@@ -140,14 +116,8 @@ public class McpController {
         if (e == null) {
             return null;
         }
-        if (e.getMetadata() != null) {
-            e.getMetadata().setOrgan(Strings.nullToEmpty(e.getMetadata().getOrgan()));
-            e.getMetadata().setCourt(Strings.nullToEmpty(e.getMetadata().getCourt()));
-            e.getMetadata().setCaseNumber(Strings.nullToEmpty(e.getMetadata().getCaseNumber()));
-            e.getMetadata().setDecisionType(Strings.nullToEmpty(e.getMetadata().getDecisionType()));
-            e.getMetadata().setCaseNumber(Strings.nullToEmpty(e.getMetadata().getCaseNumber()).trim());
-            e.getMetadata().setEcli(Strings.nullToEmpty(e.getMetadata().getEcli()));
-
+        if (e.getMetadata() != null && e.getMetadata().getCaseNumber() != null) {
+            e.getMetadata().setCaseNumber(e.getMetadata().getCaseNumber().trim());
         }
         return e;
     }
