@@ -40,6 +40,8 @@ public class McpController {
                           The AI summary may misrepresent the judgment, so it should be verified against the full text. But
                           it can serve as a first indication on the relevance of the case.
               
+                          Results are the 50 most recent decisions that match, newest first
+              
                           Recommended agent workflow:
                           1. Start with specific German legal terms where possible.
                           2. Search recent decisions first, for example the last 10 years.

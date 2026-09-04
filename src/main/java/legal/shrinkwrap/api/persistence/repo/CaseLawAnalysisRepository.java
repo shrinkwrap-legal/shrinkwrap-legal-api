@@ -33,7 +33,7 @@ public interface CaseLawAnalysisRepository extends JpaRepository<CaseLawAnalysis
                 AND (CAST(:applicationType AS text) IS NULL OR c.application_type = :applicationType) 
                 AND (CAST(:dateFrom AS date) IS NULL OR c.decision_date >= :dateFrom)
                 AND (CAST(:dateTo AS date) IS NULL OR c.decision_date <= :dateTo)
-        ORDER BY ts_rank(ca.search_vector, plainto_tsquery('german', :query)) DESC 
+        ORDER BY c.decision_date DESC 
         """, nativeQuery = true)
     List<CaseLawAnalysisEntity> searchPostgresFullText(@Param("query") String query, @Param("applicationType") String applicationType, @Param("dateFrom") LocalDate dateFrom, @Param("dateTo") LocalDate dateTo, Pageable pageable);
 }
