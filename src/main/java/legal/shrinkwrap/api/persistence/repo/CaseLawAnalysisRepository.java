@@ -21,6 +21,10 @@ public interface CaseLawAnalysisRepository extends JpaRepository<CaseLawAnalysis
     @Deprecated
     Page<CaseLawAnalysisEntity> findAllBySentenceHashIsNullAndAnalysisType(String analysisType, Pageable pageable);
 
+    /**
+     * Returns a List and not a Page on purpose: for a full page Spring Data runs a second, equally
+     * expensive query only to count all matches - and the total is not used anywhere.
+     */
     @Query(value = """
         SELECT ca.* 
         FROM caselaw_analysis ca 
@@ -31,5 +35,5 @@ public interface CaseLawAnalysisRepository extends JpaRepository<CaseLawAnalysis
                 AND (CAST(:dateTo AS date) IS NULL OR c.decision_date <= :dateTo)
         ORDER BY ts_rank(ca.search_vector, plainto_tsquery('german', :query)) DESC 
         """, nativeQuery = true)
-    Page<CaseLawAnalysisEntity> searchPostgresFullText(@Param("query") String query, @Param("applicationType") String applicationType, @Param("dateFrom") LocalDate dateFrom, @Param("dateTo") LocalDate dateTo, Pageable pageable);
+    List<CaseLawAnalysisEntity> searchPostgresFullText(@Param("query") String query, @Param("applicationType") String applicationType, @Param("dateFrom") LocalDate dateFrom, @Param("dateTo") LocalDate dateTo, Pageable pageable);
 }

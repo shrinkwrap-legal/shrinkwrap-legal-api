@@ -293,13 +293,13 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
 
-        Page<CaseLawAnalysisEntity> matches = caseLawAnalysisRepository.searchPostgresFullText(search, application, dateFrom, dateTo, PageRequest.of(0,50));
-        log.info("Found {} matches for {} search '{}'", matches.getTotalElements(), application, search);
+        List<CaseLawAnalysisEntity> matches = caseLawAnalysisRepository.searchPostgresFullText(search, application, dateFrom, dateTo, PageRequest.of(0,50));
+        log.info("Found {} matches for {} search '{}'", matches.size(), application, search);
 
 
         //for all found entries, either get analysis entity (if already selected), or sort out
         // - at this point, we won't create new summaries for AI queries
-        List<CaseLawAnalysisEntity> summaries = matches.get().map(e -> {
+        List<CaseLawAnalysisEntity> summaries = matches.stream().map(e -> {
             if (e.getAnalysisType().equals("summary")) {
                 return e;
             }
