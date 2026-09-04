@@ -1,6 +1,5 @@
 package legal.shrinkwrap.api.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,6 +11,5 @@ public class CaseLawFullTextDto {
     public CaseLawMetadataDto metadata;
 
     @JsonPropertyDescription("The full text of the case law document, text only, not including markup.")
-    @JsonProperty(required = false)
     public String fullText;
 }

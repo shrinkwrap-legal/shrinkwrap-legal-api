@@ -3,75 +3,95 @@ package legal.shrinkwrap.api.controller;
 import io.modelcontextprotocol.json.McpJsonDefaults;
 import io.modelcontextprotocol.json.McpJsonMapper;
 import io.modelcontextprotocol.json.schema.JsonSchemaValidator;
-import legal.shrinkwrap.api.config.McpJsonConfiguration;
 import legal.shrinkwrap.api.dto.CaseLawFullTextDto;
 import legal.shrinkwrap.api.dto.CaseLawMetadataDto;
 import legal.shrinkwrap.api.dto.CaseLawSearchResponseDto;
 import legal.shrinkwrap.api.dto.CaselawSummaryCivilCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.mcp.annotation.method.tool.utils.McpJsonSchemaGenerator;
-import tools.jackson.databind.json.JsonMapper;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The MCP output schemas are generated with every property marked as required and typed without
- * "null", so an unset property makes the SDK's server-side validation reject the whole response.
- * The response DTOs therefore mark their optional properties as not required, and
- * {@link McpJsonConfiguration} leaves nulls out of the serialisation.
+ * The generated output schema types every property without "null", so a single null value makes the
+ * SDK reject the whole tool response - which is why {@link McpController} replaces the nulls before
+ * answering. An AI summary regularly leaves properties empty, so this is the normal case, not an
+ * edge case.
  * <p>
- * These tests answer with an almost empty result - what a case without an AI summary looks like -
- * and check that it still passes validation.
+ * The test deliberately uses {@link McpJsonDefaults}, the mapper the MCP tool serialisation actually
+ * runs through. Configuring a mapper of our own would not cover the real path.
  */
 public class McpOutputSchemaTest {
 
-    private final McpJsonMapper mapper = new McpJsonConfiguration().mcpJsonMapper(JsonMapper.builder().build());
+    private final McpJsonMapper mapper = McpJsonDefaults.getMapper();
 
     @SuppressWarnings("unchecked")
-    private void assertConformsToSchema(Class<?> type, Object instance) throws Exception {
+    private JsonSchemaValidator.ValidationResponse validate(Class<?> type, Object instance) throws Exception {
         String schema = McpJsonSchemaGenerator.generateFromClass(type);
         String json = mapper.writeValueAsString(instance);
-
-        JsonSchemaValidator.ValidationResponse result = McpJsonDefaults.getSchemaValidator()
+        return McpJsonDefaults.getSchemaValidator()
                 .validate(mapper.readValue(schema, Map.class), mapper.readValue(json, Map.class));
-
-        assertTrue(result.valid(), () -> type.getSimpleName() + " does not conform: "
-                + result.errorMessage() + " - serialised as " + json);
     }
 
-    @Test
-    public void searchResultWithoutSummaryConformsToSchema() throws Exception {
-        CaseLawSearchResponseDto response = new CaseLawSearchResponseDto();
-        response.setSearchResults(List.of(
-                new CaseLawSearchResponseDto.CaseLawSearchResultDto(42L, null, new CaseLawMetadataDto())));
-
-        assertConformsToSchema(CaseLawSearchResponseDto.class, response);
+    /** Metadata as it comes from the RIS: a court and a decision date are always there. */
+    private CaseLawMetadataDto metadata() {
+        CaseLawMetadataDto metadata = new CaseLawMetadataDto();
+        metadata.setCourt("OGH");
+        metadata.setDecisionDate(new Date());
+        return metadata;
     }
 
-    @Test
-    public void searchResultWithEmptySummaryConformsToSchema() throws Exception {
+    /** A summary of which the AI only filled in the type of decision. */
+    private CaselawSummaryCivilCase partialSummary() {
         CaselawSummaryCivilCase summary = new CaselawSummaryCivilCase();
-        summary.setArt(""); //the only property the schema still requires
-
-        CaseLawSearchResponseDto response = new CaseLawSearchResponseDto();
-        response.setSearchResults(List.of(
-                new CaseLawSearchResponseDto.CaseLawSearchResultDto(42L, summary, new CaseLawMetadataDto())));
-
-        assertConformsToSchema(CaseLawSearchResponseDto.class, response);
+        summary.setArt("Urteil");
+        return summary;
     }
 
-    /**
-     * A case whose text conversion has not run yet: the service always sets the metadata, but
-     * leaves the full text unset.
-     */
-    @Test
-    public void fullTextWithoutTextConformsToSchema() throws Exception {
-        CaseLawFullTextDto fullText = new CaseLawFullTextDto();
-        fullText.setMetadata(new CaseLawMetadataDto());
+    private CaseLawSearchResponseDto searchResponse(CaselawSummaryCivilCase summary, CaseLawMetadataDto metadata) {
+        CaseLawSearchResponseDto response = new CaseLawSearchResponseDto();
+        response.setSearchResults(List.of(
+                new CaseLawSearchResponseDto.CaseLawSearchResultDto(42L, summary, metadata)));
+        return response;
+    }
 
-        assertConformsToSchema(CaseLawFullTextDto.class, fullText);
+    @Test
+    public void searchResultConformsAfterNullsWereReplaced() throws Exception {
+        CaselawSummaryCivilCase summary = partialSummary();
+        CaseLawMetadataDto metadata = metadata();
+        McpController.replaceNulls(summary);
+        McpController.replaceNulls(metadata);
+
+        JsonSchemaValidator.ValidationResponse result = validate(
+                CaseLawSearchResponseDto.class, searchResponse(summary, metadata));
+
+        assertTrue(result.valid(), () -> "does not conform: " + result.errorMessage());
+    }
+
+    /** Without the replacement the same answer is rejected - this is what broke in production. */
+    @Test
+    public void searchResultWithNullsIsRejected() throws Exception {
+        JsonSchemaValidator.ValidationResponse result = validate(
+                CaseLawSearchResponseDto.class, searchResponse(partialSummary(), metadata()));
+
+        assertFalse(result.valid(), "nulls have to be rejected, otherwise the replacement is pointless");
+    }
+
+    @Test
+    public void fullTextConformsAfterNullsWereReplaced() throws Exception {
+        CaseLawMetadataDto metadata = metadata();
+        McpController.replaceNulls(metadata);
+        CaseLawFullTextDto fullText = new CaseLawFullTextDto();
+        fullText.setMetadata(metadata);
+        fullText.setFullText("Der Oberste Gerichtshof hat ...");
+
+        JsonSchemaValidator.ValidationResponse result = validate(CaseLawFullTextDto.class, fullText);
+
+        assertTrue(result.valid(), () -> "does not conform: " + result.errorMessage());
     }
 }
