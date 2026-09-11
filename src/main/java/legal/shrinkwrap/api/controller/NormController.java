@@ -41,8 +41,9 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @Slf4j
 public class NormController {
 
-    /** Enough for the whole of a large law, and a bound against an unfiltered request. */
-    private static final int MAX_LIMIT = 500;
+    /** Enough for the whole of a large law - the ABGB has 2.566 documents - and a bound against
+     * an unfiltered request. */
+    private static final int MAX_LIMIT = 2000;
 
     /** "Kompetenzfeststellung durch den VfGH" names 71 laws; a caller needs a choice, not all of them. */
     private static final int MAX_CANDIDATES = 25;
@@ -68,18 +69,27 @@ public class NormController {
     public NormStructureDto getStructure(@RequestParam("jurisdiction") String jurisdiction,
                                          @RequestParam("gesetzesnummer") String gesetzesnummer,
                                          @RequestParam(value = "asOf", required = false) LocalDate asOf,
+                                         @RequestParam(value = "inForceFrom", required = false) LocalDate inForceFrom,
+                                         @RequestParam(value = "inForceUntil", required = false) LocalDate inForceUntil,
                                          @RequestParam(value = "from", required = false) String from,
                                          @RequestParam(value = "to", required = false) String to,
                                          @RequestParam(value = "typ", required = false) String typ) {
         NormEntity norm = law(jurisdiction, gesetzesnummer);
         return new NormStructureDto(toLawDto(norm),
-                provisions(norm, asOf, from, to, typ).stream().map(d -> toProvisionDto(d, false)).toList());
+                provisions(norm, asOf, inForceFrom, inForceUntil, from, to, typ).stream()
+                        .map(d -> toProvisionDto(normService.withText(d), false)).toList());
     }
 
     /**
      * Provisions of a law, optionally with their text. A single provision is {@code from}
      * without {@code to}; a range includes everything in between, so 12a to 14c also brings up
      * 13 and 13a.
+     * <p>
+     * By default this answers with the law as it stands today. {@code asOf} moves that to another
+     * day; {@code inForceFrom} and {@code inForceUntil} open it into a stretch of time and then
+     * every version that was in force at any point within it comes back - which is how a caller
+     * sees what changed. Either end may be left off. The versions of one provision arrive next
+     * to each other, oldest first, each naming the publication that brought it about.
      * <p>
      * A bound is a number, optionally preceded by its designation: {@code 12}, {@code 12a},
      * {@code § 12a}, {@code Art. 4}, {@code Artikel 4}, {@code Anl. 3}, {@code Anlage 3}. The
@@ -94,6 +104,8 @@ public class NormController {
             @RequestParam(value = "gesetzesnummer", required = false) String gesetzesnummer,
             @RequestParam(value = "abbreviation", required = false) String abbreviation,
             @RequestParam(value = "asOf", required = false) LocalDate asOf,
+            @RequestParam(value = "inForceFrom", required = false) LocalDate inForceFrom,
+            @RequestParam(value = "inForceUntil", required = false) LocalDate inForceUntil,
             @RequestParam(value = "from", required = false) String from,
             @RequestParam(value = "to", required = false) String to,
             @RequestParam(value = "typ", required = false) String typ,
@@ -104,10 +116,12 @@ public class NormController {
                 ? law(jurisdiction, gesetzesnummer)
                 : singleLawFor(jurisdiction, abbreviation);
 
-        return provisions(norm, asOf, from, to, typ).stream()
+        return provisions(norm, asOf, inForceFrom, inForceUntil, from, to, typ).stream()
                 .limit(Math.min(limit, MAX_LIMIT))
-                //text is fetched and converted here if this is the first time it is asked for
-                .map(d -> toProvisionDto(includeText ? normService.withText(d) : d, includeText))
+                //always converted, not only when the text is wanted: the word count comes out of
+                //the conversion and there is nothing in the RIS metadata to derive it from. The
+                //result is stored, so this costs one fetch per provision ever, not per request
+                .map(d -> toProvisionDto(normService.withText(d), includeText))
                 .toList();
     }
 
@@ -121,21 +135,40 @@ public class NormController {
     }
 
     private List<NormDocumentEntity> provisions(NormEntity norm, LocalDate asOf,
+                                                LocalDate inForceFrom, LocalDate inForceUntil,
                                                 String from, String to, String typ) {
-        LocalDate effective = asOf == null ? LocalDate.now() : asOf;
+        LocalDate[] period = period(asOf, inForceFrom, inForceUntil);
         NormSectionType wanted = sectionType(typ);
         if (from == null) {
-            List<NormDocumentEntity> all = normService.findProvisions(norm, effective);
-            return wanted == null ? all
-                    : all.stream().filter(d -> wanted.name().equals(d.getAbschnittTyp())).toList();
+            return withoutLawHead(normService.findProvisions(norm, period[0], period[1])).stream()
+                    .filter(d -> wanted == null || wanted.name().equals(d.getAbschnittTyp()))
+                    .toList();
         }
         try {
             //a single provision is a range whose bounds coincide
-            return normService.findProvisions(norm, effective, from, to == null ? from : to, wanted);
+            return withoutLawHead(normService.findProvisions(norm, period[0], period[1],
+                    from, to == null ? from : to, wanted));
         } catch (IllegalArgumentException e) {
             //a bound nobody can read is a bad request, not an empty law
             throw new ResponseStatusException(BAD_REQUEST, e.getMessage());
         }
+    }
+
+    /**
+     * Which stretch of time a provision has to have been in force in. A period wins over
+     * {@code asOf}, either of its ends may be left open, and with neither given the answer is
+     * today's law - the question a caller asks unless they say otherwise.
+     */
+    private static LocalDate[] period(LocalDate asOf, LocalDate inForceFrom, LocalDate inForceUntil) {
+        if (inForceFrom != null || inForceUntil != null) {
+            if (inForceFrom != null && inForceUntil != null && inForceFrom.isAfter(inForceUntil)) {
+                throw new ResponseStatusException(BAD_REQUEST,
+                        "inForceFrom " + inForceFrom + " lies after inForceUntil " + inForceUntil);
+            }
+            return new LocalDate[]{inForceFrom, inForceUntil};
+        }
+        LocalDate day = asOf == null ? LocalDate.now() : asOf;
+        return new LocalDate[]{day, day};
     }
 
     /** Accepts the enum in any casing, plus "Alle" for no restriction. */
@@ -149,6 +182,18 @@ public class NormController {
             throw new ResponseStatusException(BAD_REQUEST, "unknown typ " + typ
                     + " - expected Paragraph, Artikel, Anlage, Norm or Alle");
         }
+    }
+
+    /**
+     * Drops the head document of the law. RIS numbers it "§ 0" and marks it {@code Norm}; its
+     * text block is empty, and what it carries besides - title, index, publication - is already
+     * on the law itself. All 25.213 of them in the corpus are exactly the documents typed
+     * {@code NORM}, so the two ways of naming them agree.
+     */
+    private static List<NormDocumentEntity> withoutLawHead(List<NormDocumentEntity> documents) {
+        return documents.stream()
+                .filter(d -> !NormSectionType.NORM.name().equals(d.getAbschnittTyp()))
+                .toList();
     }
 
     private NormEntity law(String jurisdiction, String gesetzesnummer) {
@@ -211,12 +256,21 @@ public class NormController {
                 norm.getKundmachungsorgan(), norm.getEli());
     }
 
+    /** "BGBl. I Nr." and "59/2017" are two RIS fields; a reader wants the one line. */
+    private static String publication(String organ, String nummer) {
+        if (organ == null && nummer == null) {
+            return null;
+        }
+        return ((organ == null ? "" : organ) + " " + (nummer == null ? "" : nummer)).trim();
+    }
+
     private NormProvisionDto toProvisionDto(NormDocumentEntity document, boolean includeText) {
         return new NormProvisionDto(
-                document.getDocNumber(), document.getAbschnittTyp(),
                 document.getArtikelParagraphAnlage(), normService.risUrl(document),
                 document.getInkrafttreten(), document.getAusserkrafttreten(),
-                document.getFullText() != null, document.getWordCount(),
+                publication(document.getStammnormPublikationsorgan(), document.getStammnormBgblnummer()),
+                publication(document.getNovellenPublikationsorgan(), document.getNovellenBgblnummer()),
+                document.getWordCount(),
                 includeText ? document.getFullText() : null,
                 //a table of contents does not need the attachment list, only the reader of a text does
                 includeText ? document.getAttachments() : null);

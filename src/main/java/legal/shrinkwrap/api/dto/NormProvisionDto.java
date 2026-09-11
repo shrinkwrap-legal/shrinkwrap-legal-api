@@ -5,12 +5,14 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import java.time.LocalDate;
 
 /**
- * One version of one provision. {@code hasText} and {@code wordCount} are filled even when the
- * text itself is not requested, so a caller can see what a full retrieval would cost.
+ * One version of one provision.
+ * <p>
+ * Deliberately narrow. The document number is left out because it is the last segment of
+ * {@link #risUrl}; the kind of provision because {@link #artikelParagraphAnlage} already reads
+ * "§ 50", "Art. 4 § 1" or "Anl. 2/49"; and a separate "has text" flag because a
+ * {@link #wordCount} says the same thing.
  */
 public record NormProvisionDto(
-        String docNumber,
-        String abschnittTyp,
         @JsonPropertyDescription("Designation as RIS writes it: \"§ 50\", \"Art. 4 § 1\", \"Anl. 2/49\"")
         String artikelParagraphAnlage,
         @JsonPropertyDescription("Link to this version of the provision in the RIS interface")
@@ -18,7 +20,11 @@ public record NormProvisionDto(
         LocalDate inkrafttreten,
         @JsonPropertyDescription("Frequently absent - a provision in force has no end date")
         LocalDate ausserkrafttreten,
-        boolean hasText,
+        @JsonPropertyDescription("Where the provision was originally enacted, e.g. \"JGS Nr. 946/1811\"")
+        String stammfassung,
+        @JsonPropertyDescription("Which publication last touched it, e.g. \"BGBl. I Nr. 59/2017\". "
+                + "Together with ausserkrafttreten this says whether it amended or repealed")
+        String letzteAenderung,
         Long wordCount,
         @JsonPropertyDescription("Only present when the text was requested")
         String fullText,
