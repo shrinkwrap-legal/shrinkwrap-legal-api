@@ -48,6 +48,14 @@ public class NormService {
     private static final int TITLE_MATCH_LIMIT = 50;
 
     /**
+     * Stand-ins for an open end of the period. Real dates rather than nulls, because a nullable
+     * date in the query would leave Postgres to guess the parameter type; and not
+     * {@link LocalDate#MIN}/{@link LocalDate#MAX}, which lie outside what a date column holds.
+     */
+    private static final LocalDate EARLIEST = LocalDate.of(1, 1, 1);
+    private static final LocalDate LATEST = LocalDate.of(9999, 12, 31);
+
+    /**
      * The RIS user interface. Without the "www", which resolves just as well and without a
      * redirect - measured across federal, state, annex and JGS links - and saves four characters
      * on every provision an agent reads.
@@ -121,9 +129,17 @@ public class NormService {
         return normDocumentRepository.findByDocNumber(docNumber);
     }
 
-    /** The provisions of a law in force on a day, in the order RIS lists them. */
-    public List<NormDocumentEntity> findProvisions(NormEntity norm, LocalDate asOf) {
-        return normDocumentRepository.findInForce(norm, asOf);
+    /**
+     * Every version of every provision that was in force at some point between the two days, in
+     * the order RIS lists them - which puts the versions of one provision next to each other,
+     * oldest first, so the changes read in sequence.
+     * <p>
+     * Pass the same day twice for the single version in force then. An open bound reaches as far
+     * as the data goes; both open returns every version ever recorded.
+     */
+    public List<NormDocumentEntity> findProvisions(NormEntity norm, LocalDate from, LocalDate until) {
+        return normDocumentRepository.findInForceBetween(norm,
+                from == null ? EARLIEST : from, until == null ? LATEST : until);
     }
 
     /**
@@ -144,11 +160,11 @@ public class NormService {
      * @throws IllegalArgumentException if a bound cannot be read - an unusable range is an error,
      *                                  not an empty result
      */
-    public List<NormDocumentEntity> findProvisions(NormEntity norm, LocalDate asOf,
+    public List<NormDocumentEntity> findProvisions(NormEntity norm, LocalDate from, LocalDate until,
                                                    String von, String bis, NormSectionType typ) {
-        ArticleNumber from = ArticleNumber.parse(von);
-        ArticleNumber to = ArticleNumber.parse(bis);
-        if (from == null || to == null) {
+        ArticleNumber lower = ArticleNumber.parse(von);
+        ArticleNumber upper = ArticleNumber.parse(bis);
+        if (lower == null || upper == null) {
             throw new IllegalArgumentException("cannot read the range " + von + " to " + bis
                     + " - expected a number, optionally with a designation: 12, 12a, \u00a7 12a, "
                     + "Art. 4, Anlage 3");
@@ -158,11 +174,11 @@ public class NormService {
         //no re-sorting: the order comes from RIS and is the reading order of the law. Sorting by
         //(number, letters) would interleave kinds that number alike - "Art. 1, Art. 4 § 1,
         //Art. 2, Art. 4 § 2, …" instead of the articles followed by their paragraphs
-        return findProvisions(norm, asOf).stream()
+        return findProvisions(norm, from, until).stream()
                 .filter(d -> wanted == null || wanted.name().equals(d.getAbschnittTyp()))
                 .filter(d -> {
                     ArticleNumber key = ArticleNumber.of(d);
-                    return key != null && key.compareTo(from) >= 0 && key.compareTo(to) <= 0;
+                    return key != null && key.compareTo(lower) >= 0 && key.compareTo(upper) <= 0;
                 })
                 .toList();
     }
@@ -192,7 +208,9 @@ public class NormService {
 
         document.setFullCleanHtml(cleanHtml);
         document.setFullText(text);
-        document.setWordCount((long) text.split("\\s+").length);
+        //splitting an empty string yields one element, so § 0 with its empty text body would
+        //otherwise be reported as one word
+        document.setWordCount(text.isBlank() ? 0L : text.strip().split("\\s+").length);
         document.setTextConversionVersion(TEXT_CONVERSION_VERSION);
         return normDocumentRepository.save(document);
     }

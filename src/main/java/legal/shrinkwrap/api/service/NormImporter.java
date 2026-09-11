@@ -154,11 +154,20 @@ public class NormImporter {
             Map<LawKey, List<RisNormResult>> byLaw = new LinkedHashMap<>();
             for (RisNormResult result : changed) {
                 String gesetzesnummer = result.getNormMetadaten().getGesetzesnummer();
-                if (gesetzesnummer != null) {
-                    byLaw.computeIfAbsent(
-                            new LawKey(bundeslandOf(result.getNormMetadaten().getBundesland()), gesetzesnummer),
-                            key -> new ArrayList<>()).add(result);
+                if (gesetzesnummer == null) {
+                    continue;
                 }
+                Bundesland state = bundeslandOf(result.getNormMetadaten().getBundesland());
+                //a null state is the key of federal law, so an unreadable one would file a state
+                //law under the federal law of the same Gesetzesnummer - the numbers are not
+                //unique across the two. Better to skip it loudly than to write it to the wrong law
+                if (landesrecht && state == null) {
+                    log.error("changed document {} reports the unknown Bundesland {}, skipped",
+                            result.getMetadaten().getId(), result.getNormMetadaten().getBundesland());
+                    continue;
+                }
+                byLaw.computeIfAbsent(new LawKey(state, gesetzesnummer), key -> new ArrayList<>())
+                        .add(result);
             }
             log.info("{} changed documents in {} laws", changed.size(), byLaw.size());
 
@@ -211,13 +220,21 @@ public class NormImporter {
     private record LawKey(Bundesland bundesland, String gesetzesnummer) {
     }
 
-    /** RIS reports the state as its plain name in the response; the request needs the enum. */
+    /**
+     * RIS reports the state as its plain name in the response; the request needs the enum.
+     * <p>
+     * The two spellings do not match: the schema transliterates - {@code Oberoesterreich} - while
+     * the response carries the umlaut. Without folding them, Kaernten, Niederoesterreich and
+     * Oberoesterreich never resolve, and a null state means federal law one line further down.
+     */
     static Bundesland bundeslandOf(String name) {
         if (name == null || name.isBlank()) {
             return null;
         }
+        //exactly three of the nine names carry one, and never as the first letter
+        String transliterated = name.trim().replace("ä", "ae").replace("ö", "oe");
         try {
-            return Bundesland.fromValue(name.trim());
+            return Bundesland.fromValue(transliterated);
         } catch (IllegalArgumentException e) {
             return null;
         }
@@ -285,7 +302,7 @@ public class NormImporter {
     }
 
     /** Federal law and all nine states. Runs for hours and writes some 722.000 documents. */
-    @PostConstruct
+    //@PostConstruct
     public void importEverything() {
         importAllLaws(null);
         for (Bundesland bundesland : Bundesland.values()) {
