@@ -99,6 +99,15 @@ public class NormService {
         return normRepository.findByJurisdictionAndIdentifier(jurisdiction, gesetzesnummer);
     }
 
+    /**
+     * The law of a document. Going through the id rather than {@code document.getNorm()}: the
+     * association is lazy and open-in-view is off, so outside the loading transaction only the id
+     * of that proxy can be read without failing.
+     */
+    public NormEntity lawOf(NormDocumentEntity document) {
+        return normRepository.findById(document.getNorm().getId()).orElseThrow();
+    }
+
     /** Every name the law is known by, for display - the normalised keys stay internal. */
     public List<String> namesOf(NormEntity norm) {
         return normAbbreviationRepository.findByNorm(norm).stream()

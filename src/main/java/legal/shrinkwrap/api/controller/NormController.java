@@ -3,7 +3,7 @@ package legal.shrinkwrap.api.controller;
 import legal.shrinkwrap.api.dto.NormAmbiguityDto;
 import legal.shrinkwrap.api.dto.NormLawDto;
 import legal.shrinkwrap.api.dto.NormProvisionDto;
-import legal.shrinkwrap.api.dto.NormStructureDto;
+import legal.shrinkwrap.api.dto.NormProvisionsDto;
 import legal.shrinkwrap.api.persistence.entity.NormDocumentEntity;
 import legal.shrinkwrap.api.persistence.entity.NormEntity;
 import legal.shrinkwrap.api.persistence.entity.NormSectionType;
@@ -15,15 +15,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
@@ -48,36 +49,28 @@ public class NormController {
     /** "Kompetenzfeststellung durch den VfGH" names 71 laws; a caller needs a choice, not all of them. */
     private static final int MAX_CANDIDATES = 25;
 
+    /** Matches found before the limit was applied. */
+    public static final String TOTAL_COUNT = "X-Total-Count";
+
+    /**
+     * NOR40248854 for federal law, LKT40018779 and the like for the states - three letters and
+     * eight digits throughout the corpus. Narrow on purpose: the segment before it, "P1" or
+     * "P30a", looks alike, and a link cut off there must not pass for a document number.
+     */
+    private static final Pattern DOCUMENT_NUMBER = Pattern.compile("[A-Z]{3}\\d{8}");
+
     private final NormService normService;
 
     /** Finds a law by an abbreviation or a short title, however the caller writes it. */
     @GetMapping(value = "norm/laws", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<NormLawDto> findLaws(@RequestParam("jurisdiction") String jurisdiction,
-                                     @RequestParam("query") String query,
-                                     @RequestParam(value = "limit", defaultValue = "20") int limit) {
-        return normService.findLaws(query, jurisdiction).stream()
+    public ResponseEntity<List<NormLawDto>> findLaws(@RequestParam("jurisdiction") String jurisdiction,
+                                                     @RequestParam("query") String query,
+                                                     @RequestParam(value = "limit", defaultValue = "20") int limit) {
+        List<NormEntity> laws = normService.findLaws(query, jurisdiction);
+        return withTotal(laws.size(), laws.stream()
                 .limit(Math.min(limit, MAX_LIMIT))
                 .map(this::toLawDto)
-                .toList();
-    }
-
-    /**
-     * The table of contents of a law without any text, so a caller can see what exists - and,
-     * through hasText and wordCount, what retrieving it would cost.
-     */
-    @GetMapping(value = "norm/structure", produces = MediaType.APPLICATION_JSON_VALUE)
-    public NormStructureDto getStructure(@RequestParam("jurisdiction") String jurisdiction,
-                                         @RequestParam("gesetzesnummer") String gesetzesnummer,
-                                         @RequestParam(value = "asOf", required = false) LocalDate asOf,
-                                         @RequestParam(value = "inForceFrom", required = false) LocalDate inForceFrom,
-                                         @RequestParam(value = "inForceUntil", required = false) LocalDate inForceUntil,
-                                         @RequestParam(value = "from", required = false) String from,
-                                         @RequestParam(value = "to", required = false) String to,
-                                         @RequestParam(value = "typ", required = false) String typ) {
-        NormEntity norm = law(jurisdiction, gesetzesnummer);
-        return new NormStructureDto(toLawDto(norm),
-                provisions(norm, asOf, inForceFrom, inForceUntil, from, to, typ).stream()
-                        .map(d -> toProvisionDto(normService.withText(d), false)).toList());
+                .toList());
     }
 
     /**
@@ -97,12 +90,22 @@ public class NormController {
      * paragraphs only. Failing that, {@code typ} does the same, and without either the range
      * spans every kind - which matters, because a law can number several kinds alike: the
      * 2. Wohnrechtsänderungsgesetz has Art. 1 to Art. 5 as well as Art. 4 § 1 to § 4.
+     * <p>
+     * {@code risUrl} picks versions by the link an earlier answer gave for them, several separated
+     * by commas; {@code docNumber} does the same with the bare RIS document number the link ends in.
+     * It is the only way to one of several provisions sharing a designation - the ASVG has 24
+     * "Art. 2" in force at once, one from each amending act - and the second step after a listing
+     * without text. The numbers name the law, so neither jurisdiction nor gesetzesnummer is needed,
+     * and they have to belong to one law. The other filters still apply; only the default of
+     * today falls away, because a document number names a version rather than a day.
      */
     @GetMapping(value = "norm/provisions", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<NormProvisionDto> getProvisions(
-            @RequestParam("jurisdiction") String jurisdiction,
+    public ResponseEntity<NormProvisionsDto> getProvisions(
+            @RequestParam(value = "jurisdiction", required = false) String jurisdiction,
             @RequestParam(value = "gesetzesnummer", required = false) String gesetzesnummer,
             @RequestParam(value = "abbreviation", required = false) String abbreviation,
+            @RequestParam(value = "risUrl", required = false) List<String> risUrl,
+            @RequestParam(value = "docNumber", required = false) List<String> docNumber,
             @RequestParam(value = "asOf", required = false) LocalDate asOf,
             @RequestParam(value = "inForceFrom", required = false) LocalDate inForceFrom,
             @RequestParam(value = "inForceUntil", required = false) LocalDate inForceUntil,
@@ -112,32 +115,38 @@ public class NormController {
             @RequestParam(value = "includeText", defaultValue = "false") boolean includeText,
             @RequestParam(value = "limit", defaultValue = "25") int limit) {
 
-        NormEntity norm = gesetzesnummer != null
-                ? law(jurisdiction, gesetzesnummer)
-                : singleLawFor(jurisdiction, abbreviation);
+        List<String> numbers = documentNumbers(risUrl, docNumber);
+        boolean byNumber = !numbers.isEmpty();
+        NormEntity norm = byNumber
+                ? lawOf(numbers, jurisdiction, gesetzesnummer, abbreviation)
+                : namedLaw(jurisdiction, gesetzesnummer, abbreviation);
 
-        return provisions(norm, asOf, inForceFrom, inForceUntil, from, to, typ).stream()
+        LocalDate[] period = byNumber && asOf == null && inForceFrom == null && inForceUntil == null
+                ? new LocalDate[]{null, null}
+                : period(asOf, inForceFrom, inForceUntil);
+        List<NormDocumentEntity> found = provisions(norm, period, from, to, typ).stream()
+                .filter(d -> !byNumber || numbers.contains(d.getDocNumber()))
+                .toList();
+        List<NormProvisionDto> page = found.stream()
                 .limit(Math.min(limit, MAX_LIMIT))
                 //always converted, not only when the text is wanted: the word count comes out of
                 //the conversion and there is nothing in the RIS metadata to derive it from. The
                 //result is stored, so this costs one fetch per provision ever, not per request
                 .map(d -> toProvisionDto(normService.withText(d), includeText))
                 .toList();
+        return withTotal(found.size(), new NormProvisionsDto(toLawDto(norm), found.size(), page));
     }
 
-    /** The stable single reference; a document number never changes. */
-    @GetMapping(value = "norm/document/{docNumber}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public NormProvisionDto getDocument(@PathVariable("docNumber") String docNumber,
-                                        @RequestParam(value = "includeText", defaultValue = "true") boolean includeText) {
-        NormDocumentEntity document = normService.findByDocNumber(docNumber)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "unknown document " + docNumber));
-        return toProvisionDto(includeText ? normService.withText(document) : document, includeText);
+    /**
+     * A list cut off at the limit looks exactly like a complete one - 25 of the 239 TKG versions
+     * of the last ten years read as the whole answer. The header says how many there were.
+     */
+    private static <T> ResponseEntity<T> withTotal(int total, T body) {
+        return ResponseEntity.ok().header(TOTAL_COUNT, String.valueOf(total)).body(body);
     }
 
-    private List<NormDocumentEntity> provisions(NormEntity norm, LocalDate asOf,
-                                                LocalDate inForceFrom, LocalDate inForceUntil,
+    private List<NormDocumentEntity> provisions(NormEntity norm, LocalDate[] period,
                                                 String from, String to, String typ) {
-        LocalDate[] period = period(asOf, inForceFrom, inForceUntil);
         NormSectionType wanted = sectionType(typ);
         if (from == null) {
             return withoutLawHead(normService.findProvisions(norm, period[0], period[1])).stream()
@@ -194,6 +203,60 @@ public class NormController {
         return documents.stream()
                 .filter(d -> !NormSectionType.NORM.name().equals(d.getAbschnittTyp()))
                 .toList();
+    }
+
+    /** A law by the name the caller gave it - which, without a document number, has to be given. */
+    private NormEntity namedLaw(String jurisdiction, String gesetzesnummer, String abbreviation) {
+        if (jurisdiction == null || jurisdiction.isBlank()) {
+            throw new ResponseStatusException(BAD_REQUEST, "jurisdiction is required unless docNumber is given");
+        }
+        return gesetzesnummer != null ? law(jurisdiction, gesetzesnummer) : singleLawFor(jurisdiction, abbreviation);
+    }
+
+    /**
+     * The document numbers asked for, whichever way. A link to a version ends in its number -
+     * {@code …/eli/bgbl/i/2022/196/P1/NOR40248854} - so that is all that is taken from it.
+     */
+    private static List<String> documentNumbers(List<String> risUrls, List<String> docNumbers) {
+        List<String> numbers = new ArrayList<>();
+        for (String url : risUrls == null ? List.<String>of() : risUrls) {
+            String path = url.trim().replaceFirst("[?#].*$", "").replaceFirst("/+$", "");
+            String number = path.substring(path.lastIndexOf('/') + 1);
+            if (!DOCUMENT_NUMBER.matcher(number).matches()) {
+                throw new ResponseStatusException(BAD_REQUEST, "no document number at the end of " + url);
+            }
+            numbers.add(number);
+        }
+        for (String number : docNumbers == null ? List.<String>of() : docNumbers) {
+            numbers.add(number.trim());
+        }
+        return numbers;
+    }
+
+    /**
+     * The law the document numbers belong to. One answer carries one law, so numbers from several
+     * laws are a request to split. A law named alongside has to be that same law.
+     */
+    private NormEntity lawOf(List<String> docNumbers, String jurisdiction, String gesetzesnummer,
+                             String abbreviation) {
+        List<NormDocumentEntity> documents = docNumbers.stream()
+                .map(number -> normService.findByDocNumber(number)
+                        .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "unknown document " + number)))
+                .toList();
+        if (documents.stream().map(d -> d.getNorm().getId()).distinct().count() > 1) {
+            throw new ResponseStatusException(BAD_REQUEST,
+                    "the document numbers belong to different laws - one request per law");
+        }
+        NormEntity law = normService.lawOf(documents.getFirst());
+        if (gesetzesnummer != null || abbreviation != null) {
+            NormEntity named = namedLaw(jurisdiction != null ? jurisdiction : law.getJurisdiction(),
+                    gesetzesnummer, abbreviation);
+            if (!named.getId().equals(law.getId())) {
+                throw new ResponseStatusException(BAD_REQUEST, "the document numbers do not belong to "
+                        + (gesetzesnummer != null ? gesetzesnummer : abbreviation));
+            }
+        }
+        return law;
     }
 
     private NormEntity law(String jurisdiction, String gesetzesnummer) {
@@ -266,7 +329,7 @@ public class NormController {
 
     private NormProvisionDto toProvisionDto(NormDocumentEntity document, boolean includeText) {
         return new NormProvisionDto(
-                document.getArtikelParagraphAnlage(), normService.risUrl(document),
+                document.getArtikelParagraphAnlage(), document.getUebergangsrecht(), normService.risUrl(document),
                 document.getInkrafttreten(), document.getAusserkrafttreten(),
                 publication(document.getStammnormPublikationsorgan(), document.getStammnormBgblnummer()),
                 publication(document.getNovellenPublikationsorgan(), document.getNovellenBgblnummer()),

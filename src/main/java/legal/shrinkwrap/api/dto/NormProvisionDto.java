@@ -8,14 +8,19 @@ import java.time.LocalDate;
  * One version of one provision.
  * <p>
  * Deliberately narrow. The document number is left out because it is the last segment of
- * {@link #risUrl}; the kind of provision because {@link #artikelParagraphAnlage} already reads
- * "§ 50", "Art. 4 § 1" or "Anl. 2/49"; and a separate "has text" flag because a
- * {@link #wordCount} says the same thing.
+ * {@link #risUrl}, which also serves as the filter to fetch exactly this version again; the kind
+ * of provision because {@link #artikelParagraphAnlage} already reads "§ 50", "Art. 4 § 1" or
+ * "Anl. 2/49"; and a separate "has text" flag because a {@link #wordCount} says the same thing.
  */
 public record NormProvisionDto(
         @JsonPropertyDescription("Designation as RIS writes it: \"§ 50\", \"Art. 4 § 1\", \"Anl. 2/49\"")
         String artikelParagraphAnlage,
-        @JsonPropertyDescription("Link to this version of the provision in the RIS interface")
+        @JsonPropertyDescription("A marker RIS sets on provisions consolidated from an amending act, "
+                + "mostly at the end of a law: \"ÜR\" for transitional law, also \"EG/EU\", \"A\", \"S\", \"BVG\". "
+                + "Such a provision names the amending act as its stammfassung")
+        String uebergangsrecht,
+        @JsonPropertyDescription("Link to this version of the provision in the RIS interface; pass it "
+                + "back as risUrl to fetch exactly this version, e.g. with its text")
         String risUrl,
         LocalDate inkrafttreten,
         @JsonPropertyDescription("Frequently absent - a provision in force has no end date")
