@@ -347,12 +347,15 @@ public class NormImporter {
     /** Federal law and all nine states. Runs for hours and writes some 722.000 documents. */
     //@PostConstruct
     public void importEverything() {
-        importAllLaws(null);
-        for (Bundesland bundesland : Bundesland.values()) {
-            if (bundesland != Bundesland.UNDEFINED) {
-                importAllLaws(bundesland);
+        new Thread(() -> {
+            importAllLaws(null);
+            for (Bundesland bundesland : Bundesland.values()) {
+                if (bundesland != Bundesland.UNDEFINED) {
+                    importAllLaws(bundesland);
+                }
             }
-        }
+            ;
+        }).start();
     }
 
     /**
@@ -418,6 +421,7 @@ public class NormImporter {
         document.setNovellenPublikationsorgan(source.getNovellenPublikationsorgan());
         document.setNovellenBgblnummer(source.getNovellenBgblnummer());
         document.setNovellenBeziehung(source.getNovellenBeziehung());
+        document.setUebergangsrecht(stripped(source.getUebergangsrecht()));
         document.setBeachte(source.getBeachte());
         document.setAnmerkung(source.getAnmerkung());
         //RIS also rewrites a document in place, keeping its docNumber - the ABGB head is reissued
@@ -464,9 +468,9 @@ public class NormImporter {
             return;
         }
 
-        norm.setKurztitel(source.getKurztitel());
-        norm.setTyp(source.getTyp());
-        norm.setKundmachungsorgan(source.getKundmachungsorgan());
+        norm.setKurztitel(stripped(source.getKurztitel()));
+        norm.setTyp(stripped(source.getTyp()));
+        norm.setKundmachungsorgan(stripped(source.getKundmachungsorgan()));
         norm.setGesamteRechtsvorschriftUrl(source.getGesamteRechtsvorschriftUrl());
         norm.setIndizes(source.getIndizes() == null ? null : String.join("; ", source.getIndizes()));
         //the law may not be in force yet, and then the fallback above handed out a future date
@@ -515,9 +519,18 @@ public class NormImporter {
                         && (m.getAusserkrafttreten() == null || m.getAusserkrafttreten().isAfter(today)))
                 .findFirst()
                 .ifPresent(head -> {
-                    norm.setLangtitel(head.getTitel());
+                    norm.setLangtitel(stripped(head.getTitel()));
                     norm.setEli(head.getEli());
                 });
+    }
+
+    /**
+     * RIS pads what it delivers - "Allgemeines Pensionsgesetz ", and the Kundmachungsorgan ends in
+     * a space almost every time. Only the edges go; markup inside, such as the line breaks of the
+     * long title, is content.
+     */
+    static String stripped(String value) {
+        return value == null ? null : value.strip();
     }
 
     static boolean inForceAlready(RisNormMetadaten metadaten, LocalDate today) {
@@ -529,7 +542,8 @@ public class NormImporter {
      * their day for decades, so a name seen once stays findable. Abbreviation and short title
      * share the table, so a query does not have to know which of the two it was given.
      */
-    private void storeName(NormEntity norm, String value, NormAbbreviationSource quelle) {
+    private void storeName(NormEntity norm, String written, NormAbbreviationSource quelle) {
+        String value = stripped(written);
         //measured against the value as written, not against the normalised key: condensing
         //drops dots and spaces, so a 267 character title shrinks to 223 and would slip past a
         //check on the key while the untouched original still goes into the row

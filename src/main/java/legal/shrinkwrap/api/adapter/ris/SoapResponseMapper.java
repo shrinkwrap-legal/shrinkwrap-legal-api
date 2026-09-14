@@ -185,6 +185,7 @@ public class SoapResponseMapper {
             norm.setNovellenPublikationsorgan(brKons.getNovellenPublikationsorgan());
             norm.setNovellenBgblnummer(brKons.getNovellenBgblnummer());
             norm.setNovellenBeziehung(brKons.getNovellenBeziehung());
+            norm.setUebergangsrecht(brKons.getUebergangsrecht());
             norm.setInkrafttreten(formXmlGregorianCalendar(unwrap(brKons.getInkrafttretensdatum())));
             norm.setAusserkrafttreten(formXmlGregorianCalendar(unwrap(brKons.getAusserkrafttretensdatum())));
             norm.setBeachte(brKons.getBeachte());
@@ -222,6 +223,7 @@ public class SoapResponseMapper {
             norm.setNovellenPublikationsorgan(lrKons.getNovellenPublikationsorgan());
             norm.setNovellenBgblnummer(lrKons.getNovellenBgblnummer());
             norm.setNovellenBeziehung(lrKons.getNovellenBeziehung());
+            norm.setUebergangsrecht(lrKons.getUebergangsrecht());
             norm.setInkrafttreten(formXmlGregorianCalendar(unwrap(lrKons.getInkrafttretensdatum())));
             norm.setAusserkrafttreten(formXmlGregorianCalendar(unwrap(lrKons.getAusserkrafttretensdatum())));
             norm.setBeachte(lrKons.getBeachte());
