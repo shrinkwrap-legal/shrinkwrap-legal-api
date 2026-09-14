@@ -20,8 +20,9 @@ import legal.shrinkwrap.api.persistence.repo.NormDocumentRepository;
 import legal.shrinkwrap.api.persistence.repo.NormRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,9 +30,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -46,7 +50,7 @@ import java.util.Set;
  * hundreds of documents that nobody will read.
  */
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class NormImporter {
 
@@ -60,8 +64,26 @@ public class NormImporter {
      */
     private static final int MAX_NAME_LENGTH = 200;
 
+    /** Accepts every type, so the property may stay untouched for a complete mirror. */
+    private static final String ALL_TYPES = "*";
+
     /** Several days, so a run that fails or is skipped is caught by the next one. */
     private static final int CHANGE_WINDOW_DAYS = 5;
+
+    /** Nulls last, so a version RIS left undated never wins a min() over the dated ones. */
+    private static final Comparator<RisNormResult> BY_INKRAFTTRETEN =
+            Comparator.comparing(r -> r.getNormMetadaten().getInkrafttreten(),
+                    Comparator.nullsLast(Comparator.naturalOrder()));
+
+    /**
+     * Which laws the import takes, matched against the type RIS writes on every document: "BG"
+     * for a federal act, "LG" for a state one, "V" for a regulation. "*" takes everything and is
+     * what production runs; a staging system narrows it to the acts, which are a fifth of the
+     * laws. It applies to the nightly update too, or the change feed would put back what the
+     * initial import left out.
+     */
+    @Value("${ris.norm.import-types:*}")
+    String importTypes;
 
     private final RisSoapAdapter risSoapAdapter;
     private final NormRepository normRepository;
@@ -157,6 +179,9 @@ public class NormImporter {
                 if (gesetzesnummer == null) {
                     continue;
                 }
+                if (!importsType(result.getNormMetadaten().getTyp())) {
+                    continue;
+                }
                 Bundesland state = bundeslandOf(result.getNormMetadaten().getBundesland());
                 //a null state is the key of federal law, so an unreadable one would file a state
                 //law under the federal law of the same Gesetzesnummer - the numbers are not
@@ -221,6 +246,21 @@ public class NormImporter {
     }
 
     /**
+     * Whether a law of this type is imported. The wildcard and an empty setting take everything,
+     * so leaving the property alone keeps the behaviour of a complete mirror. Matching ignores
+     * case and spacing: the state type is free text, and RIS writes "LG", "Gesetz" and " K " alike.
+     */
+    boolean importsType(String typ) {
+        if (importTypes == null || importTypes.isBlank() || ALL_TYPES.equals(importTypes.trim())) {
+            return true;
+        }
+        String wanted = typ == null ? "" : typ.trim().toLowerCase(Locale.ROOT);
+        return Arrays.stream(importTypes.split(","))
+                .map(accepted -> accepted.trim().toLowerCase(Locale.ROOT))
+                .anyMatch(wanted::equals);
+    }
+
+    /**
      * RIS reports the state as its plain name in the response; the request needs the enum.
      * <p>
      * The two spellings do not match: the schema transliterates - {@code Oberoesterreich} - while
@@ -257,7 +297,10 @@ public class NormImporter {
                         .abschnitt(NormabschnittTyp.PARAGRAPH, "0", "0")
                         .fassungVom(LocalDate.now())
                         .build()).stream()
-                .map(result -> result.getNormMetadaten().getGesetzesnummer())
+                .map(RisNormResult::getNormMetadaten)
+                //the head already carries the type, so a law left out is never fetched at all
+                .filter(metadaten -> importsType(metadaten.getTyp()))
+                .map(RisNormMetadaten::getGesetzesnummer)
                 .filter(Objects::nonNull)
                 .distinct()
                 .toList();
@@ -377,6 +420,14 @@ public class NormImporter {
         document.setNovellenBeziehung(source.getNovellenBeziehung());
         document.setBeachte(source.getBeachte());
         document.setAnmerkung(source.getAnmerkung());
+        //RIS also rewrites a document in place, keeping its docNumber - the ABGB head is reissued
+        //that way whenever its table of contents moves. The cached text then belongs to content
+        //that is gone, and nothing else would ever throw it away
+        if (!Objects.equals(document.getGeaendert(), result.getMetadaten().getChanged())) {
+            document.setFullText(null);
+            document.setWordCount(null);
+            document.setTextConversionVersion(null);
+        }
         document.setGeaendert(result.getMetadaten().getChanged());
         document.setHtmlUrl(result.getHtmlDocumentUrl());
         document.setMetadata(result.getMetadaten().getFullResponseAsJson());
@@ -393,13 +444,18 @@ public class NormImporter {
      * Title and abbreviation are current values without history, but historical versions carry
      * the wording of their day. A plain "last write wins" would cement whichever document came
      * last, so only a version at least as new as the one behind the stored values may overwrite.
+     * <p>
+     * The long title and the ELI of the law are not in that group: RIS carries them on the head
+     * document alone, every other provision leaves them empty. They get their own source.
      */
     private void applyCurrentTitle(NormEntity norm, List<RisNormResult> results) {
-        RisNormResult newest = results.stream()
-                .filter(r -> r.getNormMetadaten().getInkrafttreten() != null)
-                .max((a, b) -> a.getNormMetadaten().getInkrafttreten()
-                        .compareTo(b.getNormMetadaten().getInkrafttreten()))
-                .orElse(results.getFirst());
+        LocalDate today = LocalDate.now();
+        applyHead(norm, results, today);
+
+        RisNormResult newest = titleSource(norm, results, today);
+        if (newest == null) {
+            return;
+        }
 
         RisNormMetadaten source = newest.getNormMetadaten();
         LocalDate from = source.getInkrafttreten();
@@ -409,16 +465,63 @@ public class NormImporter {
         }
 
         norm.setKurztitel(source.getKurztitel());
-        norm.setLangtitel(source.getTitel());
         norm.setTyp(source.getTyp());
-        norm.setEli(source.getEli());
         norm.setKundmachungsorgan(source.getKundmachungsorgan());
         norm.setGesamteRechtsvorschriftUrl(source.getGesamteRechtsvorschriftUrl());
         norm.setIndizes(source.getIndizes() == null ? null : String.join("; ", source.getIndizes()));
-        norm.setTitleSourceInkrafttreten(from);
+        //the law may not be in force yet, and then the fallback above handed out a future date
+        norm.setTitleSourceInkrafttreten(inForceAlready(source, today) ? from : null);
 
         storeName(norm, source.getAbkuerzung(), NormAbbreviationSource.BRKONS);
         storeName(norm, source.getKurztitel(), NormAbbreviationSource.KURZTITEL);
+    }
+
+    /**
+     * The version the current values are read from: the newest one that has come into force.
+     * <p>
+     * A version still to come must not be it. It would push {@code titleSourceInkrafttreten} into
+     * the future, and the guard in the caller would then turn down every later change until that
+     * date arrives - including RIS' 9000-01-01 for "never". Their order among themselves says
+     * nothing either: an amendment resolved later may well start earlier than one resolved
+     * before it, so the last one RIS wrote is not the one that will apply first.
+     *
+     * @return null when nothing has come into force and the law already carries values - then
+     * there is nothing current to say and what is stored stays
+     */
+    static RisNormResult titleSource(NormEntity norm, List<RisNormResult> results, LocalDate today) {
+        return results.stream()
+                .filter(r -> inForceAlready(r.getNormMetadaten(), today))
+                .max(BY_INKRAFTTRETEN)
+                //a law before its own start has only future versions to offer, and a row with
+                //nothing in it is better served by the one starting first than by nothing at all
+                .or(() -> norm.getKurztitel() != null
+                        ? Optional.<RisNormResult>empty()
+                        : results.stream().min(BY_INKRAFTTRETEN))
+                .orElse(null);
+    }
+
+    /**
+     * Takes the long title and the ELI from the head document, which is the only one carrying
+     * them. Only the head that is in force may write: RIS keeps the superseded ones and there is
+     * exactly one current at a time, so a correction to an old version must not rewrite the
+     * title. A run without a head is a run in which the head did not change - a new one brings a
+     * new docNumber and with it a complete reimport.
+     */
+    static void applyHead(NormEntity norm, List<RisNormResult> results, LocalDate today) {
+        results.stream()
+                .map(RisNormResult::getNormMetadaten)
+                .filter(m -> NormDokumenttyp.NORM.equals(m.getDokumenttyp()))
+                .filter(m -> inForceAlready(m, today)
+                        && (m.getAusserkrafttreten() == null || m.getAusserkrafttreten().isAfter(today)))
+                .findFirst()
+                .ifPresent(head -> {
+                    norm.setLangtitel(head.getTitel());
+                    norm.setEli(head.getEli());
+                });
+    }
+
+    static boolean inForceAlready(RisNormMetadaten metadaten, LocalDate today) {
+        return metadaten.getInkrafttreten() != null && !metadaten.getInkrafttreten().isAfter(today);
     }
 
     /**
