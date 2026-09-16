@@ -110,9 +110,79 @@ public class NormUpdateTest extends SpringTest {
                 .contains("BPrBG 2023", "BPrBG 2028", "Buchpreisbindungsgesetz 2028");
     }
 
+    /**
+     * RIS does not only add versions, it also rewrites a document in place and keeps its number -
+     * the ABGB head is reissued that way whenever its table of contents moves, most recently on
+     * 20 August 2026 for a provision in force since 1812. The stored text then describes content
+     * that is gone, and nothing but the change date would ever notice.
+     */
+    @Test
+    public void aRewrittenDocumentLosesItsCachedText() {
+        NormDocumentEntity stored = normDocumentRepository.findByDocNumber(PARAGRAPH_1).orElseThrow();
+
+        //fill the cache first - the text is loaded on demand and on nobody else's account
+        NormDocumentEntity cached = normService.withText(stored);
+        assertThat(cached.getFullText()).isNotBlank();
+        assertThat(cached.getWordCount()).isGreaterThan(0L);
+        assertThat(cached.getTextConversionVersion()).isEqualTo(NormService.TEXT_CONVERSION_VERSION);
+
+        RisNormMetadaten rewritten = new RisNormMetadaten();
+        rewritten.setGesetzesnummer(BPRBG);
+        rewritten.setKurztitel(norm.getKurztitel());
+        rewritten.setArtikelParagraphAnlage("§ 1");
+        rewritten.setParagraphnummer(1);
+        rewritten.setInkrafttreten(stored.getInkrafttreten());
+
+        LocalDate laterThanBefore = cached.getGeaendert() == null
+                ? LocalDate.now() : cached.getGeaendert().plusDays(1);
+        normImporter.applyChanges(null, BPRBG,
+                List.of(resultFor(rewritten, stored, laterThanBefore)));
+
+        NormDocumentEntity after = normDocumentRepository.findByDocNumber(PARAGRAPH_1).orElseThrow();
+        assertThat(after.getGeaendert()).isEqualTo(laterThanBefore);
+        assertThat(after.getFullText()).isNull();
+        assertThat(after.getWordCount()).isNull();
+        assertThat(after.getTextConversionVersion()).isNull();
+
+        //and it is the absence of the text that makes the next read fetch it again
+        assertThat(normService.withText(after).getFullText()).isNotBlank();
+    }
+
+    /**
+     * The feed re-delivers documents that did not change, and the window is five days wide on
+     * purpose. Dropping the text for those would refetch and re-convert whole laws every night.
+     */
+    @Test
+    public void aDocumentDeliveredUnchangedKeepsItsCachedText() {
+        NormDocumentEntity stored = normDocumentRepository.findByDocNumber(PARAGRAPH_1).orElseThrow();
+        NormDocumentEntity cached = normService.withText(stored);
+        String text = cached.getFullText();
+        assertThat(text).isNotBlank();
+
+        RisNormMetadaten unchanged = new RisNormMetadaten();
+        unchanged.setGesetzesnummer(BPRBG);
+        unchanged.setKurztitel(norm.getKurztitel());
+        unchanged.setArtikelParagraphAnlage("§ 1");
+        unchanged.setParagraphnummer(1);
+        unchanged.setInkrafttreten(stored.getInkrafttreten());
+
+        normImporter.applyChanges(null, BPRBG,
+                List.of(resultFor(unchanged, stored, cached.getGeaendert())));
+
+        NormDocumentEntity after = normDocumentRepository.findByDocNumber(PARAGRAPH_1).orElseThrow();
+        assertThat(after.getFullText()).isEqualTo(text);
+        assertThat(after.getWordCount()).isEqualTo(cached.getWordCount());
+    }
+
     private RisNormResult resultFor(RisNormMetadaten metadaten, NormDocumentEntity existing) {
+        return resultFor(metadaten, existing, LocalDate.now());
+    }
+
+    /** The change date is what tells a rewritten document from one that was only re-delivered. */
+    private RisNormResult resultFor(RisNormMetadaten metadaten, NormDocumentEntity existing,
+                                    LocalDate changed) {
         RisMetadaten technical = new RisMetadaten(existing.getDocNumber(), null, null, null,
-                LocalDate.now(), existing.getHtmlUrl(), "{}");
+                changed, existing.getHtmlUrl(), "{}");
         return new RisNormResult(technical, metadaten, existing.getHtmlUrl(), List.of());
     }
 }

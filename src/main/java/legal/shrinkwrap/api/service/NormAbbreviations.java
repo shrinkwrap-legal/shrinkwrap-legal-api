@@ -44,6 +44,22 @@ public final class NormAbbreviations {
     }
 
     /**
+     * Only the keys of the name as written, without dropping its year: "TKG 2003" yields
+     * "tkg 2003" and "tkg2003", but not "tkg". A query tries these first - the year is how a
+     * caller tells TKG 2003 from TKG 2021, and stripping it would make the two alike.
+     */
+    public static Set<String> asWritten(String abbreviation) {
+        if (abbreviation == null || abbreviation.isBlank()) {
+            return Set.of();
+        }
+        String base = collapseWhitespace(abbreviation).toLowerCase(Locale.ROOT);
+        Set<String> keys = new LinkedHashSet<>();
+        keys.add(base);
+        keys.add(condense(base));
+        return keys;
+    }
+
+    /**
      * RIS separates a short title from its year with a non-breaking space, as in
      * {@code "Buchpreisbindungsgesetz\u00a02023"}. Java's {@code \s} does not match that
      * character, so without replacing it first the year would never be stripped and the law

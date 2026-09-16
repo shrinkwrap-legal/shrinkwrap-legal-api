@@ -85,6 +85,15 @@ public class NormImporter {
     @Value("${ris.norm.import-types:*}")
     String importTypes;
 
+    /**
+     * How far back repealed laws are taken, by the day they went out of force. TKG 2003 and the
+     * Kesselgesetz no longer apply but decide cases still pending; a law that ended in 1950 rarely
+     * does. Empty takes every repealed law. Only the initial import reads it - a repealed law
+     * changes too seldom for the change feed to need the same restriction.
+     */
+    @Value("${ris.norm.repealed-since:2000-01-01}")
+    String repealedSince;
+
     private final RisSoapAdapter risSoapAdapter;
     private final NormRepository normRepository;
     private final NormDocumentRepository normDocumentRepository;
@@ -261,6 +270,18 @@ public class NormImporter {
     }
 
     /**
+     * Whether a head is recent enough. One head per version comes back, so a law whose early head
+     * ended long ago is still taken through the head in force today; one without an end date is
+     * either in force or not yet, and taken either way.
+     */
+    boolean importsPeriod(RisNormMetadaten head) {
+        if (repealedSince == null || repealedSince.isBlank() || head.getAusserkrafttreten() == null) {
+            return true;
+        }
+        return !head.getAusserkrafttreten().isBefore(LocalDate.parse(repealedSince.trim()));
+    }
+
+    /**
      * RIS reports the state as its plain name in the response; the request needs the enum.
      * <p>
      * The two spellings do not match: the schema transliterates - {@code Oberoesterreich} - while
@@ -284,9 +305,12 @@ public class NormImporter {
      * Every law of a jurisdiction, by way of its head document.
      * <p>
      * RIS numbers the head document of a law "§ 0" and marks it {@code Dokumenttyp: Norm} - also
-     * for laws divided into articles, the B-VG included. Asking for § 0 as it stands today
-     * therefore yields exactly one document per law in force, which is a far cheaper way to
-     * enumerate than paging the corpus: 10.688 federal laws against 441.147 documents.
+     * for laws divided into articles, the B-VG included. Asking for § 0 yields one document per
+     * version of every head, which is a far cheaper way to enumerate than paging the corpus:
+     * 26.011 heads of 21.962 federal laws against 441.147 documents.
+     * <p>
+     * Deliberately without a day. Asked for as they stand today, the heads leave out every law
+     * that has been repealed - 11.275 in federal law alone.
      * <p>
      * Only over SOAP. The same request over REST is wrong - it drops the Bundesland restriction
      * without a word and answers with all 8.350 state laws.
@@ -295,11 +319,10 @@ public class NormImporter {
         return risSoapAdapter.findNormDocuments(RisSearchParameterNorm.builder()
                         .bundesland(bundesland)
                         .abschnitt(NormabschnittTyp.PARAGRAPH, "0", "0")
-                        .fassungVom(LocalDate.now())
                         .build()).stream()
                 .map(RisNormResult::getNormMetadaten)
-                //the head already carries the type, so a law left out is never fetched at all
-                .filter(metadaten -> importsType(metadaten.getTyp()))
+                //the head already carries type and end date, so a law left out is never fetched
+                .filter(metadaten -> importsType(metadaten.getTyp()) && importsPeriod(metadaten))
                 .map(RisNormMetadaten::getGesetzesnummer)
                 .filter(Objects::nonNull)
                 .distinct()

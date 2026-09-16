@@ -117,13 +117,12 @@ public class NormController {
 
         List<String> numbers = documentNumbers(risUrl, docNumber);
         boolean byNumber = !numbers.isEmpty();
-        NormEntity norm = byNumber
-                ? lawOf(numbers, jurisdiction, gesetzesnummer, abbreviation)
-                : namedLaw(jurisdiction, gesetzesnummer, abbreviation);
-
         LocalDate[] period = byNumber && asOf == null && inForceFrom == null && inForceUntil == null
                 ? new LocalDate[]{null, null}
                 : period(asOf, inForceFrom, inForceUntil);
+        NormEntity norm = byNumber
+                ? lawOf(numbers, jurisdiction, gesetzesnummer, abbreviation, period)
+                : namedLaw(jurisdiction, gesetzesnummer, abbreviation, period);
         List<NormDocumentEntity> found = provisions(norm, period, from, to, typ).stream()
                 .filter(d -> !byNumber || numbers.contains(d.getDocNumber()))
                 .toList();
@@ -206,11 +205,14 @@ public class NormController {
     }
 
     /** A law by the name the caller gave it - which, without a document number, has to be given. */
-    private NormEntity namedLaw(String jurisdiction, String gesetzesnummer, String abbreviation) {
+    private NormEntity namedLaw(String jurisdiction, String gesetzesnummer, String abbreviation,
+                                LocalDate[] period) {
         if (jurisdiction == null || jurisdiction.isBlank()) {
             throw new ResponseStatusException(BAD_REQUEST, "jurisdiction is required unless docNumber is given");
         }
-        return gesetzesnummer != null ? law(jurisdiction, gesetzesnummer) : singleLawFor(jurisdiction, abbreviation);
+        return gesetzesnummer != null
+                ? law(jurisdiction, gesetzesnummer)
+                : singleLawFor(jurisdiction, abbreviation, period);
     }
 
     /**
@@ -238,7 +240,7 @@ public class NormController {
      * laws are a request to split. A law named alongside has to be that same law.
      */
     private NormEntity lawOf(List<String> docNumbers, String jurisdiction, String gesetzesnummer,
-                             String abbreviation) {
+                             String abbreviation, LocalDate[] period) {
         List<NormDocumentEntity> documents = docNumbers.stream()
                 .map(number -> normService.findByDocNumber(number)
                         .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "unknown document " + number)))
@@ -250,7 +252,7 @@ public class NormController {
         NormEntity law = normService.lawOf(documents.getFirst());
         if (gesetzesnummer != null || abbreviation != null) {
             NormEntity named = namedLaw(jurisdiction != null ? jurisdiction : law.getJurisdiction(),
-                    gesetzesnummer, abbreviation);
+                    gesetzesnummer, abbreviation, period);
             if (!named.getId().equals(law.getId())) {
                 throw new ResponseStatusException(BAD_REQUEST, "the document numbers do not belong to "
                         + (gesetzesnummer != null ? gesetzesnummer : abbreviation));
@@ -268,8 +270,14 @@ public class NormController {
     /**
      * An abbreviation can belong to several laws. Rather than picking one, the caller is told to
      * disambiguate - which of the two "UStG 1994" is meant is not something to guess at.
+     * <p>
+     * The period narrows it first. "TKG" names TKG 2003 and TKG 2021 alike, but asked for today's
+     * law only one of them has provisions; asked for 2015 only the other. Only candidates that
+     * all have provisions in the period - or none of which has - are left to the caller. A single
+     * candidate is taken as it is, even without provisions then: the name was unambiguous, and an
+     * empty list says what there is to say.
      */
-    private NormEntity singleLawFor(String jurisdiction, String abbreviation) {
+    private NormEntity singleLawFor(String jurisdiction, String abbreviation, LocalDate[] period) {
         if (abbreviation == null) {
             throw new ResponseStatusException(NOT_FOUND, "either gesetzesnummer or abbreviation is required");
         }
@@ -277,10 +285,14 @@ public class NormController {
         if (laws.isEmpty()) {
             throw new ResponseStatusException(NOT_FOUND, "no law found for " + abbreviation);
         }
-        if (laws.size() > 1) {
-            throw new AmbiguousName(abbreviation, laws);
+        if (laws.size() == 1) {
+            return laws.getFirst();
         }
-        return laws.getFirst();
+        List<NormEntity> inPeriod = normService.withProvisionsBetween(laws, period[0], period[1]);
+        if (inPeriod.size() == 1) {
+            return inPeriod.getFirst();
+        }
+        throw new AmbiguousName(abbreviation, inPeriod.isEmpty() ? laws : inPeriod);
     }
 
     /**

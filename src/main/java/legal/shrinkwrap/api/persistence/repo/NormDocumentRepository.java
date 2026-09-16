@@ -45,4 +45,22 @@ public interface NormDocumentRepository extends JpaRepository<NormDocumentEntity
             ORDER BY d.sortIndex
             """)
     List<NormDocumentEntity> findInForceBetween(NormEntity norm, LocalDate from, LocalDate until);
+
+    /**
+     * Which of the given laws have at least one provision in force at some point between the two
+     * days - the same overlap as {@link #findInForceBetween}, asked as EXISTS so it stops at the
+     * first hit. Ids only, for the reason given at {@link #findLiveDocNumbers}. The head document
+     * does not count: it is no provision and never part of an answer.
+     */
+    @Query("""
+            SELECT n.id FROM NormEntity n
+            WHERE n.id IN :normIds
+              AND EXISTS (SELECT 1 FROM NormDocumentEntity d
+                          WHERE d.norm = n
+                            AND d.deletedAt IS NULL
+                            AND d.abschnittTyp <> 'NORM'
+                            AND (d.inkrafttreten IS NULL OR d.inkrafttreten <= :until)
+                            AND (d.ausserkrafttreten IS NULL OR d.ausserkrafttreten > :from))
+            """)
+    List<Long> findNormIdsInForceBetween(Collection<Long> normIds, LocalDate from, LocalDate until);
 }

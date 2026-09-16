@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -84,7 +85,13 @@ public class NormService {
         if (keys.isEmpty()) {
             return List.of();
         }
-        List<Long> ids = normAbbreviationRepository.findNormIdsByNormalizedIn(keys, jurisdiction);
+        //the name as written first, the year included, and the year dropped only when that finds
+        //nothing: "TKG 2003" must not also bring up TKG 2021, while "StVO" still finds StVO 1960
+        List<Long> ids = normAbbreviationRepository.findNormIdsByNormalizedIn(
+                NormAbbreviations.asWritten(query), jurisdiction);
+        if (ids.isEmpty()) {
+            ids = normAbbreviationRepository.findNormIdsByNormalizedIn(keys, jurisdiction);
+        }
         if (!ids.isEmpty()) {
             return normRepository.findAllById(ids);
         }
@@ -149,6 +156,17 @@ public class NormService {
     public List<NormDocumentEntity> findProvisions(NormEntity norm, LocalDate from, LocalDate until) {
         return normDocumentRepository.findInForceBetween(norm,
                 from == null ? EARLIEST : from, until == null ? LATEST : until);
+    }
+
+    /**
+     * The laws among these that have provisions in the period, in the order given. An open bound
+     * reaches as far as the data goes, as with {@link #findProvisions(NormEntity, LocalDate, LocalDate)}.
+     */
+    public List<NormEntity> withProvisionsBetween(List<NormEntity> laws, LocalDate from, LocalDate until) {
+        Set<Long> ids = new HashSet<>(normDocumentRepository.findNormIdsInForceBetween(
+                laws.stream().map(NormEntity::getId).toList(),
+                from == null ? EARLIEST : from, until == null ? LATEST : until));
+        return laws.stream().filter(law -> ids.contains(law.getId())).toList();
     }
 
     /**

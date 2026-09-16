@@ -56,27 +56,33 @@ public class NormEndToEndTest extends SpringTest {
                     .contains(norm.getId());
         }
 
-        List<NormDocumentEntity> inForce = normService.findProvisions(norm, IN_FORCE);
+        List<NormDocumentEntity> inForce = normService.findProvisions(norm, IN_FORCE, IN_FORCE);
         assertThat(inForce).isNotEmpty();
 
         //the law only came into force in 2023
-        assertThat(normService.findProvisions(norm, BEFORE_IT_EXISTED)).isEmpty();
+        assertThat(normService.findProvisions(norm, BEFORE_IT_EXISTED, BEFORE_IT_EXISTED)).isEmpty();
 
         //"1a" sits after § 1, so the range starts at § 2 - a letter is a following provision,
         //not a variant of the one before it
-        List<NormDocumentEntity> range = normService.findProvisions(norm, IN_FORCE, "1a", "3", null);
+        List<NormDocumentEntity> range = normService.findProvisions(norm, IN_FORCE, IN_FORCE, "1a", "3", null);
         assertThat(range).extracting(NormDocumentEntity::getArtikelParagraphAnlage)
                 .containsExactly("§ 2", "§ 3");
 
-        assertThat(normService.findProvisions(norm, IN_FORCE, "1", "3", null))
-                .extracting(NormDocumentEntity::getArtikelParagraphAnlage)
+        List<NormDocumentEntity> fromOne = normService.findProvisions(norm, IN_FORCE, IN_FORCE, "1", "3", null);
+        assertThat(fromOne).extracting(NormDocumentEntity::getArtikelParagraphAnlage)
                 .containsExactly("§ 1", "§ 2", "§ 3");
 
         //the head document RIS numbers "§ 0" must not slip into a range that starts at 1
         assertThat(range).noneMatch(d -> "§ 0".equals(d.getArtikelParagraphAnlage()));
 
-        //metadata is mirrored completely, text only on demand
-        NormDocumentEntity first = range.getFirst();
+        //an open period reaches every version ever recorded, a single day only the current one
+        assertThat(normService.findProvisions(norm, null, null))
+                .as("every version")
+                .hasSizeGreaterThanOrEqualTo(inForce.size());
+
+        //metadata is mirrored completely, text only on demand. Read off the range that starts
+        //at 1 - the one above deliberately begins at § 2 and would not carry the § 1 text
+        NormDocumentEntity first = fromOne.getFirst();
         assertThat(first.getFullText()).isNull();
 
         NormDocumentEntity withText = normService.withText(first);
