@@ -67,6 +67,13 @@ public class NormImporter {
     /** Accepts every type, so the property may stay untouched for a complete mirror. */
     private static final String ALL_TYPES = "*";
 
+    /**
+     * When the nightly update runs. Public because answers are cached until then: nothing in the
+     * mirror changes in between. No zone is given, so it runs in the zone of the JVM - the same
+     * one {@code LocalDate.now()} uses for "today".
+     */
+    public static final String UPDATE_CRON = "0 15 2 * * *";
+
     /** Several days, so a run that fails or is skipped is caught by the next one. */
     private static final int CHANGE_WINDOW_DAYS = 5;
 
@@ -170,7 +177,7 @@ public class NormImporter {
      * not imported on its own: the sort order comes from the position in the complete result, so
      * a law is only ever written as a whole.
      */
-    @Scheduled(cron = "0 15 2 * * *")
+    @Scheduled(cron = UPDATE_CRON)
     public void updateChangedLaws() {
         for (boolean landesrecht : new boolean[]{false, true}) {
             List<RisNormResult> changed;

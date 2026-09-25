@@ -7,11 +7,14 @@ import legal.shrinkwrap.api.dto.NormProvisionsDto;
 import legal.shrinkwrap.api.persistence.entity.NormDocumentEntity;
 import legal.shrinkwrap.api.persistence.entity.NormEntity;
 import legal.shrinkwrap.api.persistence.entity.NormSectionType;
+import legal.shrinkwrap.api.service.NormImporter;
 import legal.shrinkwrap.api.service.NormService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.support.CronExpression;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,12 +22,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
@@ -141,7 +147,23 @@ public class NormController {
      * of the last ten years read as the whole answer. The header says how many there were.
      */
     private static <T> ResponseEntity<T> withTotal(int total, T body) {
-        return ResponseEntity.ok().header(TOTAL_COUNT, String.valueOf(total)).body(body);
+        return ResponseEntity.ok()
+                .header(TOTAL_COUNT, String.valueOf(total))
+                .cacheControl(CacheControl.maxAge(untilNextChange(ZonedDateTime.now())).cachePublic())
+                .body(body);
+    }
+
+    /**
+     * How long an answer stays valid. The mirror only changes in the nightly update, but "today",
+     * the default of every query, moves on at midnight - a law asked for on 31 December may read
+     * differently on 1 January without any update in between. So an answer is valid until
+     * whichever comes first.
+     */
+    static Duration untilNextChange(ZonedDateTime now) {
+        ZonedDateTime midnight = now.toLocalDate().plusDays(1).atStartOfDay(now.getZone());
+        ZonedDateTime update = CronExpression.parse(NormImporter.UPDATE_CRON).next(now);
+        ZonedDateTime next = update != null && update.isBefore(midnight) ? update : midnight;
+        return Duration.between(now, next);
     }
 
     private List<NormDocumentEntity> provisions(NormEntity norm, LocalDate[] period,
@@ -319,7 +341,13 @@ public class NormController {
         private final transient List<NormEntity> laws;
 
         AmbiguousName(String name, List<NormEntity> laws) {
-            super(name);
+            //the handler below builds the REST answer from the fields; the message is what a tool
+            //call sees, so it has to carry the candidates on its own
+            super("\"" + name + "\" names " + laws.size() + " laws - repeat the request with the "
+                    + "gesetzesnummer of the one that is meant: " + laws.stream()
+                    .limit(MAX_CANDIDATES)
+                    .map(n -> n.getIdentifier() + " (" + n.getKurztitel() + ")")
+                    .collect(Collectors.joining(", ")));
             this.name = name;
             this.laws = laws;
         }
