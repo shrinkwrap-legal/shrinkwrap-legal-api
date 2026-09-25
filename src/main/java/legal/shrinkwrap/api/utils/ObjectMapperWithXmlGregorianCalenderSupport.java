@@ -41,8 +41,13 @@ public class ObjectMapperWithXmlGregorianCalenderSupport extends ObjectMapper {
                     LocalDateTime localDateTime = calendar.toGregorianCalendar().toZonedDateTime().toLocalDateTime();
                     gen.writeString(localDateTime.toString());
                 }
+            } else if (value.getValue() == null) {
+                gen.writeNull();
             } else {
-                serializers.defaultSerializeValue(value, gen);
+                //the wrapped value, never the element - passing the element back in would land
+                //in this very serializer again and recurse until the stack is gone. Only norm
+                //metadata hits this branch, judicature happens to wrap nothing but calendars
+                serializers.defaultSerializeValue(value.getValue(), gen);
             }
         }
     }

@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import legal.shrinkwrap.api.adapter.exception.AdapterRequestException;
 import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
+import legal.shrinkwrap.api.adapter.ris.dto.RisNormResult;
 import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 public class RisSoapAdapterImpl implements RisSoapAdapter {
     private final static Logger LOG = LoggerFactory.getLogger(RisSoapAdapterImpl.class);
     private final Long MAX_SIZE = 1000000L;
+    private static final ZoneId RIS_ZONE = ZoneId.of("Europe/Vienna");
     private final String STATUS_OK = "ok";
 
     private final OgdRisServiceSoap risSoap;
@@ -244,6 +246,125 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
 
 
 
+    @Override
+    public List<RisNormResult> findNormDocuments(RisSearchParameterNorm searchParameter) {
+        OGDRisRequest risRequest = SoapRequestMapper.createRisSearch(objectFactory);
+
+        NormabschnittSucheinschraenkung abschnitt = null;
+        if (searchParameter.abschnittTyp() != null) {
+            abschnitt = objectFactory.createNormabschnittSucheinschraenkung();
+            abschnitt.setTyp(searchParameter.abschnittTyp());
+            abschnitt.setVon(searchParameter.abschnittVon());
+            abschnitt.setBis(searchParameter.abschnittBis());
+        }
+
+        Fassungsangabe fassung = null;
+        if (searchParameter.fassungVom() != null) {
+            StichtagFassungsangabe stichtag = objectFactory.createStichtagFassungsangabe();
+            stichtag.setFassungVom(toXmlDate(searchParameter.fassungVom()));
+            fassung = stichtag;
+        }
+
+        ExactMatchSearchExpression gesetzesnummer = null;
+        if (searchParameter.gesetzesnummer() != null) {
+            gesetzesnummer = objectFactory.createExactMatchSearchExpression();
+            gesetzesnummer.setValue(searchParameter.gesetzesnummer());
+        }
+
+        FulltextSearchExpression titel = null;
+        if (searchParameter.titel() != null) {
+            titel = objectFactory.createFulltextSearchExpression();
+            titel.setValue(searchParameter.titel());
+        }
+
+        if (searchParameter.isLandesrecht()) {
+            LrKonsSearchRequest lrKons = objectFactory.createLrKonsSearchRequest();
+            lrKons.setAbschnitt(abschnitt);
+            lrKons.setFassung(fassung);
+            lrKons.setGesetzesnummer(gesetzesnummer);
+            lrKons.setBundesland(bundeslandRestriction(searchParameter.bundesland()));
+
+            LandesrechtSearchRequest landesrecht = objectFactory.createLandesrechtSearchRequest();
+            landesrecht.setLrKons(lrKons);
+            landesrecht.setTitel(titel);
+            risRequest.getSuche().setLandesrecht(landesrecht);
+        } else {
+            BrKonsSearchRequest brKons = objectFactory.createBrKonsSearchRequest();
+            brKons.setAbschnitt(abschnitt);
+            brKons.setFassung(fassung);
+            brKons.setGesetzesnummer(gesetzesnummer);
+
+            BundesrechtSearchRequest bundesrecht = objectFactory.createBundesrechtSearchRequest();
+            bundesrecht.setBrKons(brKons);
+            bundesrecht.setTitel(titel);
+            risRequest.getSuche().setBundesrecht(bundesrecht);
+        }
+
+        //the sort order is never set on purpose: the RIS sortable columns order "§ 10" before
+        //"§ 2", only the default order of the result list is usable
+        return searchPagination(risRequest).stream().map(SoapResponseMapper::mapToNormResult).toList();
+    }
+
+    @Override
+    public List<RisNormResult> findChangedNormDocuments(boolean landesrecht, int changedInLastXDays) {
+        OGDRisRequest risRequest = objectFactory.createOGDRisRequest();
+
+        OGDHistoryType history = objectFactory.createOGDHistoryType();
+        history.setAnwendung(landesrecht
+                ? HistoryRequestApplicationType.LANDESNORMEN
+                : HistoryRequestApplicationType.BUNDESNORMEN);
+        //a withdrawn document has to reach the import too, it is soft deleted rather than dropped
+        history.setIncludeDeletedDocuments(true);
+        history.setAenderungenVon(objectFactory.createOGDHistoryTypeAenderungenVon(
+                toXmlDate(LocalDate.now(RIS_ZONE).minusDays(changedInLastXDays))));
+        history.setAenderungenBis(objectFactory.createOGDHistoryTypeAenderungenBis(
+                toXmlDate(LocalDate.now(RIS_ZONE).plusDays(1))));
+
+        //a change request carries no search, the two are mutually exclusive
+        risRequest.setAenderungen(history);
+
+        return searchPagination(risRequest).stream()
+                //the feed reports withdrawn documents as an entry without any payload at all -
+                //no id, no metadata, nothing to import. Measured: 11 of 685 over five days
+                .filter(d -> d.getData() != null && d.getData().getMetadaten() != null)
+                .map(SoapResponseMapper::mapToNormResult)
+                .toList();
+    }
+
+    /** The request models the state as nine booleans rather than as the Bundesland enum. */
+    private BundeslandSucheinschraenkung bundeslandRestriction(Bundesland bundesland) {
+        BundeslandSucheinschraenkung restriction = objectFactory.createBundeslandSucheinschraenkung();
+        switch (bundesland) {
+            case BURGENLAND -> restriction.setSucheInBurgenland(true);
+            case KAERNTEN -> restriction.setSucheInKaernten(true);
+            case NIEDEROESTERREICH -> restriction.setSucheInNiederoesterreich(true);
+            case OBEROESTERREICH -> restriction.setSucheInOberoesterreich(true);
+            case SALZBURG -> restriction.setSucheInSalzburg(true);
+            case STEIERMARK -> restriction.setSucheInSteiermark(true);
+            case TIROL -> restriction.setSucheInTirol(true);
+            case VORARLBERG -> restriction.setSucheInVorarlberg(true);
+            case WIEN -> restriction.setSucheInWien(true);
+            case null, default -> throw new AdapterRequestException(
+                    "A concrete Bundesland is required for a Landesrecht search");
+        }
+        return restriction;
+    }
+
+    private static XMLGregorianCalendar toXmlDate(LocalDate date) {
+        try {
+            XMLGregorianCalendar calendar = DatatypeFactory.newInstance().newXMLGregorianCalendar(
+                    GregorianCalendar.from(date.atStartOfDay(ZoneId.systemDefault())));
+            calendar.setHour(DatatypeConstants.FIELD_UNDEFINED);
+            calendar.setMinute(DatatypeConstants.FIELD_UNDEFINED);
+            calendar.setSecond(DatatypeConstants.FIELD_UNDEFINED);
+            calendar.setMillisecond(DatatypeConstants.FIELD_UNDEFINED);
+            calendar.setTimezone(DatatypeConstants.FIELD_UNDEFINED);
+            return calendar;
+        } catch (DatatypeConfigurationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private List<OgdDocumentResults.OgdDocumentReference> searchPagination(OGDRisRequest risRequest) {
         List<OgdDocumentResults.OgdDocumentReference> documents = new ArrayList<>();
 
@@ -281,7 +402,12 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
                 risRequest.getSuche().getJudikatur().setSeitennummer(seitennummer);
             }
             if(risRequest.getSuche().getBundesrecht() != null) {
+                risRequest.getSuche().getBundesrecht().setDokumenteProSeite(PageSize.ONE_HUNDRED);
                 risRequest.getSuche().getBundesrecht().setSeitennummer(seitennummer);
+            }
+            if(risRequest.getSuche().getLandesrecht() != null) {
+                risRequest.getSuche().getLandesrecht().setDokumenteProSeite(PageSize.ONE_HUNDRED);
+                risRequest.getSuche().getLandesrecht().setSeitennummer(seitennummer);
             }
         } else if (risRequest != null && risRequest.getAenderungen() != null) {
             risRequest.getAenderungen().setDokumenteProSeite(PageSize.ONE_HUNDRED);

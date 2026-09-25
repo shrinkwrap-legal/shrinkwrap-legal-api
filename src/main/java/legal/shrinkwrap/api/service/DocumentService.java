@@ -24,6 +24,13 @@ public interface DocumentService {
 
     CaseLawFullTextDto getFullTextForEcli(String ecli);
 
+    /**
+     * Whether an answer is final: it has its summary, or it is too short to get one. Anything else
+     * - most often a summary that could not be generated this time - is repeated on the next request
+     * and must not be cached.
+     */
+    boolean isComplete(CaseLawResponseDto document);
+
     CaseLawDataset getCaselawDatasetForECLI(String ecli);
 
     CaseLawEntity importJudikaturResult(RisJudikaturResult result);

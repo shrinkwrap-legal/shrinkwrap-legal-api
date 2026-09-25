@@ -330,6 +330,17 @@ public class DocumentServiceImpl implements DocumentService {
         return uniqueSummaries.stream().map(s -> this.getDocumentForEntity(s.getCaseLaw(), false)).toList();
     }
 
+    /**
+     * Deliberately without the list of courts that get a summary: a long decision of a court that
+     * never gets one is then treated as unfinished and merely goes uncached, which costs nothing.
+     */
+    @Override
+    public boolean isComplete(CaseLawResponseDto document) {
+        return document != null
+                && (document.getSummary() != null
+                || (document.getWordCount() != null && document.getWordCount() <= minWordsForSummary));
+    }
+
     @Override
     public CaseLawFullTextDto getFullTextForEcli(String ecli) {
         Optional<CaseLawEntity> dbEntity = caseLawRepository.findCaseLawEntityByEcli(ecli);

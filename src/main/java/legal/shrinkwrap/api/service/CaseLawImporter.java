@@ -53,6 +53,12 @@ public class CaseLawImporter {
     private static final Duration FIRST_BACKOFF = Duration.ofMinutes(1);
     private static final Duration MAX_BACKOFF = Duration.ofMinutes(30);
 
+    /**
+     * When the nightly import of changed decisions runs. Public because answers about a decision
+     * are cached until then. No zone is given, so it runs in the zone of the JVM.
+     */
+    public static final String UPDATE_CRON = "0 30 3 * * *";
+
     private final DocumentService documentService;
     private final RisSoapAdapter risSoapAdapter;
     private final CaseLawRepository caseLawRepository;
@@ -83,7 +89,7 @@ public class CaseLawImporter {
     }
 
 
-    @Scheduled(cron = "0 30 3 * * *")
+    @Scheduled(cron = UPDATE_CRON)
     public void updateLatestDocuments() {
         ZonedDateTime deadline = ZonedDateTime.now(RIS_ZONE).with(IMPORT_DEADLINE);
 
