@@ -4,12 +4,16 @@ import jakarta.validation.Valid;
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import legal.shrinkwrap.api.dto.CaseLawRequestDto;
 import legal.shrinkwrap.api.dto.CaseLawResponseDto;
+import legal.shrinkwrap.api.service.CaseLawImporter;
 import legal.shrinkwrap.api.service.DocumentService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.support.CronExpression;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.text.MessageFormat;
+import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.HashSet;
 
 @RestController
@@ -33,13 +39,12 @@ public class CaseLawController {
     }
 
     @GetMapping(value = "case-law/shrinkwrap", produces = MediaType.APPLICATION_JSON_VALUE)
-    public CaseLawResponseDto getShrinkwrapDocument(@Valid @ParameterObject CaseLawRequestDto requestDto) {
-        CaseLawResponseDto document = documentService.getDocument(requestDto);
-        return document;
+    public ResponseEntity<CaseLawResponseDto> getShrinkwrapDocument(@Valid @ParameterObject CaseLawRequestDto requestDto) {
+        return cached(documentService.getDocument(requestDto));
     }
 
     @GetMapping(value = "case-law/shrinkwrap/{court}/{docNumber}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public CaseLawResponseDto getShrinkwrapDocumentByCourtAndDocNumber(
+    public ResponseEntity<CaseLawResponseDto> getShrinkwrapDocumentByCourtAndDocNumber(
             @PathVariable("court") RisCourt court,
             @PathVariable("docNumber") String docNumber,
             @RequestParam(value = "includePrompts", required = false) Boolean includePrompts) {
@@ -50,7 +55,23 @@ public class CaseLawController {
                 court,
                 includePrompts
         );
-        return documentService.getDocument(requestDto);
+        return cached(documentService.getDocument(requestDto));
+    }
+
+    /**
+     * A decision only changes in the nightly import, so a complete answer is valid until then. An
+     * incomplete one - typically a summary the AI could not produce this time - is not cached at
+     * all: the next request tries again, and a cache would show the gap for a whole day.
+     */
+    private ResponseEntity<CaseLawResponseDto> cached(CaseLawResponseDto document) {
+        CacheControl cacheControl = documentService.isComplete(document)
+                ? CacheControl.maxAge(untilNextImport(ZonedDateTime.now())).cachePublic()
+                : CacheControl.noStore();
+        return ResponseEntity.ok().cacheControl(cacheControl).body(document);
+    }
+
+    static Duration untilNextImport(ZonedDateTime now) {
+        return Duration.between(now, CronExpression.parse(CaseLawImporter.UPDATE_CRON).next(now));
     }
 
     @GetMapping("case-law/overview")
