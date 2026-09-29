@@ -224,12 +224,23 @@ public class NormService {
             return document;
         }
 
-        String html = htmlDownloadService.downloadHtml(document.getHtmlUrl());
-        String cleanHtml = normTextService.prepareRisNormHtml(html, attachmentsOf(document));
-        String text = PandocTextWrapper.convertHtmlToText(cleanHtml);
+        String cleanHtml;
+        String text;
+        try {
+            String html = htmlDownloadService.downloadHtml(document.getHtmlUrl());
+            cleanHtml = normTextService.prepareRisNormHtml(html, attachmentsOf(document));
+            text = PandocTextWrapper.convertHtmlToText(cleanHtml);
+        } catch (RuntimeException e) {
+            //one document RIS shapes in a way the conversion does not know - SymE0 in the NÖ
+            //Jagdgesetz was the first - must not take down the answer for the whole law: the row
+            //stays untouched, the provision goes out without text and the next request tries again
+            log.error("text conversion failed for {} ({})", document.getDocNumber(), document.getHtmlUrl(), e);
+            return document;
+        }
         if (text == null) {
             //pandoc failed; leave the row untouched so the next run tries again
-            log.error("text conversion failed for {}", document.getDocNumber());
+            log.error("text conversion failed for {} ({}): pandoc returned nothing",
+                    document.getDocNumber(), document.getHtmlUrl());
             return document;
         }
 

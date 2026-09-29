@@ -60,9 +60,9 @@ public class NormDocumentEntity {
     private Integer sortIndex;
 
     /**
-     * ELI path without the trailing {@code /NOR…} segment - the stable key of a provision
-     * across its versions. Only the path is stored, the host varies between ris.bka.gv.at,
-     * www.ris.bka.gv.at and ogd.ris.bka.gv.at.
+     * ELI path without the trailing document number ({@code /NOR…}, {@code /LOO…}) - the stable
+     * key of a provision across its versions. Only the path is stored, the host varies between
+     * ris.bka.gv.at, www.ris.bka.gv.at and ogd.ris.bka.gv.at.
      */
     @Column(name = "eli_provision", length = 512)
     private String eliProvision;

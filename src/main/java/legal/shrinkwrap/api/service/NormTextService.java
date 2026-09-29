@@ -187,7 +187,9 @@ public class NormTextService {
             }
 
             String marker = symbol.text().replace(NBSP, " ").trim();
-            String indent = NBSP.repeat(INDENT_PER_LEVEL * (nestingLevel(symbol) - 1));
+            //level 0 exists as well - state law lists flush with the paragraph text as SymE0 (the NÖ
+            //Jagdgesetz 1974 does) - and it is indented no more than level 1
+            String indent = NBSP.repeat(INDENT_PER_LEVEL * Math.max(0, nestingLevel(symbol) - 1));
             symbol.remove();
 
             Jerry firstBlock = content.children().first();
@@ -200,7 +202,7 @@ public class NormTextService {
         }
     }
 
-    /** {@code SymE1} … {@code SymE3}; anything unexpected counts as the outermost level. */
+    /** {@code SymE0} … {@code SymE3}; anything unexpected counts as the outermost level. */
     private static int nestingLevel(Jerry symbol) {
         String firstToken = symbol.attr("class").split("\\s+")[0];
         char last = firstToken.charAt(firstToken.length() - 1);

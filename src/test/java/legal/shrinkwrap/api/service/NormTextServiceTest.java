@@ -71,6 +71,19 @@ public class NormTextServiceTest {
         assertThat(html).contains(NBSP.repeat(8) + "bb)" + NBSP + " ");
     }
 
+    /**
+     * State law knows a level 0 as well - dashes flush with the paragraph text, SymE0 - and it
+     * used to compute a negative indentation that failed the whole answer. § 7 NÖ Jagdgesetz 1974.
+     */
+    @Test
+    public void levelZeroIsFlushLikeLevelOne() throws IOException {
+        String html = cleanDecoded("LNO40035225");
+
+        assertThat(html).contains(">-" + NBSP + " der Erholung oder");
+        assertThat(html).doesNotContain(NBSP + "-" + NBSP + " der Erholung oder");
+        assertThat(html).doesNotContain("<ul", "<li");
+    }
+
     @Test
     public void paragraphNumberIsSeparatedFromItsText() throws IOException {
         String html = cleanDecoded("NOR40018832");

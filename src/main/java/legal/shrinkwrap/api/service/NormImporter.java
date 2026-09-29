@@ -540,14 +540,24 @@ public class NormImporter {
      * exactly one current at a time, so a correction to an old version must not rewrite the
      * title. A run without a head is a run in which the head did not change - a new one brings a
      * new docNumber and with it a complete reimport.
+     * <p>
+     * A repealed law has no head in force, and then the one that came into force last is its final
+     * title. It only fills a law that has none yet: the same situation - no current head among the
+     * results - is also what the nightly update of a law in force looks like when RIS corrects one
+     * of its old heads, and that correction must not replace the current title.
      */
     static void applyHead(NormEntity norm, List<RisNormResult> results, LocalDate today) {
-        results.stream()
+        List<RisNormMetadaten> heads = results.stream()
                 .map(RisNormResult::getNormMetadaten)
                 .filter(m -> NormDokumenttyp.NORM.equals(m.getDokumenttyp()))
+                .toList();
+        heads.stream()
                 .filter(m -> inForceAlready(m, today)
                         && (m.getAusserkrafttreten() == null || m.getAusserkrafttreten().isAfter(today)))
                 .findFirst()
+                .or(() -> norm.getLangtitel() != null ? Optional.empty() : heads.stream()
+                        .filter(m -> inForceAlready(m, today))
+                        .max(Comparator.comparing(RisNormMetadaten::getInkrafttreten)))
                 .ifPresent(head -> {
                     norm.setLangtitel(stripped(head.getTitel()));
                     norm.setEli(head.getEli());
@@ -675,7 +685,10 @@ public class NormImporter {
             int firstSlash = path.indexOf('/', scheme + 3);
             path = firstSlash < 0 ? "" : path.substring(firstSlash);
         }
-        path = path.replaceFirst("/NOR\\d+$", "");
+        //NOR40248854 in federal law, LOO12005088, LKT40018779 and seven more prefixes in state law -
+        //three letters and eight digits throughout. Matching only NOR left the number in every state
+        //law path, and the link built from it named the document twice
+        path = path.replaceFirst("/[A-Z]{3}\\d{8}$", "");
         return path.isBlank() ? null : path;
     }
 
