@@ -115,7 +115,10 @@ public class CaselawAnalyzerService {
         return summarizeCaselaw(text, null);
     }
 
-    public SummaryAnalysis summarizeCaselaw(String text, CaseLawEntity entity) {
+    /**
+     * Builds the prompts for a summary without calling the model, allowing batch exports
+     */
+    public SummaryRequest buildSummaryRequest(String text, CaseLawEntity entity) {
         boolean isCriminal = entity != null && StringUtils.defaultString(entity.getCaseNumber()).matches("^[\\d]+(Os|Bs).*");
         boolean isVfGH = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString());
         boolean isVwGH = entity != null && entity.getApplicationType().equalsIgnoreCase(RisCourt.VwGH.toString());
@@ -178,7 +181,23 @@ public class CaselawAnalyzerService {
             String system = templates.get("summary.system").apply(model);
             String user = templates.get("summary").apply(model);
             user = user.replaceAll("\n\n","\n").replaceAll("\r\n\r\n","\r\n");
+            return new SummaryRequest(system, user, removedText, tokenEstimation);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
+    public SummaryAnalysis summarizeCaselaw(String text, CaseLawEntity entity) {
+        SummaryRequest request = buildSummaryRequest(text, entity);
+        if (request == null) {
+            return null;
+        }
+        String system = request.systemPrompt();
+        String user = request.userPrompt();
+        String removedText = request.removedFromPrompt();
+        int tokenEstimation = request.tokenEstimation();
+
+        try {
             //try generating json schema
             ObjectSchema jsonSchema = schemaGen.generateSchema(CaselawSummaryCivilCase.class).asObjectSchema();
             jsonSchema.setAdditionalProperties(ObjectSchema.NoAdditionalProperties.instance);
@@ -406,6 +425,8 @@ public class CaselawAnalyzerService {
         }
         return 5;
     }
+
+    public static final record SummaryRequest(String systemPrompt, String userPrompt, String removedFromPrompt, int tokenEstimation) {};
 
     public static final record SummaryAnalysis(CaselawSummaryCivilCase summary, String systemPrompt, String userPrompt, String removedFromPrompt, String model, int durationMs) {};
 
