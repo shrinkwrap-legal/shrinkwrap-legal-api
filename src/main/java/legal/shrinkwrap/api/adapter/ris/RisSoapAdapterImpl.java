@@ -11,10 +11,10 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import at.gv.bka.ris.v26.soap.ws.client.*;
-import com.github.javaparser.utils.Log;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
+import jakarta.xml.ws.BindingProvider;
 
 import legal.shrinkwrap.api.adapter.ris.dto.RisCourt;
 import org.slf4j.Logger;
@@ -36,6 +36,7 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
     private final OgdRisServiceSoap risSoap;
     private final JAXBContext soapContext;
     private final ObjectFactory objectFactory = new ObjectFactory();
+    private static final String RIS_ENDPOINT = "https://data.bka.gv.at/ris/ogd/v2.6/ogdrisservice.asmx";
 
     public RisSoapAdapterImpl() {
         /*
@@ -53,6 +54,8 @@ public class RisSoapAdapterImpl implements RisSoapAdapter {
         }
         OgdRisService service = new OgdRisService();
         this.risSoap = service.getOgdRisServiceSoap();
+
+        ((BindingProvider) risSoap).getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, RIS_ENDPOINT);
     }
 
     @Override
