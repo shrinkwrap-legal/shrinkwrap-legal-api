@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.7</version>
+        <version>4.1.1</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
     <groupId>legal.shrinkwrap</groupId>
@@ -23,10 +23,10 @@
         <spring-ai.version>1.0.0-M4</spring-ai.version>
         -->
         <spring-modulith.version>1.4.6</spring-modulith.version>
-        <openapi-generator-version>7.23.0</openapi-generator-version>
+        <openapi-generator-version>7.25.0</openapi-generator-version>
 
-        <springdoc-version>2.8.13</springdoc-version>
-        <jackson.version>2.19.2</jackson.version>
+        <springdoc-version>3.1.1</springdoc-version>
+        <jackson.version>2.22.3</jackson.version>
         <record.builder.version>45</record.builder.version>
         <lombok.version>1.18.42</lombok.version>
     </properties>
@@ -61,17 +61,17 @@
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.18.3</version>
+            <version>1.23.2</version>
         </dependency>
         <dependency>
             <groupId>org.commonmark</groupId>
             <artifactId>commonmark</artifactId>
-            <version>0.23.0</version>
+            <version>0.30.0</version>
         </dependency>
         <dependency>
             <groupId>org.commonmark</groupId>
             <artifactId>commonmark-ext-gfm-tables</artifactId>
-            <version>0.23.0</version>
+            <version>0.30.0</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -91,7 +91,7 @@
         <dependency>
             <groupId>com.github.jknack</groupId>
             <artifactId>handlebars</artifactId>
-            <version>4.5.0</version>
+            <version>4.5.2</version>
         </dependency>
 
         <!-- useful libraries for java  -->
@@ -158,7 +158,7 @@
         <dependency>
             <groupId>org.openapitools</groupId>
             <artifactId>jackson-databind-nullable</artifactId>
-            <version>0.2.6</version>
+            <version>0.2.12</version>
         </dependency>
         <dependency>
             <groupId>org.openapitools</groupId>
