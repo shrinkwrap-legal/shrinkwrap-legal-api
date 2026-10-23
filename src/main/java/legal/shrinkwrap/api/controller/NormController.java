@@ -7,6 +7,7 @@ import legal.shrinkwrap.api.dto.NormProvisionsDto;
 import legal.shrinkwrap.api.persistence.entity.NormDocumentEntity;
 import legal.shrinkwrap.api.persistence.entity.NormEntity;
 import legal.shrinkwrap.api.persistence.entity.NormSectionType;
+import legal.shrinkwrap.api.service.NormAbbreviations;
 import legal.shrinkwrap.api.service.NormImporter;
 import legal.shrinkwrap.api.service.NormService;
 import lombok.AllArgsConstructor;
@@ -29,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -127,8 +129,8 @@ public class NormController {
                 ? new LocalDate[]{null, null}
                 : period(asOf, inForceFrom, inForceUntil);
         NormEntity norm = byNumber
-                ? lawOf(numbers, jurisdiction, gesetzesnummer, abbreviation, period)
-                : namedLaw(jurisdiction, gesetzesnummer, abbreviation, period);
+                ? lawOf(numbers, jurisdiction, gesetzesnummer, abbreviation, new Selection(period, from, to, typ))
+                : namedLaw(jurisdiction, gesetzesnummer, abbreviation, new Selection(period, from, to, typ));
         List<NormDocumentEntity> found = provisions(norm, period, from, to, typ).stream()
                 .filter(d -> !byNumber || numbers.contains(d.getDocNumber()))
                 .toList();
@@ -228,13 +230,13 @@ public class NormController {
 
     /** A law by the name the caller gave it - which, without a document number, has to be given. */
     private NormEntity namedLaw(String jurisdiction, String gesetzesnummer, String abbreviation,
-                                LocalDate[] period) {
+                                Selection selection) {
         if (jurisdiction == null || jurisdiction.isBlank()) {
             throw new ResponseStatusException(BAD_REQUEST, "jurisdiction is required unless docNumber is given");
         }
         return gesetzesnummer != null
                 ? law(jurisdiction, gesetzesnummer)
-                : singleLawFor(jurisdiction, abbreviation, period);
+                : singleLawFor(jurisdiction, abbreviation, selection);
     }
 
     /**
@@ -262,7 +264,7 @@ public class NormController {
      * laws are a request to split. A law named alongside has to be that same law.
      */
     private NormEntity lawOf(List<String> docNumbers, String jurisdiction, String gesetzesnummer,
-                             String abbreviation, LocalDate[] period) {
+                             String abbreviation, Selection selection) {
         List<NormDocumentEntity> documents = docNumbers.stream()
                 .map(number -> normService.findByDocNumber(number)
                         .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "unknown document " + number)))
@@ -274,7 +276,7 @@ public class NormController {
         NormEntity law = normService.lawOf(documents.getFirst());
         if (gesetzesnummer != null || abbreviation != null) {
             NormEntity named = namedLaw(jurisdiction != null ? jurisdiction : law.getJurisdiction(),
-                    gesetzesnummer, abbreviation, period);
+                    gesetzesnummer, abbreviation, selection);
             if (!named.getId().equals(law.getId())) {
                 throw new ResponseStatusException(BAD_REQUEST, "the document numbers do not belong to "
                         + (gesetzesnummer != null ? gesetzesnummer : abbreviation));
@@ -298,8 +300,13 @@ public class NormController {
      * all have provisions in the period - or none of which has - are left to the caller. A single
      * candidate is taken as it is, even without provisions then: the name was unambiguous, and an
      * empty list says what there is to say.
+     * <p>
+     * The provision asked for narrows it next. RIS files the UStG 1994 as two laws that both carry
+     * "UStG 1994" and are both in force - the act and its annex on the internal market - but the act
+     * has only paragraphs and the annex only articles, so "§ 6 UStG" can mean only one of them.
+     * Last comes the spelling, see {@link #writtenAsAsked}.
      */
-    private NormEntity singleLawFor(String jurisdiction, String abbreviation, LocalDate[] period) {
+    private NormEntity singleLawFor(String jurisdiction, String abbreviation, Selection selection) {
         if (abbreviation == null) {
             throw new ResponseStatusException(NOT_FOUND, "either gesetzesnummer or abbreviation is required");
         }
@@ -310,11 +317,62 @@ public class NormController {
         if (laws.size() == 1) {
             return laws.getFirst();
         }
-        List<NormEntity> inPeriod = normService.withProvisionsBetween(laws, period[0], period[1]);
-        if (inPeriod.size() == 1) {
-            return inPeriod.getFirst();
+        LocalDate[] period = selection.period();
+        List<NormEntity> candidates = narrowed(laws, normService.withProvisionsBetween(laws, period[0], period[1]));
+        if (candidates.size() > 1 && selection.from() != null) {
+            candidates = narrowed(candidates, candidates.stream()
+                    .filter(law -> !provisions(law, period, selection.from(), selection.to(), selection.typ()).isEmpty())
+                    .toList());
         }
-        throw new AmbiguousName(abbreviation, inPeriod.isEmpty() ? laws : inPeriod);
+        if (candidates.size() > 1) {
+            candidates = writtenAsAsked(abbreviation, candidates, normService::namesOf);
+        }
+        if (candidates.size() == 1) {
+            return candidates.getFirst();
+        }
+        throw new AmbiguousName(abbreviation, candidates);
+    }
+
+    /** A step that would leave no candidate does not narrow - the caller is shown them all instead. */
+    private static List<NormEntity> narrowed(List<NormEntity> candidates, List<NormEntity> remaining) {
+        return remaining.isEmpty() ? candidates : remaining;
+    }
+
+    /**
+     * Among laws that remain alike, the one carrying the name exactly as asked. Two rules keep this
+     * from guessing:
+     * <ul>
+     *     <li>A match that needed the year dropped yields to an exact one only if both are versions
+     *     of the same law: "NO" is the Notariatsordnung, not the Notariatsordnung 1945. But "VAG" stays
+     *     open between the Volksanwaltschaftsgesetz, which carries it, and the
+     *     Versicherungsaufsichtsgesetz 2016, which is meant at least as often.</li>
+     *     <li>Case decides only among exact matches, and only there: RIS tells the Eisenbahngesetz
+     *     1957 ("EisbG") from the Eisenbahnbuchgesetz ("EisBG") by nothing else.</li>
+     * </ul>
+     */
+    static List<NormEntity> writtenAsAsked(String query, List<NormEntity> candidates,
+                                           Function<NormEntity, List<String>> namesOf) {
+        List<NormEntity> exact = candidates.stream()
+                .filter(law -> namesOf.apply(law).stream().anyMatch(name -> NormAbbreviations.writtenAlike(name, query, false)))
+                .toList();
+        if (exact.isEmpty()) {
+            return candidates;
+        }
+        List<NormEntity> kept = candidates.stream()
+                .filter(law -> exact.contains(law) || exact.stream().noneMatch(e ->
+                        NormAbbreviations.stem(e.getKurztitel()).equals(NormAbbreviations.stem(law.getKurztitel()))))
+                .toList();
+        if (!exact.containsAll(kept)) {
+            return kept;
+        }
+        List<NormEntity> cased = kept.stream()
+                .filter(law -> namesOf.apply(law).stream().anyMatch(name -> NormAbbreviations.writtenAlike(name, query, true)))
+                .toList();
+        return narrowed(kept, cased);
+    }
+
+    /** What the caller asked for besides the law: it can tell apart laws that share a name. */
+    private record Selection(LocalDate[] period, String from, String to, String typ) {
     }
 
     /**
