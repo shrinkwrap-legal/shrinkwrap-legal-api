@@ -8,9 +8,10 @@ import legal.shrinkwrap.api.adapter.ris.dto.RisJudikaturResult;
 import legal.shrinkwrap.api.adapter.ris.dto.RisSearchResult;
 import legal.shrinkwrap.api.persistence.entity.CaseLawEntity;
 import legal.shrinkwrap.api.persistence.repo.CaseLawRepository;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.domain.Page;
@@ -44,7 +45,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class CaseLawImporter {
     //the daily import retries failing RIS calls until this time, the rest is left to the next run
@@ -66,6 +67,13 @@ public class CaseLawImporter {
 
     private final CommonSentenceService commonSentenceService;
     private final ResourceLoader resourceLoader;
+
+    /**
+     * Switches off everything case law does on its own: the nightly import of changed decisions
+     * and the summaries generated in the evening, which is where the tokens are spent.
+     */
+    @Value("${enable-judicature:true}")
+    boolean judicatureEnabled = true;
 
     //@PostConstruct
     public void initDB() {
@@ -91,6 +99,10 @@ public class CaseLawImporter {
 
     @Scheduled(cron = UPDATE_CRON)
     public void updateLatestDocuments() {
+        if (!judicatureEnabled) {
+            log.info("Skipping case law update, enable-judicature=false");
+            return;
+        }
         ZonedDateTime deadline = ZonedDateTime.now(RIS_ZONE).with(IMPORT_DEADLINE);
 
         for (RisCourt court : RisCourt.values()) {
@@ -178,6 +190,10 @@ public class CaseLawImporter {
 
     @Scheduled(cron = "0 30 22 * * *")
     public void doSummariesForCases() {
+        if (!judicatureEnabled) {
+            log.info("Skipping summary generation, enable-judicature=false");
+            return;
+        }
         doSummariesForCases(List.of("OGH"));
     }
 

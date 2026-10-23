@@ -63,6 +63,9 @@ public class DocumentServiceImpl implements DocumentService {
     @Value("${download-missing-judicature}")
     private Boolean downloadMissing;
 
+    @Value("${enable-judicature:true}")
+    private boolean judicatureEnabled = true;
+
     @Value("${min-words-for-summary}")
     private Integer minWordsForSummary;
 
@@ -98,7 +101,7 @@ public class DocumentServiceImpl implements DocumentService {
 
         //if no match, get from RIS, and save to db
         if (dbEntity.isEmpty()) {
-            if (!downloadMissing) {
+            if (!downloadMissing || !judicatureEnabled) {
                 //no downloading - so nothing to return here
                 return null;
             }
@@ -193,20 +196,7 @@ public class DocumentServiceImpl implements DocumentService {
                     analysisEntity.setRemovedFromPrompt(o.removedFromPrompt());
                     analysisEntity.setAiModel(o.model());
                     analysisEntity.setDurationMs(o.durationMs());
-                    if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VfGH.toString())) {
-                        analysisEntity.setAnalysisSubType("vfghCase");
-                    } else if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.VwGH.toString())) {
-                        analysisEntity.setAnalysisSubType("vwghCase");
-                    } else if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.BVwG.toString())) {
-                        analysisEntity.setAnalysisSubType("bvwgCase");
-                    } else if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.LVwG.toString())) {
-                        analysisEntity.setAnalysisSubType("lvwgCase");
-                    } else if (caseLawEntity.getApplicationType().equalsIgnoreCase(RisCourt.DSB.toString()) || caseLawEntity.getApplicationType().equalsIgnoreCase("dsk")) {
-                        analysisEntity.setAnalysisSubType("dsbCase");
-                    }
-                    else {
-                        analysisEntity.setAnalysisSubType("civilCase");
-                    }
+                    analysisEntity.setAnalysisSubType(summarySubType(caseLawEntity));
                     try {
                         analysisEntity.setAnalysis(MAPPER.writeValueAsString(o.summary()));
                     } catch (JsonProcessingException e) {
@@ -550,6 +540,23 @@ public class DocumentServiceImpl implements DocumentService {
             analysisEntity = caseLawAnalysisRepository.save(analysisEntity);
         }
         return entity;
+    }
+
+    /** The analysis_subtype a summary of this decision is stored with. */
+    public static String summarySubType(CaseLawEntity caseLawEntity) {
+        String applicationType = caseLawEntity.getApplicationType();
+        if (applicationType.equalsIgnoreCase(RisCourt.VfGH.toString())) {
+            return "vfghCase";
+        } else if (applicationType.equalsIgnoreCase(RisCourt.VwGH.toString())) {
+            return "vwghCase";
+        } else if (applicationType.equalsIgnoreCase(RisCourt.BVwG.toString())) {
+            return "bvwgCase";
+        } else if (applicationType.equalsIgnoreCase(RisCourt.LVwG.toString())) {
+            return "lvwgCase";
+        } else if (applicationType.equalsIgnoreCase(RisCourt.DSB.toString()) || applicationType.equalsIgnoreCase("dsk")) {
+            return "dsbCase";
+        }
+        return "civilCase";
     }
 
     public static CaseLawAnalysisEntity createTextConversion(CaseLawEntity entity) {

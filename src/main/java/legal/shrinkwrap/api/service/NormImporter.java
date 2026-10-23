@@ -101,6 +101,10 @@ public class NormImporter {
     @Value("${ris.norm.repealed-since:2000-01-01}")
     String repealedSince;
 
+    /** Switches off the nightly update and the initial import. */
+    @Value("${enable-norms:true}")
+    boolean normsEnabled = true;
+
     private final RisSoapAdapter risSoapAdapter;
     private final NormRepository normRepository;
     private final NormDocumentRepository normDocumentRepository;
@@ -179,6 +183,10 @@ public class NormImporter {
      */
     @Scheduled(cron = UPDATE_CRON)
     public void updateChangedLaws() {
+        if (!normsEnabled) {
+            log.info("Skipping norm update, enable-norms=false");
+            return;
+        }
         for (boolean landesrecht : new boolean[]{false, true}) {
             List<RisNormResult> changed;
             try {
@@ -377,6 +385,10 @@ public class NormImporter {
     /** Federal law and all nine states. Runs for hours and writes some 722.000 documents. */
     //@PostConstruct
     public void importEverything() {
+        if (!normsEnabled) {
+            log.info("Skipping initial norm import, enable-norms=false");
+            return;
+        }
         new Thread(() -> {
             importAllLaws(null);
             for (Bundesland bundesland : Bundesland.values()) {
