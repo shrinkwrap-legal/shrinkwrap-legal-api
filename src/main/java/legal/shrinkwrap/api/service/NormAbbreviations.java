@@ -60,6 +60,31 @@ public final class NormAbbreviations {
     }
 
     /**
+     * Whether a stored name is the one asked for, as written: without dropping a year, ignoring
+     * dots and spaces, and ignoring case unless asked not to. RIS tells the Eisenbahngesetz 1957
+     * ("EisbG") from the Eisenbahnbuchgesetz ("EisBG") by case alone.
+     */
+    public static boolean writtenAlike(String name, String query, boolean caseSensitive) {
+        if (name == null || query == null) {
+            return false;
+        }
+        String stored = condense(collapseWhitespace(name));
+        String asked = condense(collapseWhitespace(query));
+        return caseSensitive ? stored.equals(asked) : stored.equalsIgnoreCase(asked);
+    }
+
+    /**
+     * A title without its year, to tell two versions of one law ("Notariatsordnung",
+     * "Notariatsordnung 1945") from two laws that merely share an abbreviation.
+     */
+    public static String stem(String title) {
+        if (title == null) {
+            return "";
+        }
+        return collapseWhitespace(title).toLowerCase(Locale.ROOT).replaceAll(TRAILING_YEAR, "").trim();
+    }
+
+    /**
      * RIS separates a short title from its year with a non-breaking space, as in
      * {@code "Buchpreisbindungsgesetz\u00a02023"}. Java's {@code \s} does not match that
      * character, so without replacing it first the year would never be stripped and the law
