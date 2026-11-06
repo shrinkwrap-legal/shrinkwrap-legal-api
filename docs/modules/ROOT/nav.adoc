@@ -1,0 +1,7 @@
+* xref:index.adoc[Überblick]
+* xref:entwicklung.adoc[Entwicklung]
+* xref:konfiguration.adoc[Konfiguration]
+* xref:rest-api.adoc[REST-API]
+* xref:mcp-server.adoc[MCP-Server]
+* xref:datenimport.adoc[Datenimport und Zusammenfassungen]
+* xref:betrieb.adoc[Betrieb]

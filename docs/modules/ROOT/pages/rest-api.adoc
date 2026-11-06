@@ -1,0 +1,89 @@
+= REST-API
+
+Alle `@RestController`-Endpunkte erhalten das Präfix `/api` (siehe `WebMvcConfiguration`).
+Die vollständige, aktuelle Spezifikation liefert springdoc:
+
+* OpenAPI: https://api.shrinkwrap.legal/api/v3/api-docs
+* lokal: http://localhost:8080/api/v3/api-docs
+
+Aus dieser Spezifikation generiert die xref:extension::api-client.adoc[Browser-Extension] ihren TypeScript-Client.
+
+== Rechtsprechung (`CaseLawController`)
+
+[cols="2,4"]
+|===
+| Endpunkt | Beschreibung
+
+| `GET /api/case-law/shrinkwrap?ecli=…&docNumber=…&court=…&includePrompts=…`
+| Liefert Metadaten, Wortanzahl und KI-Zusammenfassung einer Entscheidung. Suche zuerst über ECLI, dann über die RIS-Dokumentnummer. Wird vom Side Panel der Extension verwendet.
+
+| `+GET /api/case-law/shrinkwrap/{court}/{docNumber}+`
+| Alternative mit Pfadvariablen; wird von den in RIS eingeblendeten Komponenten der Extension verwendet.
+|===
+
+`court` ist einer der Werte `Justiz`, `VwGH`, `VfGH`, `BVwG`, `LVwG`, `DSB`, `GBK`.
+
+Antwortstruktur (`CaseLawResponseDto`):
+
+[source,json]
+----
+{
+  "wordCount": 1234,
+  "summaryType": "...",
+  "analysisVersion": 1,
+  "summary": { },
+  "prompts": { },
+  "metadata": { "ecli": "...", "caseNumber": "...", "court": "...", "decisionDate": "...", "url": "..." }
+}
+----
+
+=== Caching
+
+Eine Entscheidung ändert sich nur durch den nächtlichen Import. Vollständige Antworten werden daher mit
+`Cache-Control: public, max-age=<Sekunden bis zum nächsten Import>` ausgeliefert; unvollständige Antworten
+(z. B. Zusammenfassung noch nicht verfügbar) mit `no-store`, damit der nächste Aufruf es erneut versucht.
+
+[[normen]]
+== Normen (`NormController`)
+
+[cols="2,4"]
+|===
+| Endpunkt | Beschreibung
+
+| `GET /api/norm/laws?jurisdiction=…&query=…&limit=20`
+| Sucht ein Gesetz über Abkürzung oder Kurztitel.
+
+| `GET /api/norm/provisions?…`
+| Liefert Bestimmungen (§§, Artikel, Anlagen) eines Gesetzes, optional mit Text.
+|===
+
+Parameter von `/api/norm/provisions`:
+
+[cols="1,4"]
+|===
+| `jurisdiction` | `AT` für Bundesrecht, `AT-1` … `AT-9` für die Länder
+| `gesetzesnummer` / `abbreviation` | Identifikation des Gesetzes
+| `risUrl` / `docNumber` | konkrete Fassungen über Link bzw. RIS-Dokumentnummer (mehrere möglich)
+| `from` / `to` | Bereich, z. B. `§ 12a` bis `§ 14c`; `from` allein = einzelne Bestimmung
+| `typ` | Art der Bestimmung, falls nicht aus `from` ersichtlich
+| `asOf` | Rechtslage zu einem Stichtag (Standard: heute)
+| `inForceFrom` / `inForceUntil` | alle Fassungen, die im Zeitraum in Kraft waren
+| `includeText` | Volltext mitliefern (Standard `false`)
+| `limit` | Anzahl der Bestimmungen (Standard 25)
+|===
+
+Die Gesamtanzahl der Treffer vor dem Limit steht im Response-Header `X-Total-Count` (per CORS freigegeben).
+
+== Sonstiges (`ShrinkwrapController`)
+
+[cols="2,4"]
+|===
+| `GET /api/general` | allgemeine Informationen
+| `GET /api/extension-install` | Begrüßungsseite nach Installation der Extension
+| `GET /api/hello` | einfacher Erreichbarkeitstest
+|===
+
+== Sicherheit
+
+Die API ist öffentlich und ohne Authentifizierung zugänglich. CORS ist mit den Spring-Standardwerten
+freigegeben, damit die Extension aus dem Browser zugreifen kann. CSRF ist für die MCP-Endpunkte deaktiviert.

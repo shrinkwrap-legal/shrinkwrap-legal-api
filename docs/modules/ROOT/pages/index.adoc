@@ -1,0 +1,41 @@
+= Shrinkwrap.Legal API
+
+Backend des Shrinkwrap.Legal-Projekts. Die API liefert Metadaten und KI-generierte Zusammenfassungen
+österreichischer Gerichtsentscheidungen sowie Normtexte aus dem Rechtsinformationssystem des Bundes (RIS).
+Konsumenten sind die xref:extension::index.adoc[Browser-Extension] und – über das Model Context Protocol – KI-Agenten.
+
+Die Architektur des Gesamtsystems ist in der xref:ROOT::index.adoc[arc42-Dokumentation] beschrieben.
+Diese Komponente dokumentiert Entwicklung, Konfiguration und Betrieb der API.
+
+== Technologie
+
+[cols="1,3"]
+|===
+| Sprache / Laufzeit | Java 25, virtuelle Threads (`spring.threads.virtual.enabled=true`)
+| Framework | Spring Boot 4.1 (Web MVC, Data JPA, Security, Actuator, Validation)
+| KI | Spring AI 2.0 (OpenAI Chat- und Embedding-Modelle, pgvector Vector Store, MCP-Server)
+| Datenbank | PostgreSQL 17 mit pgvector; H2 (in-memory) für die lokale Entwicklung
+| RIS-Anbindung | SOAP-Client (per `jaxws-maven-plugin` aus der RIS-OGD-WSDL v2.6 generiert) und REST-Adapter
+| Textverarbeitung | Pandoc (HTML → Text), jsoup, Jodd Lagarto, CommonMark, Handlebars (Prompt-Templates)
+| API-Dokumentation | springdoc-openapi (`/api/v3/api-docs`, Swagger UI)
+| Lizenz | GNU AGPL v3.0
+|===
+
+== Paketstruktur
+
+Basis-Package: `legal.shrinkwrap.api`
+
+[cols="1,3"]
+|===
+| `adapter` | Zugriff auf externe Systeme: RIS-SOAP-Adapter (`adapter.ris`), RIS-REST-Adapter (`adapter.ris.rest`), HTML-Download
+| `controller` | REST-Controller (`CaseLawController`, `NormController`, `ShrinkwrapController`) und MCP-Tools (`McpController`, `McpNormController`)
+| `service` | Fachlogik: Import (`CaseLawImporter`, `NormImporter`), Dokumentbereitstellung (`DocumentServiceImpl`), Analyse/Zusammenfassung (`CaselawAnalyzerService`), Embeddings, Normen
+| `persistence` | JPA-Entities (`entity`) und Spring-Data-Repositories (`repo`)
+| `dto` | Transportobjekte der REST- und MCP-Schnittstellen
+| `config` | Spring-Konfiguration (Security/CORS, Web MVC, Spring AI, Adapter)
+| `utils` | Hilfsklassen (Pandoc-Wrapper, Satz-Hashing, ObjectMapper)
+|===
+
+== Repository
+
+https://github.com/shrinkwrap-legal/shrinkwrap-legal-api

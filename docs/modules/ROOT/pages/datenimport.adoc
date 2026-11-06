@@ -1,0 +1,34 @@
+= Datenimport und Zusammenfassungen
+
+Die API hält Entscheidungen und Normen in einer eigenen Datenbank vor, damit Anfragen der Extension
+ohne Live-Zugriff auf das RIS beantwortet werden können.
+
+== Zeitgesteuerte Jobs
+
+[cols="1,2,3"]
+|===
+| Zeit | Job | Beschreibung
+
+| 02:15 | `NormImporter` | Nächtliches Update der Normen (gefiltert nach `ris.norm.import-types`)
+| 03:30 | `CaseLawImporter.updateLatestDocuments` | Lädt neue Entscheidungen aller Gerichte (`RisCourt`) über den RIS-SOAP-Service
+| 22:30 | `CaseLawImporter.doSummariesForCases` | Erzeugt KI-Zusammenfassungen für noch nicht zusammengefasste Entscheidungen (derzeit OGH)
+|===
+
+Jobs prüfen beim Start `enable-judicature` bzw. `enable-norms` und werden bei `false` übersprungen.
+RIS-Fehler werden bis zu einer Deadline wiederholt.
+
+== Erstimport
+
+Mit `do-initial-import=true` startet `ShrinkwrapRunner` nach dem Hochfahren den Erstimport der aktivierten
+Bereiche in einem Hintergrund-Thread. Danach die Property wieder deaktivieren.
+
+== Verarbeitung einer Entscheidung
+
+. Abruf von Metadaten und HTML aus dem RIS, Speicherung als `CaseLawEntity` / `CaseLawMetadataEntity`.
+. Konvertierung HTML → Text mit Pandoc; Ergebnis als Analyse vom Typ `text` inkl. Wortanzahl (`CaseLawAnalysisEntity`).
+. Erkennung identischer Entscheidungen (`identicalTo`), damit Zusammenfassungen wiederverwendet werden.
+. Ab `min-words-for-summary` Wörtern: Zusammenfassung über das LLM mit Handlebars-Prompts
+  (`src/main/resources/prompts/summary.system.hbs`, `summary.hbs`, `parts.hbs`); Speicherung als Analyse vom Typ `summary`, versioniert.
+. Optional: Embeddings (`CaseLawEmbeddingEntity`, pgvector).
+
+Der Ablauf ist im xref:ROOT::06_runtime_view.adoc[arc42-Kapitel Laufzeitsicht] im Kontext des Gesamtsystems dargestellt.

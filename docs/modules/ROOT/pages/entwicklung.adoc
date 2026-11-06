@@ -1,0 +1,61 @@
+= Entwicklung
+
+== Voraussetzungen
+
+* JDK 25
+* Maven 3.9+ (oder der mitgelieferte Maven Wrapper `./mvnw`)
+* Pandoc im `PATH` (wird für die HTML→Text-Konvertierung der Entscheidungen verwendet)
+* Internetzugang: Der Build generiert den RIS-SOAP-Client aus der WSDL
+  `https://data.bka.gv.at/ris/ogd/v2.6/ogdrisservice.asmx?WSDL`
+* optional: Docker und Docker Compose (PostgreSQL mit pgvector)
+
+[IMPORTANT]
+====
+Der RIS-Server verwendet ein Zertifikat der HARICA-CA. Ist diese im JDK-Truststore nicht enthalten, schlägt die
+Code-Generierung im Build fehl. Die nötigen `keytool`-Aufrufe stehen im `Dockerfile`.
+====
+
+== Build und Start
+
+[source,bash]
+----
+# Bauen (inkl. Generierung des SOAP-Clients nach target/generated-sources)
+./mvnw clean package -DskipTests
+
+# Lokal starten (Standardprofil: H2 in-memory)
+./mvnw spring-boot:run
+----
+
+Die API ist anschließend unter http://localhost:8080 erreichbar, alle REST-Endpunkte liegen unter dem Präfix `/api`.
+
+== Tests
+
+Die Tests sind mit JUnit-5-Tags kategorisiert und werden über `-Dgroups` ausgewählt:
+
+[cols="1,3"]
+|===
+| Tag | Bedeutung
+
+| `fast` | schnelle Tests ohne externe Abhängigkeiten – läuft in der CI
+| `integration` | Integrationstests mit Spring-Kontext / Datenbank
+| `network` | benötigen Netzwerkzugriff auf RIS oder externe Dienste
+| `release` | werden beim `maven-release-plugin` ausgeführt
+|===
+
+[source,bash]
+----
+./mvnw test -Dgroups=fast
+----
+
+Unter `src/test/http/` liegen HTTP-Client-Dateien (`api.http`, `ris-judikatur.http`) für manuelle Aufrufe.
+
+== Continuous Integration
+
+GitHub Actions (`.github/workflows/maven.yml`) baut bei jedem Push mit JDK 25 (Temurin) und führt
+`mvn -B clean test package -Dgroups=fast` aus. Die `config/application.properties` wird dabei aus dem
+Repository-Secret `application_properties` erzeugt.
+
+== Datenbankmigrationen
+
+Liquibase ist eingebunden (`src/main/resources/db/changelog/db.changelog-master.yaml`). Zusätzliche SQL-Skripte
+für Schemaänderungen liegen datiert unter `src/main/resources/db/` (z. B. Volltextsuche via `tsvector`, Normtabellen).
