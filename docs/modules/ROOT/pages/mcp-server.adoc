@@ -1,0 +1,63 @@
+= MCP-Server
+
+Die API stellt einen zustandslosen https://modelcontextprotocol.io[Model Context Protocol]-Server bereit
+(Spring AI `spring-ai-starter-mcp-server-webmvc`, Streamable HTTP). KI-Agenten können damit österreichische
+Rechtsprechung und Normen recherchieren.
+
+* Endpunkt: `https://api.shrinkwrap.legal/mcp` (lokal `http://localhost:8080/mcp`)
+* Protokoll: `STATELESS`
+* Alle Tools sind lesend (`readOnlyHint`, `idempotentHint`) und erzeugen ein Output-Schema.
+
+== Tools
+
+=== Rechtsprechung (`McpController`, aktiv bei `enable-judicature=true`)
+
+[cols="2,4"]
+|===
+| `search_austrian_case_law`
+| Volltextsuche in der Rechtsprechung. Liefert die 50 neuesten passenden Entscheidungen mit Metadaten,
+  KI-Zusammenfassung und Wortanzahl – nicht den Volltext.
+
+| `retrieve_case_law_full_text_by_ecli`
+| Volltext einer Entscheidung anhand des ECLI.
+|===
+
+=== Normen (`McpNormController`, aktiv bei `enable-norms=true`)
+
+[cols="2,4"]
+|===
+| `find_austrian_law`
+| Findet ein Gesetz über Abkürzung (mit/ohne Jahr) oder Titel und liefert u. a. die `gesetzesnummer`.
+
+| `retrieve_austrian_norm_provisions`
+| Bestimmungen eines Gesetzes, optional mit Text, zu einem Stichtag oder über einen Zeitraum
+  (Parameter analog zu xref:rest-api.adoc#normen[`/api/norm/provisions`]).
+|===
+
+== Empfohlener Agenten-Workflow
+
+. `find_austrian_law`, um die `gesetzesnummer` zu ermitteln (außer die Abkürzung ist eindeutig).
+. `retrieve_austrian_norm_provisions` ohne Text, um verfügbare Bestimmungen und deren Länge zu sehen.
+. `retrieve_austrian_norm_provisions` mit `includeText` für die relevanten Bestimmungen.
+
+Für Rechtsprechung: mit spezifischen deutschen Fachbegriffen und einem jüngeren Zeitraum beginnen,
+bei Bedarf erweitern und den Volltext nur für relevante Treffer abrufen.
+
+[WARNING]
+====
+KI-Zusammenfassungen können eine Entscheidung falsch wiedergeben und sind gegen den Volltext zu prüfen.
+====
+
+== Client-Konfiguration (Beispiel)
+
+[source,json]
+----
+{
+  "mcpServers": {
+    "shrinkwrap-legal": {
+      "type": "http",
+      "url": "https://api.shrinkwrap.legal/mcp"
+    }
+  }
+}
+----

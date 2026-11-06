@@ -1,0 +1,39 @@
+= Betrieb
+
+== Docker Compose
+
+`compose.yaml` startet zwei Services:
+
+[cols="1,2,3"]
+|===
+| Service | Image | Hinweise
+
+| `database` | `pgvector/pgvector:pg17-bookworm` | Port `127.0.0.1:5432`, Daten unter `/mnt/volume-shrinkwrap/postgresql/data`
+| `api` | Build aus `Dockerfile` | Port `127.0.0.1:8080`, `JAVA_TOOL_OPTIONS=-Xms512m -Xmx2g`, Logs nach `/app/logs`
+|===
+
+[source,bash]
+----
+docker compose up -d --build
+docker compose logs -f api
+docker compose down
+----
+
+Beide Ports sind nur an `127.0.0.1` gebunden; der öffentliche Zugriff (`https://api.shrinkwrap.legal`)
+erfolgt über einen vorgelagerten Reverse Proxy (siehe xref:ROOT::07_deployment_view.adoc[Verteilungssicht]).
+
+== Docker-Image
+
+Das `Dockerfile` (Basis `maven:3.9.16-amazoncorretto-25-debian`):
+
+. installiert Pandoc 3.6.3,
+. importiert die HARICA-Root-Zertifikate in den Java-Truststore (nötig für RIS),
+. baut das Fat-JAR mit Maven (Dependency-Cache per BuildKit-Mount),
+. startet als Nicht-Root-User `spring` mit `SPRING_PROFILES_ACTIVE=prod`.
+
+Die externe Konfiguration (Secrets) wird aus `config/` ins Image kopiert.
+
+== Health Checks
+
+* `GET /actuator/health` (inkl. `liveness`/`readiness`, DB, Disk)
+* `GET /actuator/info`

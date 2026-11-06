@@ -1,0 +1,53 @@
+= Konfiguration
+
+Die Konfiguration erfolgt über Spring-Properties. Basis ist `src/main/resources/application.properties`,
+ergänzt um Profile:
+
+[cols="1,3"]
+|===
+| Profil | Zweck
+
+| _(default)_ | Lokale Entwicklung mit H2 in-memory
+| `docker` | PostgreSQL im Compose-Netzwerk (`jdbc:postgresql://database:5432/shrinkwrap`), `ddl-auto=update`, keine Embeddings
+| `prod` | Produktivbetrieb; Logdatei unter `/app/logs/shrinkwrap-api.log`. Im `Dockerfile` als Standard gesetzt
+| `test` | Testkonfiguration
+|===
+
+Geheimnisse (API-Keys, DB-Passwörter) gehören nicht ins Repository, sondern in eine externe
+`config/application.properties` (wird von Spring Boot automatisch gelesen) oder in Umgebungsvariablen.
+
+== Anwendungsspezifische Properties
+
+[cols="2,1,4"]
+|===
+| Property | Standard | Bedeutung
+
+| `enable-judicature` | `true` | Schaltet die Rechtsprechung komplett ab: Import, nächtliches Update, abendliche Zusammenfassungen und die zugehörigen MCP-Tools
+| `enable-norms` | `true` | Dasselbe für Normen (Bundes- und Landesrecht)
+| `do-initial-import` | `false` | Startet nach dem Hochfahren den Erstimport der aktivierten Bereiche im Hintergrund. Bereits Vorhandenes wird übersprungen, RIS wird aber vollständig abgefragt – einmalig setzen und wieder deaktivieren
+| `download-missing-judicature` | `false` | Lädt angefragte, aber nicht in der Datenbank vorhandene Entscheidungen live aus dem RIS nach
+| `generate-embeddings` | `true` | Erzeugt Vektor-Embeddings für Entscheidungen
+| `min-words-for-summary` | `150` | Mindestlänge (Wörter) einer Entscheidung, ab der eine Zusammenfassung erzeugt wird
+| `files.output-directory` | – | Verzeichnis für heruntergeladene/zwischengespeicherte Dateien
+| `ris.norm.document-base-url` | `https://ris.bka.gv.at` | Basis für root-relative Verweise in Norm-HTML (z. B. Bilder)
+| `ris.norm.import-types` | `*` | Welche Rechtsvorschriften importiert werden (RIS-Typ, z. B. `BG,LG,V`). Auf Staging-Systemen einschränken
+| `ris.norm.repealed-since` | `2000-01-01` | Aufgehobene Normen werden ab diesem Datum berücksichtigt
+|===
+
+== Spring AI / MCP
+
+[cols="2,4"]
+|===
+| Property | Bedeutung
+
+| `spring.ai.openai.api-key` | OpenAI-API-Key (Pflicht für Zusammenfassungen und Embeddings)
+| `spring.ai.openai.chat.options.model` | verwendetes Chat-Modell
+| `spring.ai.mcp.server.protocol` | `STATELESS` – zustandsloser MCP-Server
+| `spring.ai.mcp.server.streamable-http.mcp-endpoint` | `/mcp`
+|===
+
+== Monitoring und Tracking
+
+* Actuator: `health` und `info` sind freigegeben, inkl. Liveness-/Readiness-Probes und DB-/Disk-Health.
+* Matomo-Tracking: `matomo.tracker.enabled` (lokal `false`).
+* Logging: Rolling-Logfiles, 100 MB pro Datei, 14 Tage Historie, max. 3 GB.
