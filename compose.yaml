@@ -22,7 +22,7 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     environment:
-      JAVA_TOOL_OPTIONS: "-Xms512m -Xmx2g"
+      JAVA_TOOL_OPTIONS: "-Xms512m -Xmx2g -XX:+UnlockDiagnosticVMOptions -XX:-UseBASE64Intrinsics"
     restart: unless-stopped
     depends_on:
       - database
