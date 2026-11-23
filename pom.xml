@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.1</version>
+        <version>4.1.3</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
     <groupId>legal.shrinkwrap</groupId>
@@ -17,18 +17,14 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
-        <spring-ai.version>2.0.1</spring-ai.version>
-        <mcp-sdk.version>2.0.1</mcp-sdk.version>
-        <!--
-        <spring-ai.version>1.0.0-M4</spring-ai.version>
-        -->
-        <spring-modulith.version>1.4.6</spring-modulith.version>
-        <openapi-generator-version>7.25.0</openapi-generator-version>
+        <spring-ai.version>2.1.0</spring-ai.version>
+        <mcp-sdk.version>2.2.0</mcp-sdk.version>
 
+        <spring-modulith.version>2.1.3</spring-modulith.version>
+        <openapi-generator-version>7.27.0</openapi-generator-version>
         <springdoc-version>3.1.1</springdoc-version>
-        <jackson.version>2.22.3</jackson.version>
-        <record.builder.version>45</record.builder.version>
-        <lombok.version>1.18.42</lombok.version>
+        <record.builder.version>53</record.builder.version>
+        <jackson-databind-nullable.version>0.2.13</jackson-databind-nullable.version>
     </properties>
     <dependencies>
 
@@ -76,17 +72,14 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-jsonSchema-jakarta</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.github.jknack</groupId>
@@ -158,7 +151,7 @@
         <dependency>
             <groupId>org.openapitools</groupId>
             <artifactId>jackson-databind-nullable</artifactId>
-            <version>0.2.12</version>
+            <version>${jackson-databind-nullable.version}</version>
         </dependency>
         <dependency>
             <groupId>org.openapitools</groupId>
